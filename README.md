@@ -1,5 +1,5 @@
 # THB2
-Custom firmware for Tuya THB2. 
+Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2). 
 
 * Проект в начальной стадии разработки, до появления функционального OTA.
 
@@ -15,7 +15,7 @@ Custom firmware for Tuya THB2.
 
 ## Прошивка:
 
-Прошить устройство возможно с помощью программы PhyPlusKit, через USB-COM адаптер с выходами на 3.3В.
+Прошить устройство возможно с помощью программы [PhyPlusKit](https://github.com/pvvx/PHY62x2/raw/master/PhyPlusKit/PhyPlusKit_v2.5.2c.rar), через USB-COM адаптер с выходами на 3.3В.
 
 1. Подключаются выводы GND, TX, RX, VCC (+3.3B). 
 2. Вывод TM соединяется с VCC.
@@ -29,4 +29,6 @@ Custom firmware for Tuya THB2.
 На этом пепрошивка устройтсва закончена. 
 
 Для запуска после прошивки при быстрой отладке - отключите TM от VCC и введите команду “reset” в нижней строке PhyPlusKit.
+
+Дополнительная информация по чипам [PHY62xx](https://github.com/pvvx/PHY62x2). 
 
