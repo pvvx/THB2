@@ -127,7 +127,7 @@ static void set_mac(void)
 {
 		extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
 		uint8 * p = &attDeviceName[5];
-#if 0 // =0 - test!	
+#if 1 // =0 - test!	
 		uint16 len;
 		if(hal_fs_item_read(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
 			LL_Rand(ownPublicAddr,3);
