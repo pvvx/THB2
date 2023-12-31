@@ -1,0 +1,49 @@
+== CLI Flags for Mesh Core layers ==
+------------------------------------
+CLI_PROVISION                                     -> Enables provisioning related CLI menu
+CLI_PROXY                                         -> Enables proxy related CLI menu
+CLI_TRANSPORT                                     -> Enables transport layer related CLI menu
+CLI_NETWORK                                       -> Enables network layer related CLI menu
+
+== CLI Flags for Mesh Model layers ==
+-------------------------------------
+CLI_CONFIG_SERVER_MODEL                           -> Enables setup of configuration server model *** THIS IS MANDATORY FOR ANY CIENT/SERVER SPECIFIC MODEL OPERATION ***
+
+CLI_CONFIG_CLIENT_MODEL                           -> Enables configuration client related CLI menu
+CLI_HEALTH_CLIENT_MODEL                           -> Enables health client related CLI menu
+CLI_GENERICS_CLIENT_MODEL                         -> Enables generics client related CLI menu and submodel client menu with beow flags
+ - CLI_GENERICS_ONOFF_CLIENT_MODEL
+ - CLI_GENERICS_LEVEL_CLIENT_MODEL
+ - CLI_GENERICS_TRANSITIONTIME_CLIENT_MODEL
+ - CLI_GENERICS_PWRONOFF_CLIENT_MODEL
+ - CLI_GENERICS_PWRLEVEL_CLIENT_MODEL
+ - CLI_GENERICS_BATTERY_CLIENT_MODEL
+ - CLI_GENERICS_LOCATION_CLIENT_MODEL
+ - CLI_GENERICS_PROPERTY_CLIENT_MODEL
+
+CLI_LIGHTINGS_CLIENT_MODEL                        -> Enables lightings client related CLI menu and submodel client menu with beow flags
+ - CLI_LIGHTINGS_LIGHTNESS_CLIENT_MODEL
+ - CLI_LIGHTINGS_CTL_CLIENT_MODEL
+ - CLI_LIGHTINGS_HSL_CLIENT_MODEL
+ - CLI_LIGHTINGS_XYL_CLIENT_MODEL
+ - CLI_LIGHTINGS_LC_CLIENT_MODEL
+
+CLI_HEALTH_SERVER_MODEL                           -> Enables setup of health server model
+CLI_GENERICS_SERVER_MODEL                         -> Enables setup of generics server model and submodel with below flags
+ - CLI_GENERICS_ONOFF_SERVER_MODEL
+ - CLI_GENERICS_LEVEL_SERVER_MODEL
+ - CLI_GENERICS_TRANSITIONTIME_SERVER_MODEL
+ - CLI_GENERICS_PWRONOFF_SERVER_MODEL
+ - CLI_GENERICS_PWRLEVEL_SERVER_MODEL
+ - CLI_GENERICS_BATTERY_SERVER_MODEL
+ - CLI_GENERICS_LOCATION_SERVER_MODEL
+ - CLI_GENERICS_PROPERTY_SERVER_MODEL
+
+CLI_LIGHTINGS_SERVER_MODEL                        -> Enables setup of lightings server model and submodel with below flags
+ - CLI_LIGHTINGS_LIGHTNESS_SERVER_MODEL
+ - CLI_LIGHTINGS_CTL_SERVER_MODEL
+ - CLI_LIGHTINGS_HSL_SERVER_MODEL
+ - CLI_LIGHTINGS_XYL_SERVER_MODEL
+ - CLI_LIGHTINGS_LC_SERVER_MODEL
+
+
