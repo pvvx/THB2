@@ -50,14 +50,16 @@ LR_ROM_XIP  0x11020000 0x020000 {
    uart.o(+RO)
    sensors.o(+RO)
    battery.o(+RO)
+   battservice.o(+RO)
 ;   i2c.o(+RO)
    bthome_beacon.o(+RO)
+   thservice.o(+RO)
    main.o(+RO)
    ota_app_service.o(+RO)
 ;   my_printf.o(+RO)
    gpio.o(+RO)
    ;osal_snv.o(+RO)
-   *.o(_section_xip_code_)
+   *.o(_section_xip_code_, .conststring)
   }
  }  
 

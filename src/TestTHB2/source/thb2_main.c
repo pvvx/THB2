@@ -128,8 +128,7 @@ static void set_mac(void)
 		extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
 		uint8 * p = &attDeviceName[5];
 #if 1 // =0 - test!	
-		uint16 len;
-		if(hal_fs_item_read(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
+		if(hal_fs_item_read(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN, NULL) != PPlus_SUCCESS) {
 			LL_Rand(ownPublicAddr,3);
 			ownPublicAddr[3] = 0x8d;
 			ownPublicAddr[4] = 0x1f;
@@ -143,6 +142,7 @@ static void set_mac(void)
 			ownPublicAddr[3] = 0x34;
 			ownPublicAddr[4] = 0x12;
 			ownPublicAddr[5] = 0x25;
+			//hal_fs_item_write(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN);
 #endif	
 
 		p = str_bin2hex(p, &ownPublicAddr[2], 1); 
@@ -163,7 +163,7 @@ extern uint8  gapRole_AdvEventType;
 extern uint8  gapRole_AdvDirectType;
 extern uint8  gapRole_AdvChanMap;
 extern uint8  gapRole_AdvFilterPolicy;
-extern uint8 gapRole_TaskID;
+extern uint8  gapRole_TaskID;
 extern gaprole_States_t gapRole_state;
 
 // Set new advertising interval
@@ -311,7 +311,6 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
         // until the enabler is set back to TRUE
         uint16 gapRole_AdvertOffTime	=	0;
         
- 			  extern gapPeriConnectParams_t periConnParameters;
         uint8 peerPublicAddr[] = {
 			0x01,
 			0x02,
@@ -321,9 +320,9 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 			0x06
 		};
 		set_mac();
-				uint8 advType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
+        uint8 advType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
         GAPRole_SetParameter( GAPROLE_ADV_EVENT_TYPE,	sizeof( uint8 ),		&advType );
-				GAPRole_SetParameter( GAPROLE_ADV_DIRECT_ADDR,	sizeof(peerPublicAddr), peerPublicAddr);
+        GAPRole_SetParameter( GAPROLE_ADV_DIRECT_ADDR,	sizeof(peerPublicAddr), peerPublicAddr);
         // set adv channel map
         GAPRole_SetParameter( GAPROLE_ADV_CHANNEL_MAP,	sizeof( uint8 ),		&advChnMap);        
         // Set the GAP Role Parameters
@@ -332,6 +331,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
         GAPRole_SetParameter( GAPROLE_ADVERT_DATA,	sizeof(advertData), (void *)advertData); // 	advertData	
         GAPRole_SetParameter( GAPROLE_SCAN_RSP_DATA, scanRspData[0] + 1, scanRspData );
         GAPRole_SetParameter( GAPROLE_PARAM_UPDATE_ENABLE,	sizeof( uint8  ),	&enable_update_request);
+        extern gapPeriConnectParams_t periConnParameters;
         GAPRole_SetParameter( GAPROLE_MIN_CONN_INTERVAL,	sizeof( uint16 ),	&periConnParameters.intervalMin);
         GAPRole_SetParameter( GAPROLE_MAX_CONN_INTERVAL,	sizeof( uint16 ),	&periConnParameters.intervalMax	);
         GAPRole_SetParameter( GAPROLE_SLAVE_LATENCY,		sizeof( uint16 ),	&periConnParameters.latency	);
@@ -374,8 +374,8 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 		//Batt_Register(NULL);
 		TH_AddService();
 
-		uint8	OTA_Passward_AscII[8]	=	{'1','2','3','4','5','6','7','8'};
-		ota_app_AddService_UseKey(8, OTA_Passward_AscII);
+		//uint8	OTA_Passward_AscII[8]	=	{'1','2','3','4','5','6','7','8'};
+		//ota_app_AddService_UseKey(8, OTA_Passward_AscII);
 		ota_app_AddService();
 
 #if (1)

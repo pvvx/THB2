@@ -428,6 +428,12 @@ static int fs_init(void)
                 break;
             }
         }
+				else {
+						hal_flash_erase_sector(FS_ABSOLUTE_ADDR(4096*i));
+					  osal_memset(&flash_rd_cfg, 0xff, sizeof(flash_rd_cfg));
+            sector_order[i] = 0xff;
+				}
+/*				
         else if((flash_rd_cfg.sector_addr == 0xffffffff) &&
                 (flash_rd_cfg.sector_num == 0xff) &&
                 (flash_rd_cfg.item_len == 0xff))
@@ -439,7 +445,7 @@ static int fs_init(void)
             flash = FLASH_CONTEXT_ERROR;
             FS_LOG("FLASH_CONTEXT_ERROR2\n");
             break;
-        }
+        } */
     }
 
     if(flash == FLASH_CONTEXT_ERROR)
