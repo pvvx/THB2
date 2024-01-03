@@ -204,7 +204,7 @@ int hal_gpio_pin_init(gpio_pin_e pin,gpio_dir_t type)
     if(type == GPIO_OUTPUT)
     {
         AP_GPIO->swporta_ddr |= BIT(pin);
-        //m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_OUT;
+        m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_OUT;
     }
     else
     {

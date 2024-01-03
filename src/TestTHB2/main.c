@@ -210,8 +210,8 @@ static void hal_init(void)
         .rd_instr       =   XFRD_FCMD_READ_DUAL
     };
     hal_spif_cache_init(cfg);
-    LOG_INIT();
     hal_gpio_init();
+    LOG_INIT();
     hal_fs_init(0x1103C000,2);
 		hal_adc_init();
 }

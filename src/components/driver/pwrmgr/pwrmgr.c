@@ -353,7 +353,7 @@ int hal_pwrmgr_RAM_retention_set(void)
 
 int hal_pwrmgr_LowCurrentLdo_enable(void)
 {
-    #ifdef CFG_SRAM_RETENTION_LOW_CURRENT_LDO_ENABLE
+#ifdef CFG_SRAM_RETENTION_LOW_CURRENT_LDO_ENABLE
     uint32_t retention_flag;
     hal_flash_read(0x1100181c,(uint8_t*)&retention_flag,4);
 
@@ -363,9 +363,9 @@ int hal_pwrmgr_LowCurrentLdo_enable(void)
     }
 
     return PPlus_SUCCESS;
-    #else
+#else
     return PPlus_ERR_FORBIDDEN;
-    #endif
+#endif
 }
 
 int hal_pwrmgr_LowCurrentLdo_disable(void)

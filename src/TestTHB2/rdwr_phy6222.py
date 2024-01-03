@@ -21,7 +21,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY6222 Utility'
 __filename__ = 'rdwr_phy6222.py'
-__version__ = "29.12.23"
+__version__ = "03.01.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -381,13 +381,7 @@ class phyflasher:
 			raddr = 0x00005414
 			print ('---- Segments Table -------------------------------------')
 			for ihp in hp:
-				if ihp[0] == 0x1fff0000:
-					faddr = 0x00005000
-					raddr = faddr
-				elif ihp[0] == 0x1fff1838:
-					faddr = 0x00005414
-					raddr = faddr
-				elif (ihp[0] & 0x1fff0000) == 0x1fff0000:
+				if (ihp[0] & 0x1fff0000) == 0x1fff0000:
 					faddr = raddr
 					raddr += (len(ihp[1])+3) & 0xfffffffc
 				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000:
