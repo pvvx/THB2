@@ -15,13 +15,15 @@ DEF_RUN_BAUD = 115200
 MAX_FLASH_SIZE = 0x200000
 EXT_FLASH_ADD = 0x400000
 
+DEF_START_ADDR = 0x1FFF1838
+
 PHY_FLASH_SECTOR_SIZE = 4096
 PHY_FLASH_SECTOR_MASK = 0xfffff000
 PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY6222 Utility'
 __filename__ = 'rdwr_phy6222.py'
-__version__ = "03.01.24"
+__version__ = "04.01.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -33,11 +35,12 @@ def ParseHexFile(hexfile):
 	table = []
 	result = bytearray()
 	addr = 0
+	naddr = 0
+	taddr = 0
 	addr_flg = 0
 	table.append([0, result, 0x2000])
 	for hexstr in fin.readlines():
 		hexstr = hexstr.strip()
-		#size = int(hexstr[1:3],16)
 		if hexstr[7:9] == '04':
 			if(len(result)):
 				#print(hex(addr))
@@ -49,11 +52,19 @@ def ParseHexFile(hexfile):
 		if hexstr[7:9] == '05' or hexstr[7:9] == '01':
 			table.append([addr, result, 0])
 			break
+		taddr = (int(hexstr[3:7],16))
 		if addr_flg == 0:
 			addr_flg = 1
-			addr = addr | (int(hexstr[3:7],16))
+			addr = addr | taddr
+			naddr = taddr
+		if taddr != naddr:
+			addr_flg = 1
+			table.append([addr, result, 0])
+			addr = (addr & 0xFFFF0000) | taddr
+			result = bytearray()
 		#print(hexstr[9:-3])
 		result.extend(bytearray.fromhex(hexstr[9:-2]))
+		naddr = taddr + int(hexstr[1:3],16)
 	fin.close()
 	return table
 
@@ -71,13 +82,9 @@ class phyflasher:
 			sys.exit(1)
 	def SetAutoErase(self, enable = True):
 		self.autoerase = enable
-	def CreateHead(self):
-		self.hexf = [bytearray(b'\xff')*(0x100), bytearray(), bytearray(), bytearray()]
-		self.hexf[8:12] = int.to_bytes(0x1fff1838, 4, byteorder='little')
-		return self.hexf
 	def AddSectionToHead(self, addr, size):
 		#self.hexf.sec[0:4] = int.to_bytes(self.hexidx, 4, byteorder='little')
-		self.hexf.sec.extend(bytearray(struct.pack('<IIII', phy_head[secn][0], size, addr,0xffffffff)))
+		self.hexf.sec.extend(bytearray(struct.pack('<IIII', phy_head[secn][0], size, addr, 0xffffffff)))
 		return self.hexf
 	def write_cmd(self, pkt):
 		self._port.write(pkt.encode());
@@ -371,14 +378,14 @@ class phyflasher:
 		return True
 	def HexStartSend(self):
 		return self.write_cmd('spifs 0 1 3 0 ') and self.write_cmd('sfmod 2 2 ') and self.write_cmd('cpnum ffffffff ')
-	def HexfHeader(self, hp):
+	def HexfHeader(self, hp, start = DEF_START_ADDR):
 		if len(hp) > 1:
 			hexf = bytearray(b'\xff')*(0x100)
 			hexf[0:4] = int.to_bytes(len(hp), 4, byteorder='little')
-			hexf[8:12] = int.to_bytes(0x1fff1838, 4, byteorder='little')
+			hexf[8:12] = int.to_bytes(start, 4, byteorder='little')
 			sections = 0
 			faddr = 0x00020000
-			raddr = 0x00005414
+			raddr = 0x00005000
 			print ('---- Segments Table -------------------------------------')
 			for ihp in hp:
 				if (ihp[0] & 0x1fff0000) == 0x1fff0000:
@@ -411,54 +418,55 @@ def arg_auto_int(x):
 	return int(x, 0)
 
 def main():
-	parser = argparse.ArgumentParser(description='%s version %s' % (__progname__, __version__), prog=__filename__)
-	parser.add_argument('--port', '-p', help='Serial port device',	default='COM1');
-	parser.add_argument('--baud', '-b',	help='Set Port Baud (115200, 250000, 500000, 1000000)',	type=arg_auto_int, default=DEF_RUN_BAUD);
+	parser = argparse.ArgumentParser(description='%s version %s' % (__progname__, __version__), prog = __filename__)
+	parser.add_argument('--port', '-p', help = 'Serial port device',	default='COM1');
+	parser.add_argument('--baud', '-b',	help = 'Set Port Baud (115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = DEF_RUN_BAUD);
 
-	parser.add_argument('--allerase', '-a',  action='store_true', help='Pre-processing: All Chip Erase');
-	parser.add_argument('--erase', '-e',  action='store_true', help='Pre-processing: Erase Flash work area');
-	parser.add_argument('--reset', '-r',  action='store_true', help='Post-processing: Reset');
+	parser.add_argument('--allerase', '-a',  action='store_true', help = 'Pre-processing: All Chip Erase');
+	parser.add_argument('--erase', '-e',  action='store_true', help = 'Pre-processing: Erase Flash work area');
+	parser.add_argument('--reset', '-r',  action='store_true', help = 'Post-processing: Reset');
+	parser.add_argument('--start', '-s',  help = 'Default starting address for hex writer', type = arg_auto_int, default = DEF_START_ADDR);
 
 	subparsers = parser.add_subparsers(
 			dest='operation',
-			help='Run '+__filename__+' {command} -h for additional help')
+			help = 'Run '+__filename__+' {command} -h for additional help')
 
 	parser_hex_flash = subparsers.add_parser(
 			'wh',
-			help='Write hex file to Flash')
-	parser_hex_flash.add_argument('filename', help='Name of hex file')
+			help = 'Write hex file to Flash')
+	parser_hex_flash.add_argument('filename', help = 'Name of hex file')
 
 	parser_burn_flash = subparsers.add_parser(
 			'we',
-			help='Write bin file to Flash with sectors erases')
-	parser_burn_flash.add_argument('address', help='Start address', type=arg_auto_int)
-	parser_burn_flash.add_argument('filename', help='Name of binary file')
+			help = 'Write bin file to Flash with sectors erases')
+	parser_burn_flash.add_argument('address', help = 'Start address', type = arg_auto_int)
+	parser_burn_flash.add_argument('filename', help = 'Name of binary file')
 
 	parser_write_flash = subparsers.add_parser(
 			'wf',
-			help='Write bin file to Flash without sectors erases')
-	parser_write_flash.add_argument('address', help='Start address', type=arg_auto_int)
-	parser_write_flash.add_argument('filename', help='Name of binary file')
+			help = 'Write bin file to Flash without sectors erases')
+	parser_write_flash.add_argument('address', help = 'Start address', type = arg_auto_int)
+	parser_write_flash.add_argument('filename', help = 'Name of binary file')
 
 	parser_erase_sec_flash = subparsers.add_parser(
 			'er',
-			help='Erase Region (sectors) of Flash')
-	parser_erase_sec_flash.add_argument('address', help='Start address', type=arg_auto_int)
-	parser_erase_sec_flash.add_argument('size', help='Size of region', type=arg_auto_int)
+			help = 'Erase Region (sectors) of Flash')
+	parser_erase_sec_flash.add_argument('address', help = 'Start address', type = arg_auto_int)
+	parser_erase_sec_flash.add_argument('size', help = 'Size of region', type = arg_auto_int)
 
 	parser_erase_all_flash = subparsers.add_parser(
 			'ea',
-			help='Erase All Flash')
+			help = 'Erase All Flash')
 
 	parser_read_chip = subparsers.add_parser(
 			'rc',
-			help='Read chip bus address to binary file')
-	parser_read_chip.add_argument('address', help='Start address', type=arg_auto_int)
-	parser_read_chip.add_argument('size', help='Size of region', type=arg_auto_int)
-	parser_read_chip.add_argument('filename', help='Name of binary file')
+			help = 'Read chip bus address to binary file')
+	parser_read_chip.add_argument('address', help = 'Start address', type = arg_auto_int)
+	parser_read_chip.add_argument('size', help = 'Size of region', type = arg_auto_int)
+	parser_read_chip.add_argument('filename', help = 'Name of binary file')
 
 	parser_read_flash = subparsers.add_parser(
-			'i', help='Chip Information')
+			'i', help = 'Chip Information')
 	
 	args = parser.parse_args()
 
@@ -540,7 +548,7 @@ def main():
 		hp = ParseHexFile(args.filename)
 		if hp == None:
 			sys.exit(2)
-		hexf = phy.HexfHeader(hp)
+		hexf = phy.HexfHeader(hp, args.start)
 		if hexf == None:
 			sys.exit(2)
 		hp[0][1] = hexf

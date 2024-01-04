@@ -1,1 +1,1 @@
-python3 rdwr_phy6222.py -p COM11 -b 1000000 -r wh ./bin/TestTHB2.hex
+python3 rdwr_phy6222.py -p COM11 -e -r wh ./bin/TestTHB2.hex
