@@ -217,6 +217,7 @@ static void adv_measure(void) {
 
 static void posedge_int_wakeup_cb(GPIO_Pin_e pin,IO_Wakeup_Pol_e type)
 {
+	(void) pin;
 	if(type == POSEDGE)
 	{
 		adv_con_count = 30000/DEF_CON_ADV_INERVAL_MS; // 60 sec
@@ -233,6 +234,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin,IO_Wakeup_Pol_e type)
 }
 static void negedge_int_wakeup_cb(GPIO_Pin_e pin,IO_Wakeup_Pol_e type)
 {
+	(void) pin;
 	if(type == NEGEDGE)
 	{
 		LOG("int or wakeup(neg):gpio:%d type:%d\n",pin,type);

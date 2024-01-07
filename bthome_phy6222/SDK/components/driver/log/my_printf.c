@@ -338,6 +338,8 @@ repeat:
 
         case 'X':
             flags |= LARGE;
+            base = 16;
+            break;
 
         case 'x':
             base = 16;
@@ -346,6 +348,7 @@ repeat:
         case 'd':
         case 'i':
             flags |= SIGN;
+            break;
 
         case 'u':
             break;

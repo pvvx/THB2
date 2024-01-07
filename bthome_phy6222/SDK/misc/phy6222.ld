@@ -94,13 +94,17 @@ SECTIONS
         . = ALIGN(4);
         _ebss = ABSOLUTE(.);
     } > sram
-
+ 
+ /*   
     .int_stack : {
         . = ALIGN(4);
         *(int_stack)
         . = ALIGN(4);
         _stack_top = ABSOLUTE(.);
     } > sram
+*/
+    /* stack 32 kbytes */
+    g_top_irqstack = ORIGIN(sram) + LENGTH(sram);
 
    .common_text : {
         _stext = ABSOLUTE(.);   
@@ -117,9 +121,7 @@ SECTIONS
         *(.gnu.linkonce.r.*)
         _etext = ABSOLUTE(.);
    } > flash   
-   
-    g_top_irqstack = ORIGIN(sram) + LENGTH(sram);
-   
+ 
     /* Stabs debugging sections. */
     .stab 0 : { *(.stab) }
     .stabstr 0 : { *(.stabstr) }
@@ -133,5 +135,6 @@ SECTIONS
     .debug_line 0 : { *(.debug_line) }
     .debug_pubnames 0 : { *(.debug_pubnames) }
     .debug_aranges 0 : { *(.debug_aranges) }
+    
 }
 

@@ -862,7 +862,7 @@ static void gattStoreServerInfo( gattServerInfo_t* pServer, uint8 taskId )
 static bStatus_t gattServerProcessMsgCB( uint16 connHandle, attPacket_t* pPkt )
 {
     gattMsg_t msg;
-    uint8 status;
+    uint8 status = SUCCESS;
 
     // See if this is a confirmation to an indication
     if ( pPkt->method == ATT_HANDLE_VALUE_CFM )

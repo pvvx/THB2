@@ -289,15 +289,13 @@ static uint8 gapCentProcessHCICmdEvt( uint16 cmdOpcode, hciEvt_CmdComplete_t* pM
     {
     case HCI_LE_SET_SCAN_ENABLE:
         if ( *(pMsg->pReturnParam) == SUCCESS )
-        {
             break;
-        }
-
+        safeToDealloc = gapSetScanParamStatus( *(pMsg->pReturnParam) );
+        break;
     /*lint --fallthrough */
     case HCI_LE_SET_SCAN_PARAM:
         safeToDealloc = gapSetScanParamStatus( *(pMsg->pReturnParam) );
         break;
-
     default:
         safeToDealloc = FALSE;  // send this message to the app
         break;

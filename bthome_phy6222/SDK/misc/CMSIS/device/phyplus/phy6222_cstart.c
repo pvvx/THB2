@@ -17,13 +17,6 @@
     Pre-processor Definitions
  ****************************************************************************/
 
-//extern const uint32_t _sramscttexts;
-//extern const uint32_t _sramscttext;
-//extern const uint32_t _eramscttext;
-
-//extern const uint32_t _sjtblss;
-//extern const uint32_t _sjtbls;
-//extern const uint32_t _ejtbls;
 extern int main(void);
 extern const uint32_t _sbss;
 extern const uint32_t _ebss;
@@ -56,8 +49,11 @@ void c_start(void)
     dest = (uint8_t*)&_sbss;
     edest = (uint8_t*)&_ebss;
     osal_memset(dest, 0, edest - dest);
+    /* filled in init_config() */
+/*
     dest = (uint8_t*)0x1fff0400;
     osal_memset(dest, 0, SOFT_PARAMETER_NUM * 4);
+*/
     /*  Move the initialized data section from his temporary holding spot in
         FLASH into the correct place in SRAM.  The correct place in SRAM is
         give by _sdata and _edata.  The temporary location is in FLASH at the

@@ -12,16 +12,17 @@ uint8_t g_wdt_cycle = 0xFF;//valid value:0~7.0xFF:watchdog disable.
 
 void hal_WATCHDOG_IRQHandler(void)
 {
-    volatile uint32_t a;
-    a = AP_WDT->EOI;
+//    volatile uint32_t a;
+//    a = AP_WDT->EOI;
+	(volatile void)AP_WDT->EOI;
     AP_WDT->CRR = 0x76;
     //LOG("WDT IRQ[%08x]\n",rtc_get_counter());
 }
 
 __ATTR_SECTION_SRAM__ void hal_watchdog_init(void)
 {
-    volatile uint32_t a;
-    uint8_t delay;
+    //volatile uint32_t a;
+	volatile uint8_t delay;
 
     if(g_wdt_cycle > 7)
         return ;
@@ -43,7 +44,8 @@ __ATTR_SECTION_SRAM__ void hal_watchdog_init(void)
         AP_PCR->SW_RESET0 |= 0x04;
         delay = 20;
 
-        while(delay-->0);
+        while(delay > 0)
+        	delay--;
     }
 
     if((AP_PCR->SW_RESET2 & 0x04)==0)
@@ -57,23 +59,26 @@ __ATTR_SECTION_SRAM__ void hal_watchdog_init(void)
     AP_PCR->SW_RESET2 &= ~0x20;
     delay=20;
 
-    while(delay-->0);
+    while(delay > 0)
+    	delay--;
 
     AP_PCR->SW_RESET2 |= 0x20;
     delay=20;
 
-    while(delay-->0);
+    while(delay > 0)
+    	delay--;
 
-    a = AP_WDT->EOI;
+//    a = AP_WDT->EOI;
+    (volatile void)AP_WDT->EOI;
     AP_WDT->TORR = g_wdt_cycle;
-    #if (HAL_WDG_CFG_MODE==WDG_USE_INT_MODE)
+#if (HAL_WDG_CFG_MODE==WDG_USE_INT_MODE)
     NVIC_SetPriority((IRQn_Type)WDT_IRQn, IRQ_PRIO_HAL);
     NVIC_EnableIRQ((IRQn_Type)WDT_IRQn);
     JUMP_FUNCTION(WDT_IRQ_HANDLER) = (uint32_t)&hal_WATCHDOG_IRQHandler;
     AP_WDT->CR = 0x1F;//use int
-    #else
+#else
     AP_WDT->CR = 0x1D;//not use int
-    #endif
+#endif
     AP_WDT_FEED;
 }
 

@@ -4594,7 +4594,7 @@ uint8 ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
                         remainder = (remainder + (remainder >> 1) + (remainder >> 3) + (remainder >> 7)) >> 10;     // rough estimate of (x / 625) = (1/1024 + 1/2048 + 1/8192)
 
                         // winoffset should less then conn interval
-                        if (g_new_master_delta - 2 > (conn_param[initInfo.connId].curParam.connInterval << 1))      // win_offset should less then conn interval
+                        if (g_new_master_delta - 2 > (uint32_t)(conn_param[initInfo.connId].curParam.connInterval << 1))      // win_offset should less then conn interval
                             g_new_master_delta -= conn_param[initInfo.connId].curParam.connInterval << 1;
 
                         win_offset = (remainder - 2) >> 1;
@@ -7916,8 +7916,8 @@ __ATTR_SECTION_XIP__ void init_config(void)
 void ll_patch_slave(void)
 {
     JUMP_FUNCTION(LL_SET_ADV_PARAM)                 =   (uint32_t)&LL_SetAdvParam1;
-    JUMP_FUNCTION(LL_CALC_MAX_SCAN_TIME)                = (uint32_t)&llCalcMaxScanTime1;
-    JUMP_FUNCTION(LL_SEC_ADV_ALLOW)                = (uint32_t)&llSecAdvAllow1;
+    JUMP_FUNCTION(LL_CALC_MAX_SCAN_TIME)            = (uint32_t)&llCalcMaxScanTime1;
+    JUMP_FUNCTION(LL_SEC_ADV_ALLOW)                 = (uint32_t)&llSecAdvAllow1;
     JUMP_FUNCTION(LL_SET_ADV_CONTROL)               =   (uint32_t)&LL_SetAdvControl1;
     JUMP_FUNCTION(LL_SETUP_SEC_ADV_ENTRY)           =   (uint32_t)&llSetupSecAdvEvt1;
     JUMP_FUNCTION(LL_SCHEDULER)                     =   (uint32_t)&ll_scheduler2;
@@ -7931,8 +7931,8 @@ void ll_patch_master(void)
     JUMP_FUNCTION(LL_MASTER_EVT_ENDOK)              = (uint32_t)&llMasterEvt_TaskEndOk1;
     JUMP_FUNCTION(LL_SET_SCAN_PARAM)                = (uint32_t)&LL_SetScanParam1;
     JUMP_FUNCTION(LL_SET_SCAN_CTRL)                 = (uint32_t)&LL_SetScanControl1;
-    //JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PKT)       = (uint32_t)&llProcessMasterControlPacket1;
-    JUMP_FUNCTION(LL_CREATE_CONN)                  =   (uint32_t)&LL_CreateConn1;
+    //JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PKT)     = (uint32_t)&llProcessMasterControlPacket1;
+    JUMP_FUNCTION(LL_CREATE_CONN)                   =   (uint32_t)&LL_CreateConn1;
     JUMP_FUNCTION(LL_START_ENCRYPT)                 =   (uint32_t)&LL_StartEncrypt1;
     JUMP_FUNCTION(LL_ENC_DECRYPT)                   =   (uint32_t)&LL_ENC_Decrypt1;
     JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PROC)      =   (uint32_t)&llProcessMasterControlProcedures1;
@@ -8002,7 +8002,7 @@ hciStatus_t HCI_LE_SetHostChanClassificationCmd(uint8* chanMap)
 void pplus_enter_programming_mode(void)
 {
     typedef void (*uart_init_t)(int baud, GPIO_Pin_e tx_pin, GPIO_Pin_e rx_pin,uint32_t cb_addr);
-    typedef void (*uart_tx_t)(unsigned char* str);
+    typedef void (*uart_tx_t)(char* str);
     typedef void (*uart_cmd_t)(void);
     uart_init_t p_uart_init = (uart_init_t)0x0000b379;
     uart_tx_t p_uart_tx = (uart_tx_t)0x0000b4f5;

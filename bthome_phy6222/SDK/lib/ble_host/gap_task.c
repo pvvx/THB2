@@ -415,10 +415,13 @@ static uint8 gapProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg )
 
     case HCI_LE_SET_SCAN_ENABLE:
         if ( *(pMsg->pReturnParam) == SUCCESS )
-        {
             break;
+        if ( pfnCentralCBs && pfnCentralCBs->pfnProcessHCICmdEvt )
+        {
+            safeToDealloc = pfnCentralCBs->pfnProcessHCICmdEvt( pMsg->cmdOpcode, pMsg );
         }
 
+        break;
     /*lint --fallthrough */
     case HCI_LE_SET_SCAN_PARAM:
         if ( pfnCentralCBs && pfnCentralCBs->pfnProcessHCICmdEvt )

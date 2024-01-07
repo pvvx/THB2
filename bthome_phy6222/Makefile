@@ -15,8 +15,10 @@ SRC_PRJ += bthome_beacon.c
 SRC_PRJ += osal_peripheral.c
 SRC_PRJ += peripheral_main.c
 SRC_PRJ += sbp_profile_ota.c
+SRC_PRJ += devinfoservice.c
 SRC_PRJ += sensors.c
 SRC_PRJ += thb2_main.c
+SRC_PRJ += thb2_peripheral.c
 SRC_PRJ += thservice.c
 
 INCLUDES = -I$(SRC_PATH)
@@ -154,12 +156,12 @@ SRCS += $(SDK_PATH)/components/driver/log/my_printf.c
 
 #SRCS += $(SDK_PATH)/components/profiles/Roles/central.c
 #SRCS += $(SDK_PATH)/components/profiles/ota_app/ota_app_service.c
-SRCS += $(SDK_PATH)/components/profiles/Roles/peripheral.c
+#SRCS += $(SDK_PATH)/components/profiles/Roles/peripheral.c
 SRCS += $(SDK_PATH)/components/profiles/Roles/gapbondmgr.c
 SRCS += $(SDK_PATH)/components/profiles/Roles/gapgattserver.c
 SRCS += $(SDK_PATH)/components/profiles/Roles/gap.c
 SRCS += $(SDK_PATH)/components/profiles/GATT/gattservapp.c
-SRCS += $(SDK_PATH)/components/profiles/DevInfo/devinfoservice.c
+#SRCS += $(SDK_PATH)/components/profiles/DevInfo/devinfoservice.c
 
 SRCS += $(SDK_PATH)/components/osal/snv/osal_snv.c
 SRCS += $(SDK_PATH)/components/libraries/fs/fs.c
@@ -217,7 +219,7 @@ OBJS = $(patsubst %, $(OBJ_DIR)/%, $(patsubst ./%, %, $(SRC_O)))
 DEPENDENCY_LIST = $(OBJS:%o=%d)
 
 ##############################################################################
-.PHONY: all directory clean size flash
+.PHONY: all directory clean size flash erase_and_flash
 
 all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex  $(OBJ_DIR)/$(PROJECT_NAME).asm size
 
@@ -261,7 +263,7 @@ directory:
 
 size: $(OBJ_DIR)/$(PROJECT_NAME).elf
 	@echo size:
-	#@$(SIZE) -t $^
+	@$(SIZE) -t $^
 	@$(READELF) -l $^
 	@echo
 
