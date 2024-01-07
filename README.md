@@ -3,7 +3,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2).
 
 * Проект в начальной стадии разработки, до появления функционального OTA.
 
-Прошивка V0.2 (файл TestTHB2.hex или TestTHB2_phy6222.hexf). Всё, кроме OTA работает стабильно.
+Прошивка V0.3 (файл TestTHB2.hex). Всё, кроме OTA работает стабильно.
 
 ## Основные характеристики:
 
@@ -15,25 +15,12 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2).
 
 ## Прошивка:
 
-Прошить устройство возможно через USB-COM адаптер с выходами на 3.3В с помощью программы [PhyPlusKit](https://github.com/pvvx/PHY62x2/raw/master/PhyPlusKit/PhyPlusKit_v2.5.2c.rar):
-
-1. Подключаются выводы GND, TX, RX, VCC (+3.3B). 
-2. Вывод TM соединяется с VCC.
-3. В PhyPlusKit открываем COM порт, выбрав 115200 Baud.
-4. Во вкладке “HEX”, позиции рядом с кнопкой “Megre” выбираем файл прошивки с расширением “.hexf”.
-5. Кратковременно замыкаем вывод RESET на GND. В логе программы появляется “cmd>>:”. Вывод TM можно отключить от VCC.
-6. Нажимаем кнопку “Erase”. Ожидаем выполнения - в логе “Erase successfully!”.
-7. Нажимаем кнопку “Write”. Ожидаем выполнения - в логе “ Write registers successfully!”.
-8. Отключаем провода и устанавливаем батарейки. На этом пепрошивка устройтсва закончена. 
-
-Для запуска после прошивки при быстрой отладке - отключите TM от VCC и введите команду “reset” в нижней строке PhyPlusKit.
-
-Другой вариант прошивки с помощью USB-COM адаптера с выходами на 3.3В:
+Прошить устройство возможно через USB-COM адаптер с выходами на 3.3В:
 
 1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
 2. Запустить:
 ```
-python3 rdwr_phy6222.py -p COM11 -b 1000000 -r wh TestTHB2.hex
+python3 rdwr_phy6222.py -p COM11 -r wh TestTHB2.hex
 ```
 3. Прошивка зашита. Устройство работает.
 
@@ -48,7 +35,7 @@ python3 rdwr_phy6222.py -p COM11 -b 1000000 -r wh TestTHB2.hex
 1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
 2. Запустить:
 ```
-python3 rdwr_phy6222.py -p COM11 -b 1000000 -r rc 0x11000000 0x80000 ff_thb2.bin
+python3 rdwr_phy6222.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 ```
 3. Полученный файл ff_thb2.bin сохранить.
 
@@ -60,7 +47,15 @@ python3 rdwr_phy6222.py -p COM11 -b 1000000 -r rc 0x11000000 0x80000 ff_thb2.bin
 ```
 python3 rdwr_phy6222.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 ```
+Не все адаптеры USB-COM поддерживают 1Mbit. Тогда удалите опцию `-b 1000000` или выберите другой Baud rate.
+
 4. Прошивка зашита. Устройство работает.
 
+
+## Сборка прошивки.
+
+Для сборки прошивки используется GNU Arm Embedded Toolchain или Keil.
+
+Для работы в Eclipce используете импорт проекта и установите toolchain.path.
 
 Дополнительная информация по чипам [PHY62xx](https://github.com/pvvx/PHY62x2). 
