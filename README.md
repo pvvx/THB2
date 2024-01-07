@@ -5,7 +5,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2).
 
 В плане проекта предусматривается дальнейшая поддержка BTH01 и [TH-05](https://pvvx.github.io/TH-05).
 
-Прошивка V0.3 (файл TestTHB2.hex). Всё, кроме OTA работает стабильно.
+Прошивка V0.3 для THB2 (файл TestTHB2.hex). Всё, кроме OTA работает стабильно.
 
 ## Основные характеристики:
 
