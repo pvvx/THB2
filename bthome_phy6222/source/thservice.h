@@ -1,5 +1,5 @@
 /**************************************************************************************************
-*******
+ thservice.h
 **************************************************************************************************/
 
 
@@ -12,30 +12,30 @@ extern "C"
 #endif
 
 /*********************************************************************
-    INCLUDES
+	INCLUDES
 */
 
 /*********************************************************************
-    CONSTANTS
+	CONSTANTS
 */
-#define ENV_SENSING_SERV_UUID         0x181A 
-#define TEMPERATYRE_UUID              0x2A6E  
-#define HUMIDITY_UUID                 0x2A6F 
+#define ENV_SENSING_SERV_UUID		  0x181A 
+#define TEMPERATYRE_UUID			  0x2A6E  
+#define HUMIDITY_UUID				  0x2A6F 
 
 
 // Battery Service Get/Set Parameters
-#define BATT_PARAM_LEVEL                0
-#define BATT_PARAM_CRITICAL_LEVEL       1
-#define BATT_PARAM_SERVICE_HANDLE       2
+#define BATT_PARAM_LEVEL				0
+#define BATT_PARAM_CRITICAL_LEVEL		1
+#define BATT_PARAM_SERVICE_HANDLE		2
 #define BATT_PARAM_BATT_LEVEL_IN_REPORT 3
 
 // Callback events
-#define TEMP_LEVEL_NOTI_ENABLED         1
-#define TEMP_LEVEL_NOTI_DISABLED        2
+#define TEMP_LEVEL_NOTI_ENABLED			1
+#define TEMP_LEVEL_NOTI_DISABLED		2
 
 
 /*********************************************************************
-    TYPEDEFS
+	TYPEDEFS
 */
 
 // TH Service callback function
@@ -51,58 +51,58 @@ typedef uint8 (*thServiceCalcCB_t)(uint16 adcVal);
 typedef void (*thServiceTeardownCB_t)(void);
 
 /*********************************************************************
-    MACROS
+	MACROS
 */
 
 /*********************************************************************
-    Profile Callbacks
+	Profile Callbacks
 */
 
 
 /*********************************************************************
-    API FUNCTIONS
+	API FUNCTIONS
 */
 
 /*********************************************************************
-    @fn      Batt_AddService
+	@fn		 Batt_AddService
 
-    @brief   Initializes the Battery service by registering
-            GATT attributes with the GATT server.
+	@brief	 Initializes the Battery service by registering
+			GATT attributes with the GATT server.
 
-    @return  Success or Failure
+	@return	 Success or Failure
 */
 extern bStatus_t TH_AddService( void );
 
 /*********************************************************************
-    @fn      Batt_Register
+	@fn		 Batt_Register
 
-    @brief   Register a callback function with the Battery Service.
+	@brief	 Register a callback function with the Battery Service.
 
-    @param   pfnServiceCB - Callback function.
+	@param	 pfnServiceCB - Callback function.
 
-    @return  None.
+	@return	 None.
 */
 extern void TH_Register( thServiceCB_t pfnServiceCB );
 
 /*********************************************************************
-    @fn          Batt_HandleConnStatusCB
+	@fn			 Batt_HandleConnStatusCB
 
-    @brief       Battery Service link status change handler function.
+	@brief		 Battery Service link status change handler function.
 
-    @param       connHandle - connection handle
-    @param       changeType - type of change
+	@param		 connHandle - connection handle
+	@param		 changeType - type of change
 
-    @return      none
+	@return		 none
 */
 void TH_HandleConnStatusCB( uint16 connHandle, uint8 changeType );
 
 /*********************************************************************
-    @fn      thNotifyLevelState
+	@fn		 thNotifyLevelState
 
-    @brief   Send a notification of the battery level state
-            characteristic if a connection is established.
+	@brief	 Send a notification of the battery level state
+			characteristic if a connection is established.
 
-    @return  None.
+	@return	 None.
 */
 void TH_NotifyLevel(void);
 /*********************************************************************

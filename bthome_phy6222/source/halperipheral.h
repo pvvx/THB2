@@ -1,13 +1,7 @@
 /**************************************************************************************************
-*******
-**************************************************************************************************/
-
-/**************************************************************************************************
-    Filename:       gpio_demo.h
-    Revised:        $Date $
-    Revision:       $Revision $
-
-
+	Filename:		gpio_demo.h
+	Revised:		$Date $
+	Revision:		$Revision $
 **************************************************************************************************/
 
 #ifndef __HAL_PERIPHERAL_H__
@@ -21,14 +15,12 @@ extern "C"
 {
 #endif
 
-#define START_DEVICE_EVT                    0x0001
-#define KEY_DEMO_UART_RX_EVT                0x0002
-#define LIGHT_PRCESS_EVT                    0x0004
-
-
+#define START_DEVICE_EVT			0x0001
+#define KEY_DEMO_UART_RX_EVT		0x0002
+#define LIGHT_PRCESS_EVT			0x0004
 
 /*********************************************************************
-    FUNCTIONS
+	FUNCTIONS
 */
 uint16 HalPeripheral_ProcessEvent( uint8 task_id, uint16 events );
 void HalPeripheral_Init(uint8 task_id);

@@ -14,7 +14,7 @@ void hal_WATCHDOG_IRQHandler(void)
 {
 //    volatile uint32_t a;
 //    a = AP_WDT->EOI;
-	(volatile void)AP_WDT->EOI;
+		AP_WDT->EOI;
     AP_WDT->CRR = 0x76;
     //LOG("WDT IRQ[%08x]\n",rtc_get_counter());
 }
@@ -69,7 +69,7 @@ __ATTR_SECTION_SRAM__ void hal_watchdog_init(void)
     	delay--;
 
 //    a = AP_WDT->EOI;
-    (volatile void)AP_WDT->EOI;
+    AP_WDT->EOI;
     AP_WDT->TORR = g_wdt_cycle;
 #if (HAL_WDG_CFG_MODE==WDG_USE_INT_MODE)
     NVIC_SetPriority((IRQn_Type)WDT_IRQn, IRQ_PRIO_HAL);

@@ -7676,7 +7676,7 @@ __ATTR_SECTION_XIP__ void init_config(void)
     pGlobal_config[LL_SWITCH] =  LL_DEBUG_ALLOW | SLAVE_LATENCY_ALLOW | LL_WHITELIST_ALLOW
                                  | SIMUL_CONN_ADV_ALLOW | SIMUL_CONN_SCAN_ALLOW; //RC32_TRACKINK_ALLOW
 
-    if(g_clk32K_config==CLK_32K_XTAL)
+    if(g_clk32K_config == CLK_32K_XTAL)
         pGlobal_config[LL_SWITCH] &= 0xffffffee;
     else
         pGlobal_config[LL_SWITCH] |= RC32_TRACKINK_ALLOW | LL_RC32K_SEL;
@@ -7684,7 +7684,7 @@ __ATTR_SECTION_XIP__ void init_config(void)
     // sleep delay
     pGlobal_config[MIN_TIME_TO_STABLE_32KHZ_XOSC] = 10;      // 10ms, temporary set
     // system clock setting
-    pGlobal_config[CLOCK_SETTING] = g_system_clk;//CLOCK_32MHZ;
+    pGlobal_config[CLOCK_SETTING] = g_system_clk; //CLOCK_32MHZ;
     //------------------------------------------------------------------------
     // wakeup time cose
     // t1. HW_Wakeup->MCU relase 62.5us

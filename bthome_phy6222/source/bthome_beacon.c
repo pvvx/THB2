@@ -24,7 +24,7 @@ void bthome_data_beacon(padv_bthome_ns1_t p) {
 		bit3: Simultaneous LE and BR/EDR to Same Device Capable (Controller)
 		bit4: Simultaneous LE and BR/EDR to Same Device Capable (Host)
 		bit5..7: Reserved
-	 */
+	*/
 	p->flag[2] = GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED | GAP_ADTYPE_FLAGS_GENERAL; // Flags
 	p->head.type = GAP_ADTYPE_SERVICE_DATA; // 16-bit UUID
 	p->head.UUID = ADV_BTHOME_UUID16;
