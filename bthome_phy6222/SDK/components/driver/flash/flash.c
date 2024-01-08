@@ -49,8 +49,9 @@
 
 #define spif_wait_nobusy(flg, tout_ns, return_val)   {if(_spif_wait_nobusy_x(flg, tout_ns)){if(return_val){ return return_val;}}}
 
-static xflash_Ctx_t s_xflashCtx = { .spif_ref_clk = SYS_CLK_DLL_64M, .rd_instr =
-		XFRD_FCMD_READ_DUAL };
+static xflash_Ctx_t s_xflashCtx = {
+		.spif_ref_clk = SYS_CLK_DLL_64M,
+		.rd_instr =	XFRD_FCMD_READ_DUAL };
 
 chipMAddr_t g_chipMAddr;
 
@@ -231,24 +232,21 @@ uint8_t hal_flash_get_lock_state(void)
 }
 #endif
 
-#ifdef XFLASH_HIGH_SPEED
-static void hw_spif_config_high_speed(sysclk_t ref_clk)
-{
-    volatile uint32_t tmp = AP_SPIF->config;
-    tmp =  (tmp & (~ (0xf << 19))) | (0 << 19);
-    AP_SPIF->config = tmp;
-    subWriteReg(&AP_SPIF->rddata_capture, 4, 1, 2);
-}
-
-#endif
 
 static void hw_spif_cache_config(void)
 {
-    spif_config(s_xflashCtx.spif_ref_clk,/*div*/1,s_xflashCtx.rd_instr,0,(s_xflashCtx.rd_instr == XFRD_FCMD_READ_QUAD));
+	spif_config(s_xflashCtx.spif_ref_clk,
+			1,
+			s_xflashCtx.rd_instr,
+			0,
+			(s_xflashCtx.rd_instr == XFRD_FCMD_READ_QUAD)? 1 : 0);
 #ifdef XFLASH_HIGH_SPEED
-    hw_spif_config_high_speed(s_xflashCtx.spif_ref_clk);
+	volatile uint32_t tmp = AP_SPIF->config;
+    tmp =  (tmp & (~ (0xf << 19))) | (0 << 19);
+    AP_SPIF->config = tmp;
+    subWriteReg(&AP_SPIF->rddata_capture, 4, 1, 2);
 #endif
-    AP_SPIF->wr_completion_ctrl=0xff010005;//set longest polling interval
+    AP_SPIF->wr_completion_ctrl = 0xff010005;	//set longest polling interval
     AP_SPIF->low_wr_protection = 0;
     AP_SPIF->up_wr_protection = 0x10;
     AP_SPIF->wr_protection = 0x2;
@@ -259,9 +257,9 @@ static void hw_spif_cache_config(void)
 }
 
 
-int hal_spif_cache_init(xflash_Ctx_t cfg) {
-	memset(&(s_xflashCtx), 0, sizeof(s_xflashCtx));
-	memcpy(&(s_xflashCtx), &cfg, sizeof(s_xflashCtx));
+int hal_spif_cache_init(sysclk_t spif_ref_clk, uint32_t rd_instr) {
+	s_xflashCtx.spif_ref_clk = spif_ref_clk;
+	s_xflashCtx.rd_instr = rd_instr;
 	hw_spif_cache_config();
 	hal_pwrmgr_register(MOD_SPIF, NULL, hw_spif_cache_config);
 	return PPlus_SUCCESS;

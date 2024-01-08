@@ -229,13 +229,8 @@ static void hal_init(void) {
 	clk_init(g_system_clk); //system init
 	hal_rtc_clock_config((CLK32K_e) g_clk32K_config);
 	hal_pwrmgr_init();
-	xflash_Ctx_t cfg = {
-#if SDK_VER_RELEASE_ID == 0x03010102
-		.spif_ref_clk = SYS_CLK_DLL_64M, // SYS_CLK_RC_32M
-#endif
-		.rd_instr = XFRD_FCMD_READ_DUAL // XFRD_FCMD_READ_QUAD // XFRD_FCMD_READ_DUAL
-	};
-	hal_spif_cache_init(cfg);
+	// g_system_clk, SYS_CLK_DLL_64M, SYS_CLK_RC_32M / XFRD_FCMD_READ_QUAD, XFRD_FCMD_READ_DUAL
+	hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
 	hal_gpio_init();
 	LOG_INIT();
 	hal_fs_init(0x1103C000, 2);
@@ -244,8 +239,8 @@ static void hal_init(void) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
-	g_system_clk = SYS_CLK_XTAL_16M; //SYS_CLK_DBL_32M, SYS_CLK_XTAL_16M, SYS_CLK_DLL_64M
-	g_clk32K_config = CLK_32K_RCOSC; //CLK_32K_XTAL, CLK_32K_RCOSC
+	g_system_clk = SYS_CLK_XTAL_16M; // SYS_CLK_DBL_32M, SYS_CLK_XTAL_16M, SYS_CLK_DLL_64M
+	g_clk32K_config = CLK_32K_RCOSC; // CLK_32K_XTAL, CLK_32K_RCOSC
 
 #if 0 // defined ( __GNUC__ ) // -> *.ld
 	extern const uint32_t *const jump_table_base[];
