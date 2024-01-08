@@ -231,13 +231,37 @@ uint8_t hal_flash_get_lock_state(void)
 }
 #endif
 
-static void hw_spif_cache_config(void) {
-	spif_config(s_xflashCtx.spif_ref_clk,/*div*/1, s_xflashCtx.rd_instr, 0, 0);
-	AP_SPIF->wr_completion_ctrl = 0xff010005;     //set longest polling interval
-	NVIC_DisableIRQ(SPIF_IRQn);
-	NVIC_SetPriority((IRQn_Type) SPIF_IRQn, IRQ_PRIO_HAL);
-	hal_cache_init();
-	hal_get_flash_info();
+#ifdef XFLASH_HIGH_SPEED
+static void hw_spif_config_high_speed(sysclk_t ref_clk)
+{
+    volatile uint32_t tmp = AP_SPIF->config;
+    tmp =  (tmp & (~ (0xf << 19))) | (0 << 19);
+    AP_SPIF->config = tmp;
+    subWriteReg(&AP_SPIF->rddata_capture, 4, 1, 2);
+}
+#endif
+
+static void hw_spif_cache_config(void)
+{
+    extern volatile sysclk_t g_system_clk;
+    sysclk_t spif_ref_clk = (g_system_clk > SYS_CLK_XTAL_16M) ? SYS_CLK_DLL_64M : g_system_clk;
+
+    if(s_xflashCtx.rd_instr == XFRD_FCMD_READ_QUAD)
+        spif_config(spif_ref_clk,/*div*/1,s_xflashCtx.rd_instr,0,1);
+    else
+        spif_config(spif_ref_clk,/*div*/1,s_xflashCtx.rd_instr,0,0);
+
+    #ifdef XFLASH_HIGH_SPEED
+    hw_spif_config_high_speed(s_xflashCtx.spif_ref_clk);
+    #endif
+    AP_SPIF->wr_completion_ctrl=0xff010005;//set longest polling interval
+    AP_SPIF->low_wr_protection = 0;
+    AP_SPIF->up_wr_protection = 0x10;
+    AP_SPIF->wr_protection = 0x2;
+    NVIC_DisableIRQ(SPIF_IRQn);
+    NVIC_SetPriority((IRQn_Type)SPIF_IRQn, IRQ_PRIO_HAL);
+    hal_cache_init();
+    hal_get_flash_info();
 }
 
 int hal_spif_cache_init(xflash_Ctx_t cfg) {
