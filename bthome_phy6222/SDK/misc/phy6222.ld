@@ -18,7 +18,6 @@ SECTIONS
        KEEP(*(jump_table_mem_area))
     } > jumptbl  
 
-
     .gcfgtbl : {
       *(global_config_area)
     } > gcfgtbl
@@ -26,29 +25,6 @@ SECTIONS
     .textentry : {
         *(*.isr_vector)
     } > sram
-
-
-    .init_section : {
-        _sinit = ABSOLUTE(.);
-        *(.init_array .init_array.*)
-        _einit = ABSOLUTE(.);
-    } > flash
-
-    .ARM.extab : {
-        *(.ARM.extab*)
-    } > flash
-
-    __exidx_start = ABSOLUTE(.);
-    .ARM.exidx : {
-        *(.ARM.exidx*)
-    } > flash
-    __exidx_end = ABSOLUTE(.);
-
- 
-    ._sjtblsstore : {
-       _sjtblss = ABSOLUTE(.);
-    } > flash   
-
 
     .data : {
         _sdata = ABSOLUTE(.);
@@ -69,13 +45,7 @@ SECTIONS
 
         *phy_sec_ext.o(.text .text.*)
 
-        *libc.a:lib_a-memset.o(.text.*)
-        *libc.a:lib_a-memcpy-stub.o(.text.*)
-        *libgcc.a:_udivsi3.o(.text)
-        *libgcc.a:_divsi3.o(.text)
-        *libgcc.a:_dvmd_tls.o(.text)
-/*        *libgcc.a:_thumb1_case_sqi.o(.text)
-        *libgcc.a:_thumb1_case_uqi.o(.text) */
+        *libgcc.a:*.o(.text .text.*)
    
         _etextram = ABSOLUTE(.);
 
@@ -94,7 +64,7 @@ SECTIONS
         . = ALIGN(4);
         _ebss = ABSOLUTE(.);
     } > sram
- 
+
  /*   
     .int_stack : {
         . = ALIGN(4);
@@ -120,7 +90,28 @@ SECTIONS
         *(.gcc_except_table)
         *(.gnu.linkonce.r.*)
         _etext = ABSOLUTE(.);
-   } > flash   
+   } > flash
+
+    .init_section : {
+        _sinit = ABSOLUTE(.);
+        *(.init_array .init_array.*)
+        _einit = ABSOLUTE(.);
+    } > flash
+
+    .ARM.extab : {
+        *(.ARM.extab*)
+    } > flash
+
+    __exidx_start = ABSOLUTE(.);
+    .ARM.exidx : {
+        *(.ARM.exidx*)
+    } > flash
+    __exidx_end = ABSOLUTE(.);
+
+ 
+    ._sjtblsstore : {
+       _sjtblss = ABSOLUTE(.);
+    } > flash   
  
     /* Stabs debugging sections. */
     .stab 0 : { *(.stab) }
@@ -137,4 +128,3 @@ SECTIONS
     .debug_aranges 0 : { *(.debug_aranges) }
     
 }
-
