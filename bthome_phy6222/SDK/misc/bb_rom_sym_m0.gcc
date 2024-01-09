@@ -34,6 +34,7 @@ __aeabi_idivmod = 0x00000e35;
 __aeabi_memcpy = 0x00000e81;
 __aeabi_memcpy4 = 0x00000e81;
 __aeabi_memcpy8 = 0x00000e81;
+memcpy = 0x00000e81;
 __aeabi_memset = 0x00000ea5;
 __aeabi_memset4 = 0x00000ea5;
 __aeabi_memset8 = 0x00000ea5;
