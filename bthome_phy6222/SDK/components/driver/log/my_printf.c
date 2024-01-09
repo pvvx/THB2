@@ -1,3 +1,7 @@
+/*************
+ my_printf.c
+ SDK_LICENSE
+***************/
 
 #include "rom_sym_def.h"
 #include "types.h"

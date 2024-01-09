@@ -5,6 +5,7 @@
 
     Description:    This file contains the OSAL Task definition and manipulation functions.
 
+ SDK_LICENSE
 
 **************************************************************************************************/
 

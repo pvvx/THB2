@@ -8,9 +8,8 @@
 
     Description:    Interface functions to LL HW.
 
-    Copyright 2017-2020 Phyplus  Incorporated. All rights reserved.
+ SDK_LICENSE
 
-    IMPORTANT:
 *******************************************************************************/
 
 #include <stdio.h>

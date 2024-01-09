@@ -6,9 +6,8 @@
     Description:    This file contains common functions used by the Link Layer
                   Bluetooth Low Energy (BLE) Controller.
 
+ SDK_LICENSE
 
-
-    IMPORTANT:
 *******************************************************************************/
 
 #include <string.h>

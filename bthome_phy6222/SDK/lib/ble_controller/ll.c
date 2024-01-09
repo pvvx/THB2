@@ -12,6 +12,7 @@
                   This API is based on the Bluetooth Core Specification,
                   V4.0.0, Vol. 6.
 
+ SDK_LICENSE
 
 *******************************************************************************/
 //#define DEBUG_LL

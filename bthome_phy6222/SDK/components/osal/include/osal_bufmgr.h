@@ -5,6 +5,7 @@
 
     Description:    This file contains the buffer management definitions.
 
+ SDK_LICENSE
 
 
 **************************************************************************************************/

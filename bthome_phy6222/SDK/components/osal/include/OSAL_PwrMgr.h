@@ -5,6 +5,7 @@
 
     Description:    This file contains the OSAL Power Management API.
 
+ SDK_LICENSE
 
  **************************************************************************************************/
 

@@ -1,7 +1,3 @@
-/**************************************************************************************************
-*******
-**************************************************************************************************/
-
 /**
     @headerfile:       gatt.h
     $Date:
@@ -12,6 +8,7 @@
     Description:    This file contains Generic Attribute Profile (GATT)
                   definitions and prototypes.<BR><BR>
 
+ SDK_LICENSE
 
 */
 
@@ -80,7 +77,9 @@ extern "C"
 /** @} End GATT_MAX_ATTR_SIZE_DEFINES */
 
 // GATT Maximum number of connections (including loopback)
+#ifndef GATT_MAX_NUM_CONN
 #define GATT_MAX_NUM_CONN                ( MAX_NUM_LL_CONN + 1 )
+#endif
 
 // GATT Base Method
 #define GATT_BASE_METHOD                 0x40

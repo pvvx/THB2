@@ -7,6 +7,9 @@
     @{
     @file       multi.h
     @brief      Multi layer interface
+
+     SDK_LICENSE
+
 */
 
 #ifndef MULTI_H

@@ -1,3 +1,8 @@
+/*************
+ i2c_io.c
+ SDK_LICENSE
+***************/
+
 //#include "iic.h"
 #include "bus_dev.h"
 #include "gpio.h"

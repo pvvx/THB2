@@ -22,7 +22,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2).
 1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
 2. Запустить:
 ```
-python3 rdwr_phy6222.py -p COM11 -r wh TestTHB2.hex
+python3 rdwr_phy62x2.py -p COM11 -r wh TestTHB2.hex
 ```
 3. Прошивка зашита. Устройство работает.
 
@@ -37,7 +37,7 @@ python3 rdwr_phy6222.py -p COM11 -r wh TestTHB2.hex
 1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
 2. Запустить:
 ```
-python3 rdwr_phy6222.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
+python3 rdwr_phy62x2.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 ```
 3. Полученный файл ff_thb2.bin сохранить.
 
@@ -47,7 +47,7 @@ python3 rdwr_phy6222.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 2. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
 3. Запустить:
 ```
-python3 rdwr_phy6222.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
+python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 ```
 Не все адаптеры USB-COM поддерживают 1Mbit. Тогда удалите опцию `-b 1000000` или выберите другой Baud rate.
 

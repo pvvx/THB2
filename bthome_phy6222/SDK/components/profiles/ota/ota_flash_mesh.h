@@ -1,3 +1,8 @@
+/*************
+ ota_flash_mesh.h
+ SDK_LICENSE
+***************/
+
 #ifndef __OTA_MESH_FLASH_
 #define __OTA_MESH_FLASH_
 

@@ -39,7 +39,7 @@
 
 #define RSSI_NOT_AVAILABLE			127
 
-#define DEFAULT_MIN_CONN_INTERVAL	0x0006  // 100 milliseconds
+#define DEFAULT_MIN_CONN_INTERVAL	0x0006  // 7.5 milliseconds
 #define DEFAULT_MAX_CONN_INTERVAL	0x0C80  // 4 seconds
 
 #define MIN_CONN_INTERVAL			0x0006

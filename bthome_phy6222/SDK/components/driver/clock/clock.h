@@ -1,6 +1,7 @@
-﻿/**************************************************************************************************
-*******
-**************************************************************************************************/
+﻿/*************
+ clock.h
+ SDK_LICENSE
+***************/
 #ifndef _HAL_CLOCK_H
 #define _HAL_CLOCK_H
 
@@ -40,6 +41,12 @@ typedef enum  _SYSCLK_SEL
     SYS_CLK_4M          = 7,
     SYS_CLK_NUM         = 8,
 } sysclk_t;
+
+#ifdef USE_ROMSYM_ALIAS
+extern sysclk_t _symrom_g_system_clk;
+#else
+extern sysclk_t g_system_clk;
+#endif
 
 typedef enum
 {

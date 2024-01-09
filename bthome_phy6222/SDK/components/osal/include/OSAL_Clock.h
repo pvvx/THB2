@@ -5,6 +5,7 @@
 
     Description:    OSAL Clock definition and manipulation functions.
 
+ SDK_LICENSE
 
 
 ******************************************************************************/

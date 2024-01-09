@@ -5,6 +5,7 @@
 
     Description:    This file contains the BLE encryption API for the LL.
 
+ SDK_LICENSE
 
 *******************************************************************************/
 

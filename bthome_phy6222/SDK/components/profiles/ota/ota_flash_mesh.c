@@ -1,3 +1,7 @@
+/*************
+ ota_flash_mesh.c
+ SDK_LICENSE
+***************/
 
 #include "flash.h"
 #include "ota_flash.h"

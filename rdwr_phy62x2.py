@@ -15,15 +15,16 @@ DEF_RUN_BAUD = 115200
 MAX_FLASH_SIZE = 0x200000
 EXT_FLASH_ADD = 0x400000
 
-DEF_START_ADDR = 0x1FFF1838
+DEF_START_RUN_APP_ADDR = 0x1FFF1838
+DEF_START_WR_FLASH_ADDR = 0x05000
 
 PHY_FLASH_SECTOR_SIZE = 4096
 PHY_FLASH_SECTOR_MASK = 0xfffff000
 PHY_WR_BLK_SIZE = 0x2000
 
-__progname__ = 'PHY6222 Utility'
-__filename__ = 'rdwr_phy6222.py'
-__version__ = "04.01.24"
+__progname__ = 'PHY62x2 Utility'
+__filename__ = 'rdwr_phy62x2.py'
+__version__ = "09.01.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -157,7 +158,7 @@ class phyflasher:
 		self._port.setRTS(True) #RSTN (lo)
 		self._port.flushOutput()
 		self._port.flushInput()
-		time.sleep(0.2)
+		time.sleep(0.5)
 		self._port.setDTR(False) #TM  (hi)
 		self._port.flushOutput()
 		self._port.flushInput()
@@ -200,7 +201,7 @@ class phyflasher:
 			print('PHY62x2 - Error init3!')
 			self._port.close()
 			exit(4)
-		print('PHY6222 - connected Ok')
+		print('PHY62x2 - connected Ok')
 		return self.SetBaud(baud)
 	def cmd_era4k(self, offset):
 		print ('Erase sector Flash at 0x%08x...' % offset, end = ' ')
@@ -378,20 +379,34 @@ class phyflasher:
 		return True
 	def HexStartSend(self):
 		return self.write_cmd('spifs 0 1 3 0 ') and self.write_cmd('sfmod 2 2 ') and self.write_cmd('cpnum ffffffff ')
-	def HexfHeader(self, hp, start = DEF_START_ADDR):
+	def HexfHeader(self, hp, start = DEF_START_RUN_APP_ADDR, raddr = DEF_START_WR_FLASH_ADDR):
 		if len(hp) > 1:
 			hexf = bytearray(b'\xff')*(0x100)
 			hexf[0:4] = int.to_bytes(len(hp), 4, byteorder='little')
 			hexf[8:12] = int.to_bytes(start, 4, byteorder='little')
-			sections = 0
-			faddr = 0x00020000
-			raddr = 0x00005000
+			#sections = 0
+			faddr_min = MAX_FLASH_SIZE-1
+			faddr_max = 0
+			rsize = 0
+			for ihp in hp:
+				if (ihp[0] & 0x1fff0000) == 0x1fff0000:	# SRAM
+					rsize += len(ihp[1])
+				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000: # Flash
+					offset = ihp[0] & (MAX_FLASH_SIZE-1)
+					if faddr_min > offset:
+						faddr_min = offset
+					send = offset + len(ihp[1])
+					if faddr_max <= send:
+						faddr_max = send
+			if (raddr + rsize) >= faddr_min:
+				raddr = (faddr_max + 3) & 0xfffffffc
+			#print('Test: Flash addr min: %08x, max: %08x, RAM addr: %08x' % (faddr_min, faddr_max, raddr))
 			print ('---- Segments Table -------------------------------------')
 			for ihp in hp:
-				if (ihp[0] & 0x1fff0000) == 0x1fff0000:
+				if (ihp[0] & 0x1fff0000) == 0x1fff0000:	# SRAM
 					faddr = raddr
 					raddr += (len(ihp[1])+3) & 0xfffffffc
-				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000:
+				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000: # Flash
 					faddr = ihp[0] & (MAX_FLASH_SIZE-1)
 				elif ihp[0] == 0:
 					continue
@@ -401,7 +416,6 @@ class phyflasher:
 				ihp[2] = faddr
 				print('Segment: %08x <- Flash addr: %08x, Size: %08x' % (ihp[0], faddr, len(ihp[1])))
 				hexf.extend(bytearray(struct.pack('<IIII', faddr, len(ihp[1]), ihp[0], 0xffffffff)))
-				sections += 1
 			return hexf
 		return None
 
@@ -425,7 +439,8 @@ def main():
 	parser.add_argument('--allerase', '-a',  action='store_true', help = 'Pre-processing: All Chip Erase');
 	parser.add_argument('--erase', '-e',  action='store_true', help = 'Pre-processing: Erase Flash work area');
 	parser.add_argument('--reset', '-r',  action='store_true', help = 'Post-processing: Reset');
-	parser.add_argument('--start', '-s',  help = 'Default starting address for hex writer', type = arg_auto_int, default = DEF_START_ADDR);
+	parser.add_argument('--start', '-s',  help = 'Application start address for hex writer (default: 0x%08x)' % DEF_START_RUN_APP_ADDR, type = arg_auto_int, default = DEF_START_RUN_APP_ADDR);
+	parser.add_argument('--write', '-w',  help = 'Flash starting address for hex writer (default: 0x%08x)' % DEF_START_WR_FLASH_ADDR, type = arg_auto_int, default = DEF_START_WR_FLASH_ADDR);
 
 	subparsers = parser.add_subparsers(
 			dest='operation',
@@ -548,7 +563,7 @@ def main():
 		hp = ParseHexFile(args.filename)
 		if hp == None:
 			sys.exit(2)
-		hexf = phy.HexfHeader(hp, args.start)
+		hexf = phy.HexfHeader(hp, args.start, args.write)
 		if hexf == None:
 			sys.exit(2)
 		hp[0][1] = hexf

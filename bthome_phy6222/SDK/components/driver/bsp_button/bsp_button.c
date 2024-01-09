@@ -1,3 +1,8 @@
+/*************
+ bsp_button.c
+ SDK_LICENSE
+***************/
+
 #include "error.h"
 #include "bsp_button.h"
 #include "log.h"

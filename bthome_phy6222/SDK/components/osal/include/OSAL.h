@@ -2,6 +2,9 @@
     Filename:     OSAL.h
     Revised:
     Revision:
+
+     SDK_LICENSE
+
 ******************************************************************************/
 
 #ifndef OSAL_H

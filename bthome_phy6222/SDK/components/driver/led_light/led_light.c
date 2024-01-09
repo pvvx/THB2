@@ -1,3 +1,7 @@
+/*************
+ led_light.h
+ SDK_LICENSE
+***************/
 
 #include "led_light.h"
 #include "pwm.h"

@@ -1,8 +1,8 @@
-/**************************************************************************************************
-*******
-**************************************************************************************************/
-
-
+/*************
+ ota_flash.c
+ SDK_LICENSE
+***************/
+	
 #include "flash.h"
 #include "ota_flash.h"
 #include "ota_app_service.h"
@@ -30,21 +30,30 @@ int flash_check_parition(unsigned char* pflash, int size, unsigned char* run_add
         AP_PCR->CACHE_BYPASS = 0;\
     }while(0);
 
-uint16_t crc16_table[16] __attribute__((section("ota_app_loader_area"))) =
+#if   defined ( __CC_ARM )
+    #define OTA_APP_LOADAREA_T __attribute__((section("ota_app_loader_area")))
+    #define OTA_APP_LOADAREA_D __attribute__((section("ota_app_loader_area")))
+#elif defined ( __GNUC__ )
+    #define OTA_APP_LOADAREA_T __attribute__((section("ota_app_loader_area")))
+    #define OTA_APP_LOADAREA_D __attribute__((section("ota_app_loader_area_d")))
+#endif
+
+uint16_t OTA_APP_LOADAREA_D crc16_table[16] =
 {
     0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
     0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400
 };
 
-uint32_t __attribute__((section("ota_app_loader_area")))  ota_load_flash_addr;
-uint32_t __attribute__((section("ota_app_loader_area")))  ota_load_run_addr;
-uint32_t __attribute__((section("ota_app_loader_area")))  ota_load_size;
-uint32_t __attribute__((section("ota_app_loader_area")))  ota_load_checksum;
-uint32_t __attribute__((section("ota_app_loader_area")))  ota_load_crc;
-uint32_t __attribute__((section("ota_app_loader_area")))  ota_boot_bypass_crc;
-//uint32_t __attribute__((section("ota_app_loader_area")))  ota_load_mic;
+uint32_t OTA_APP_LOADAREA_D  ota_load_flash_addr;
+uint32_t OTA_APP_LOADAREA_D  ota_load_run_addr;
+uint32_t OTA_APP_LOADAREA_D  ota_load_size;
+uint32_t OTA_APP_LOADAREA_D  ota_load_checksum;
+uint32_t OTA_APP_LOADAREA_D  ota_load_crc;
+uint32_t OTA_APP_LOADAREA_D  ota_boot_bypass_crc;
+uint32_t OTA_APP_LOADAREA_D  ota_slb_xip_addr = 0;
+//uint32_t OTA_APP_LOADAREA_D  ota_load_mic;
 
-static uint16_t __attribute__((section("ota_app_loader_area"))) crc16_byte(uint16_t crc, uint8_t byte)
+static uint16_t OTA_APP_LOADAREA_T crc16_byte(uint16_t crc, uint8_t byte)
 {
 //    static const uint16_t crc16_table[16] =
 //    {
@@ -63,7 +72,7 @@ static uint16_t __attribute__((section("ota_app_loader_area"))) crc16_byte(uint1
     return crc;
 }
 
-// uint16_t __attribute__((section("ota_app_loader_area"))) OTA_crc16(uint16_t seed, const volatile void * p_data, uint32_t size)
+// uint16_t OTA_APP_LOADAREA_T OTA_crc16(uint16_t seed, const volatile void * p_data, uint32_t size)
 //{
 //    uint8_t * p_block = (uint8_t *)p_data;
 
@@ -76,7 +85,7 @@ static uint16_t __attribute__((section("ota_app_loader_area"))) crc16_byte(uint1
 
 //   return seed;
 //}
-uint16_t __attribute__((section("ota_app_loader_area"))) $Sub$$crc16(uint16_t seed, const volatile void* p_data, uint32_t size)
+uint16_t OTA_APP_LOADAREA_T crc16(uint16_t seed, const volatile void* p_data, uint32_t size)
 {
 //  OTA_crc16(seed,p_data,size);
     uint8_t* p_block = (uint8_t*)p_data;
@@ -91,7 +100,7 @@ uint16_t __attribute__((section("ota_app_loader_area"))) $Sub$$crc16(uint16_t se
     return seed;
 }
 
-int __attribute__((section("ota_app_loader_area"))) ota_flash_read(uint32_t* dest, uint32_t addr, uint32_t size)
+int OTA_APP_LOADAREA_T ota_flash_read(uint32_t* dest, uint32_t addr, uint32_t size)
 {
     int i;
     uint32_t cb = AP_PCR->CACHE_BYPASS;
@@ -122,14 +131,15 @@ int __attribute__((section("ota_app_loader_area"))) ota_flash_read(uint32_t* des
 }
 
 
-int __attribute__((section("ota_app_loader_area"))) ota_flash_load_app(void)
+int OTA_APP_LOADAREA_T ota_flash_load_app(void)
 {
     int i,ret;
     bool is_encrypt = FALSE;
     uint32_t partition_num = 0;
     uint32_t bank_info = 0;
     uint32_t bank_addr = 0;
-//  uint32_t ota_sec_flag = 0;
+    uint32_t xip_entry = 0;
+    bool  is_not_xip = false;
     ota_flash_read(&partition_num, OTAF_2nd_BOOTINFO_ADDR, 4);
 
     if(partition_num == 0xffffffff)
@@ -154,6 +164,11 @@ int __attribute__((section("ota_app_loader_area"))) ota_flash_load_app(void)
     {
         // LOG("OTAF_APP_BANK_0_ADDR\r\n");
         bank_addr = OTAF_APP_BANK_0_ADDR;
+    }
+    else if(bank_info == OTAF_DUAL_SLBXIP)
+    {
+        // LOG("OTAF_DUAL_SLBXIP\r\n");
+        bank_addr = 0;
     }
     else
     {
@@ -180,6 +195,9 @@ int __attribute__((section("ota_app_loader_area"))) ota_flash_load_app(void)
         ota_flash_read(&ota_load_size,       OTAF_2nd_BOOTINFO_ADDR + i*4*4 + 8,  4);
         ota_flash_read(&ota_load_checksum,   OTAF_2nd_BOOTINFO_ADDR + i*4*4 + 12, 4);
 
+        if(is_not_xip==false && i == 1)
+            xip_entry = ota_load_run_addr;
+
         if((ota_load_flash_addr==0xffffffff) || (ota_load_run_addr == 0xffffffff )||(ota_load_size == 0xffffffff )||(ota_load_checksum == 0xffffffff ))
         {
             return PPlus_ERR_OTA_NO_APP;
@@ -188,7 +206,8 @@ int __attribute__((section("ota_app_loader_area"))) ota_flash_load_app(void)
         //ota_sec_flag = ota_load_size&0x80000000;
 
         //case XIP mode, shoud be in single bank and no fct
-        if(ota_load_run_addr == ota_load_flash_addr)
+        if((ota_load_run_addr == ota_load_flash_addr ) &&
+                ((ota_load_flash_addr & 0xff000000) == OTAF_BASE_ADDR))
         {
             // LOG("XIP MODE >>> ");
             if(USE_FCT==0 && CFG_OTA_BANK_MODE==OTA_SINGLE_BANK)
@@ -197,12 +216,15 @@ int __attribute__((section("ota_app_loader_area"))) ota_flash_load_app(void)
                 // continue;
                 if(is_encrypt)
                 {
-                    flash_check_parition((uint8_t*)ota_load_flash_addr,(int)ota_load_size,NULL,(uint8_t*)&ota_load_crc);
-
-                    if ( ota_load_crc!=ota_load_checksum )
+                    if(ota_boot_bypass_crc!=OTA_FAST_BOOT_MAGIC)
                     {
-                        write_reg(OTA_MODE_SELECT_REG, OTA_MODE_OTA);
-                        hal_system_soft_reset();
+                        flash_check_parition((uint8_t*)ota_load_flash_addr,(int)ota_load_size,NULL,(uint8_t*)&ota_load_crc);
+
+                        if ( ota_load_crc!=ota_load_checksum )
+                        {
+                            write_reg(OTA_MODE_SELECT_REG, OTA_MODE_OTA);
+                            hal_system_soft_reset();
+                        }
                     }
                 }
                 else
@@ -229,6 +251,8 @@ int __attribute__((section("ota_app_loader_area"))) ota_flash_load_app(void)
                 return PPlus_ERR_INVALID_DATA;
             }
         }
+
+        is_not_xip = true;
 
         if((ota_load_run_addr&0xffff0000) == 0xffff0000)
         {
@@ -277,6 +301,7 @@ int __attribute__((section("ota_app_loader_area"))) ota_flash_load_app(void)
         }
     }
 
+    ota_slb_xip_addr = xip_entry;
     // LOG("PPlus_SUCCESS\r\n");
     return PPlus_SUCCESS;
 }

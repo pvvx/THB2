@@ -1,3 +1,8 @@
+/*************
+ i2c_io.h
+ SDK_LICENSE
+***************/
+
 #ifndef __IIC_H
 #define __IIC_H
 

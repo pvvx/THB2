@@ -5,6 +5,7 @@
 
     Description:    This file contains the Callback Timer definitions.
 
+ SDK_LICENSE
 
  **************************************************************************************************/
 

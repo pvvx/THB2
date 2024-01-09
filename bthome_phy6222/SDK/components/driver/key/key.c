@@ -1,16 +1,13 @@
-/**************************************************************************************************
-*******
-**************************************************************************************************/
-
 /**************************************************************
-
-
     Module Name: key
     File name:   key.c
     Brief description:
     key driver module
     Data:    2020-06-30
     Revision:V0.01
+
+  SDK_LICENSE
+
 ****************************************************************/
 #include "rom_sym_def.h"
 #include "key.h"
@@ -21,7 +18,7 @@
 
 key_contex_t key_state;
 
-extern uint32 getMcuPrecisionCount(void);
+//extern uint32 getMcuPrecisionCount(void);
 
 static int key_timer_start(uint32 intval_ms)
 {

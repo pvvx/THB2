@@ -1,7 +1,3 @@
-/**************************************************************************************************
-*******
-**************************************************************************************************/
-
 /*******************************************************************************
     @file   spi.c
     @brief  Contains all functions support for spi driver
@@ -9,7 +5,7 @@
     @date   18. Oct. 2017
     @author qing.han
 
-
+ SDK_LICENSE
 
 *******************************************************************************/
 #include "rom_sym_def.h"
@@ -47,11 +43,20 @@ static spi_Ctx_t m_spiCtx[2];
 static void hal_spi_write_fifo(AP_SSI_TypeDef* Ssix,uint8_t len,uint8_t* tx_rx_ptr)
 {
     uint8_t i=0;
+    SPI_INDEX_e spi_index = (Ssix == AP_SPI0) ? SPI0 : SPI1;
     HAL_ENTER_CRITICAL_SECTION();
 
     while(i<len)
     {
-        Ssix->DataReg = *(tx_rx_ptr+i);
+        if (m_spiCtx[spi_index].cfg.spi_dfsmod <= SPI_1BYTE)
+        {
+            Ssix->DataReg = *(tx_rx_ptr+i);
+        }
+        else
+        {
+            Ssix->DataReg = *((uint16_t*)tx_rx_ptr+i);
+        }
+
         i++;
     }
 
@@ -114,6 +119,7 @@ static void spi_int_handle(uint8_t id, spi_Ctx_t* pctx, AP_SSI_TypeDef* Ssix)
             if(trans_ptr->tx_offset == trans_ptr->xmit_len)
             {
                 Ssix->IMR = 0x10;
+                m_spiCtx[pctx->spi_info->spi_index].transmit.busy = FALSE;
                 break;
             }
         }
@@ -448,30 +454,32 @@ static void hal_spi_master_init(hal_spi_t* spi_ptr,uint32_t baud,SPI_SCMOD_e scm
 static void config_dma_channel4spitx(hal_spi_t*  spi_ptr,uint8_t* tx_buf,uint16_t tx_len)
 {
     DMA_CH_CFG_t cfgc;
-//    uint16_t* size16_tx_buf;
     AP_SSI_TypeDef* Ssix = NULL;
     Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
     Ssix->DMACR &= 0x01;
     spi_Ctx_t* pctx;
     pctx = &m_spiCtx[spi_ptr->spi_index];
-//    if(pctx->cfg.spi_dfsmod == SPI_2BYTE)
-//        size16_tx_buf = (uint16_t *)tx_buf;
-    cfgc.transf_size = tx_len;
     cfgc.sinc = DMA_INC_INC;
 
-    if(pctx->cfg.spi_dfsmod == SPI_1BYTE)
+    if(pctx->cfg.spi_dfsmod <= SPI_1BYTE)
     {
+        hal_spi_dfs_set(spi_ptr,SPI_1BYTE);
+        cfgc.transf_size = tx_len;
         cfgc.src_tr_width = DMA_WIDTH_BYTE;
         cfgc.dst_tr_width = DMA_WIDTH_BYTE;
+        cfgc.src_addr = (uint32_t)tx_buf;
     }
     else
     {
+        uint16_t* size16_tx_buf = (uint16_t*)tx_buf;
+        hal_spi_dfs_set(spi_ptr,SPI_2BYTE);
+        cfgc.transf_size = tx_len/2;
         cfgc.src_tr_width = DMA_WIDTH_HALFWORD;
         cfgc.dst_tr_width = DMA_WIDTH_HALFWORD;
+        cfgc.src_addr = (uint32_t)size16_tx_buf;
     }
 
     cfgc.src_msize = DMA_BSIZE_1;
-    cfgc.src_addr = (uint32_t)tx_buf;
     cfgc.dinc = DMA_INC_NCHG;
     cfgc.dst_msize = DMA_BSIZE_1;
     cfgc.dst_addr = (uint32_t)&(Ssix->DataReg);
@@ -515,7 +523,7 @@ static int hal_spi_xmit_polling
 )
 {
     uint32_t rx_size = rx_len, tx_size = tx_len;
-    uint32_t tmp_len,i;
+    uint32_t tmp_len,i,tmp_tx_buf_len = 0;
     AP_SSI_TypeDef* Ssix = NULL;
     #if DMAC_USE
     spi_Ctx_t* pctx;
@@ -557,70 +565,157 @@ static int hal_spi_xmit_polling
             if(tx_buf)
             {
                 //support divider 2
-                switch (tmp_len)
+                if (m_spiCtx[spi_ptr->spi_index].cfg.spi_dfsmod <= SPI_1BYTE)
                 {
-                case 1:
-                    Ssix->DataReg = *tx_buf;
-                    break;
+                    switch (tmp_len)
+                    {
+                    case 1:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        tmp_tx_buf_len += 1;
+                        break;
 
-                case 2:
-                    Ssix->DataReg = *tx_buf;
-                    Ssix->DataReg = *(tx_buf+1);
-                    break;
+                    case 2:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+1);
+                        tmp_tx_buf_len += 2;
+                        break;
 
-                case 3:
-                    Ssix->DataReg = *tx_buf;
-                    Ssix->DataReg = *(tx_buf+1);
-                    Ssix->DataReg = *(tx_buf+2);
-                    break;
+                    case 3:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+2);
+                        tmp_tx_buf_len += 3;
+                        break;
 
-                case 4:
-                    Ssix->DataReg = *tx_buf;
-                    Ssix->DataReg = *(tx_buf+1);
-                    Ssix->DataReg = *(tx_buf+2);
-                    Ssix->DataReg = *(tx_buf+3);
-                    break;
+                    case 4:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+3);
+                        tmp_tx_buf_len += 4;
+                        break;
 
-                case 5:
-                    Ssix->DataReg = *tx_buf;
-                    Ssix->DataReg = *(tx_buf+1);
-                    Ssix->DataReg = *(tx_buf+2);
-                    Ssix->DataReg = *(tx_buf+3);
-                    Ssix->DataReg = *(tx_buf+4);
-                    break;
+                    case 5:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+4);
+                        tmp_tx_buf_len += 5;
+                        break;
 
-                case 6:
-                    Ssix->DataReg = *tx_buf;
-                    Ssix->DataReg = *(tx_buf+1);
-                    Ssix->DataReg = *(tx_buf+2);
-                    Ssix->DataReg = *(tx_buf+3);
-                    Ssix->DataReg = *(tx_buf+4);
-                    Ssix->DataReg = *(tx_buf+5);
-                    break;
+                    case 6:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+4);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+5);
+                        tmp_tx_buf_len += 6;
+                        break;
 
-                case 7:
-                    Ssix->DataReg = *tx_buf;
-                    Ssix->DataReg = *(tx_buf+1);
-                    Ssix->DataReg = *(tx_buf+2);
-                    Ssix->DataReg = *(tx_buf+3);
-                    Ssix->DataReg = *(tx_buf+4);
-                    Ssix->DataReg = *(tx_buf+5);
-                    Ssix->DataReg = *(tx_buf+6);
-                    break;
+                    case 7:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+4);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+5);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+6);
+                        tmp_tx_buf_len += 7;
+                        break;
 
-                case 8:
-                    Ssix->DataReg = *tx_buf;
-                    Ssix->DataReg = *(tx_buf+1);
-                    Ssix->DataReg = *(tx_buf+2);
-                    Ssix->DataReg = *(tx_buf+3);
-                    Ssix->DataReg = *(tx_buf+4);
-                    Ssix->DataReg = *(tx_buf+5);
-                    Ssix->DataReg = *(tx_buf+6);
-                    Ssix->DataReg = *(tx_buf+7);
-                    break;
+                    case 8:
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+4);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+5);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+6);
+                        Ssix->DataReg = *(tx_buf+tmp_tx_buf_len+7);
+                        tmp_tx_buf_len += 8;
+                        break;
 
-                default:
-                    break;
+                    default:
+                        break;
+                    }
+                }
+                else
+                {
+                    switch (tmp_len)
+                    {
+                    case 1:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        tmp_tx_buf_len += 1;
+                        break;
+
+                    case 2:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+1);
+                        tmp_tx_buf_len += 2;
+                        break;
+
+                    case 3:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+2);
+                        tmp_tx_buf_len += 3;
+                        break;
+
+                    case 4:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+3);
+                        tmp_tx_buf_len += 4;
+                        break;
+
+                    case 5:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+4);
+                        tmp_tx_buf_len += 5;
+                        break;
+
+                    case 6:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+4);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+5);
+                        tmp_tx_buf_len += 6;
+                        break;
+
+                    case 7:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+4);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+5);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+6);
+                        tmp_tx_buf_len += 7;
+                        break;
+
+                    case 8:
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+1);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+2);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+3);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+4);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+5);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+6);
+                        Ssix->DataReg = *((uint16_t*)tx_buf+tmp_tx_buf_len+7);
+                        tmp_tx_buf_len += 8;
+                        break;
+
+                    default:
+                        break;
+                    }
                 }
             }
             else
@@ -720,7 +815,7 @@ void hal_spi_dfs_set(hal_spi_t* spi_ptr,SPI_DFS_e mod)
     Ssix->SSIEN = 0;
     subWriteReg(&Ssix->CR0,3,0,mod);
     Ssix->SSIEN = 1;
-    pctx->cfg.spi_dfsmod = SPI_2BYTE;
+    pctx->cfg.spi_dfsmod = mod;
 }
 
 
@@ -939,6 +1034,7 @@ int hal_spi_bus_init(hal_spi_t* spi_ptr,spi_Cfg_t cfg)
     hal_clk_gate_enable((MODULE_e)(MOD_SPI0 + spi_ptr->spi_index));
     hal_spi_pin_init(spi_ptr,cfg.sclk_pin,cfg.ssn_pin,cfg.MOSI,cfg.MISO);
     hal_spi_master_init(spi_ptr,cfg.baudrate, cfg.spi_scmod, cfg.spi_tmod);
+    hal_spi_dfs_set(spi_ptr,cfg.spi_dfsmod);
     pctx->cfg = cfg;
     pctx->transmit.busy = false;
     pctx->spi_info = spi_ptr;
@@ -1075,7 +1171,7 @@ int hal_spi_init(SPI_INDEX_e channel)
     }
     else if(channel == SPI1)
     {
-        ret = hal_pwrmgr_register(MOD_SPI0,spi1_sleep_handler, spi1_wakeup_handler);
+        ret = hal_pwrmgr_register(MOD_SPI1,spi1_sleep_handler, spi1_wakeup_handler);
 
         if(ret == PPlus_SUCCESS)
             memset(&m_spiCtx[1],0,sizeof(spi_Ctx_t));

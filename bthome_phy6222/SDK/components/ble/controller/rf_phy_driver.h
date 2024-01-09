@@ -1,7 +1,3 @@
-/**************************************************************************************************
-*******
-**************************************************************************************************/
-
 /*******************************************************************************
     @file     rf_phy_driver.h
     @brief    
@@ -9,13 +5,10 @@
     @date     24. Aug. 2017
     @author   Zhongqi Yang
 
-
-
+    SDK_LICENSE
 *******************************************************************************/
 #ifndef __RF_PHY_DRIVER_H_
 #define __RF_PHY_DRIVER_H_
-
-
 
 
 /*******************************************************************************
@@ -46,8 +39,6 @@ typedef enum  _RX_ADC_CLK_SEL
 } rxadc_clk_t;
 
 
-
-
 /*******************************************************************************
     Global Var
 */
@@ -60,7 +51,7 @@ extern volatile uint8_t g_rfPhyPktFmt;            //** rf_phy pkt format config 
 extern volatile uint32  g_rfPhyRxDcIQ;            //** rx dc offset cal result                 **//
 extern volatile int8_t  g_rfPhyFreqOffSet;
 
-extern volatile sysclk_t g_system_clk;
+//extern volatile sysclk_t g_system_clk;
 extern volatile rfphy_clk_t g_rfPhyClkSel;
 extern volatile rxadc_clk_t g_rxAdcClkSel;
 

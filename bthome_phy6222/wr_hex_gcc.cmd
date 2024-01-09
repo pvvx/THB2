@@ -1,1 +1,1 @@
-python3 rdwr_phy6222.py -p COM11 -b 1000000 -r wh .\build\bthome_phy6222.hex
+python3 rdwr_phy62x2.py -p COM11 -b 1000000 -w 0x20000 -r -e wh .\build\bthome_phy6222.hex

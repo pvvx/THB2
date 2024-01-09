@@ -1,7 +1,3 @@
-/**************************************************************************************************
-*******
-**************************************************************************************************/
-
 /*******************************************************************************
     @file     spi.h
     @brief    Contains all functions support for spi driver
@@ -9,7 +5,7 @@
     @date     18. Oct. 2017
     @author   qing.han
 
-
+ SDK_LICENSE
 
 *******************************************************************************/
 #ifndef _SPI_H_
@@ -52,10 +48,22 @@ typedef enum
 
 typedef enum
 {
-    SPI_1BYTE=0x07,         //1byte
-    SPI_2BYTE=0x0f,         //2byte
-} SPI_DFS_e;
 
+
+    SPI_4BIT = 0x03,
+    SPI_5BIT = 0x04,
+    SPI_6BIT = 0x05,
+    SPI_7BIT = 0x06,
+    SPI_8BIT = 0x07,SPI_1BYTE = 0x07, // 1byte
+    SPI_9BIT = 0x08,
+    SPI_10BIT = 0x09,
+    SPI_11BIT = 0x0a,
+    SPI_12BIT = 0x0b,
+    SPI_13BIT = 0x0c,
+    SPI_14BIT = 0x0d,
+    SPI_15BIT = 0x0e,
+    SPI_16BIT = 0x0f,SPI_2BYTE = 0x0f, // 2byte
+} SPI_DFS_e;
 
 typedef enum
 {

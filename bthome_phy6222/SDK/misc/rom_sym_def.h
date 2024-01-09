@@ -1,5 +1,7 @@
-
-
+/*************
+ rom_sym_def.h
+ SDK_LICENSE
+***************/
 #ifndef __ROM_SYM_H__
 #define __ROM_SYM_H__
 #ifdef USE_ROMSYM_ALIAS

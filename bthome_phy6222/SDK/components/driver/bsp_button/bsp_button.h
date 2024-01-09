@@ -1,3 +1,8 @@
+/*************
+ bsp_button.h
+ SDK_LICENSE
+***************/
+
 #ifndef __BSP_BUTTON_H__
 #define __BSP_BUTTON_H__
 

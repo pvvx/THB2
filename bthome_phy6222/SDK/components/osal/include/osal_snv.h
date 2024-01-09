@@ -5,6 +5,7 @@
 
     Description:    This module defines the OSAL snv control functions.
 
+ SDK_LICENSE
 
 
 **************************************************************************************************/

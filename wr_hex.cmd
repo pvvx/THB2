@@ -1,1 +1,1 @@
-python3 rdwr_phy6222.py -p COM11 -e -r wh TestTHB2.hex
+python3 rdwr_phy62x2.py -p COM11 -e -r wh TestTHB2.hex

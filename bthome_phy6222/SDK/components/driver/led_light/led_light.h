@@ -1,3 +1,7 @@
+/*************
+ led_light.c
+ SDK_LICENSE
+***************/
 
 #ifndef _LED_LIGHT_H
 #define _LED_LIGHT_H

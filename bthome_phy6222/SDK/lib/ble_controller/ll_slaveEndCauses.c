@@ -9,6 +9,7 @@
                   related to connection termination, as well as common
                   termination routines used by the slave.
 
+ SDK_LICENSE
 
 *******************************************************************************/
 

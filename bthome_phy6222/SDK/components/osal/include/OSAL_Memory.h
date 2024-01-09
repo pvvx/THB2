@@ -5,6 +5,7 @@
 
     Description:    This module defines the OSAL memory control functions.
 
+ SDK_LICENSE
 
 
 **************************************************************************************************/
