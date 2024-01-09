@@ -459,7 +459,19 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_MSP(void)
 */
 __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
 {
+// https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Clobbers-and-Scratch-Registers
+// The clobber list should not contain the stack pointer register.
+// This is because the compiler requires the value of the stack pointer
+// to be the same after an asm statement as it was on entry to the statement. 
+// However, previous versions of GCC did not enforce this rule and allowed the
+// stack pointer to appear in the list, with unclear semantics.
+// This behavior is deprecated and listing the stack pointer may become an error
+// in future versions of GCC. 
+#if __GNUC__ >= 9
+    __ASM volatile ("MSR msp, %0\n" : : "r" (topOfMainStack));
+#else   
     __ASM volatile ("MSR msp, %0\n" : : "r" (topOfMainStack) : "sp");
+#endif   
 }
 
 
