@@ -40,22 +40,23 @@ READELF = $(GCC_PATH)arm-none-eabi-readelf
 
 CFLAGS = -Os
 CFLAGS += -W -Wall --std=gnu99
-CFLAGS += --static -nostartfiles -nostdlib
 CFLAGS += -mcpu=cortex-m0 -mthumb -mthumb-interwork
 CFLAGS += -fno-diagnostics-show-caret
 CFLAGS += -fdata-sections -ffunction-sections
 CFLAGS += -funsigned-char -funsigned-bitfields
 CFLAGS += -specs=nosys.specs
 CFLAGS += -Wl,--gc-sections
-CFLAGS += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
 #CFLAGS +=  -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
 
+LDSCRIPT?= $(SDK_PATH)/misc/phy6222.ld
 LDFLAGS += -mcpu=cortex-m0 -mthumb -mthumb-interwork
+LDFLAGS += --static -nostartfiles -nostdlib
 LDFLAGS += -Wl,--gc-sections
-LDFLAGS += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
-LDFLAGS += -Wl,--script=$(SDK_PATH)/misc/phy6222.ld
+LDFLAGS += -Wl,--script=$(LDSCRIPT)
+LDFLAGS += -Wl,--no-warn-rwx-segments
 LDFLAGS += -Wl,--just-symbols=$(SDK_PATH)/misc/bb_rom_sym_m0.gcc
 LDFLAGS += -Wl,-Map=$(OBJ_DIR)/$(PROJECT_NAME).map 
+LIBS    += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
 
 INCLUDES += -I$(SDK_PATH)/misc
 INCLUDES += -I$(SDK_PATH)/misc/CMSIS/include
