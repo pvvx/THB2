@@ -1,3 +1,7 @@
+/*
+	sensor.h
+	Author: pvvx
+*/
 
 #ifndef _SENSORS_H_
 #define _SENSORS_H_
@@ -59,6 +63,7 @@ typedef struct _measured_data_t {
 } measured_data_t;
 
 extern measured_data_t measured_data;
+extern unsigned short th_sensor_id;
 
 void init_sensor(void);
 int read_sensor(void);

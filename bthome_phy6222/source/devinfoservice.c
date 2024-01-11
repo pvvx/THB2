@@ -9,6 +9,7 @@
 /*********************************************************************
 	INCLUDES
 */
+#include "config.h"
 #include "bcomdef.h"
 #include "OSAL.h"
 #include "linkdb.h"
@@ -18,20 +19,37 @@
 #include "gatt_profile_uuid.h"
 #include "gattservapp.h"
 
+
 #include "devinfoservice.h"
 
 /*********************************************************************
 	MACROS
 */
-#define		SYSTEM_ID_ENABLE						0
+#define		SYSTEM_ID_ENABLE				0
+#ifdef DEF_MODEL_NUMBER_STR
 #define		MODEL_NUMBER_STR_ENABLE			1
+#else
+#define		MODEL_NUMBER_STR_ENABLE			0
+#endif
 #define		SERIAL_NUMBER_STR_ENABLE		1
 #define		FIRMWARE_REVISION_ENABLE		1
+#ifdef DEF_HARDWARE_REVISION
 #define		HARDWARE_REVISION_ENABLE		1
+#else
+#define		HARDWARE_REVISION_ENABLE		0
+#endif
+#ifdef DEF_SOFTWARE_REVISION
 #define		SOFTWARE_REVISION_ENABLE		1
-#define		MANUFACTURE_NAME_STR_ENABLE	1
-#define		IEEE_DATA_ENABLE						0
-#define		PNP_ID_ENABLE								0
+#else
+#define		SOFTWARE_REVISION_ENABLE		0
+#endif
+#ifdef DEF_MANUFACTURE_NAME_STR
+#define		MANUFACTURE_NAME_STR_ENABLE		1
+#else
+#define		MANUFACTURE_NAME_STR_ENABLE		0
+#endif
+#define		IEEE_DATA_ENABLE				0
+#define		PNP_ID_ENABLE					0
 
 /*********************************************************************
 	CONSTANTS
@@ -130,16 +148,16 @@ static uint8 devInfoSystemIdProps			=	GATT_PROP_READ;
 static uint8 devInfoSystemId[DEVINFO_SYSTEM_ID_LEN]		=	{0, 0, 0, 0, 0, 0, 0, 0};
 #endif
 
-#if	MODEL_NUMBER_STR_ENABLE
+#if MODEL_NUMBER_STR_ENABLE
 // Model Number String characteristic
 static uint8 devInfoModelNumberProps		=	GATT_PROP_READ;
-static const uint8 devInfoModelNumber[]		=	"THB2";
+static const uint8 devInfoModelNumber[]		=	DEF_MODEL_NUMBER_STR;
 #endif
 
 #if	SERIAL_NUMBER_STR_ENABLE
 // Serial Number String characteristic
 static uint8 devInfoSerialNumberProps	=	GATT_PROP_READ;
-static const uint8 devInfoSerialNumber[]	=	"0001";
+uint8 devInfoSerialNumber[17] = "000000-0000-0000"; // FLASH_ID-SENSOR_ID-EFUSE
 #endif
 
 #if FIRMWARE_REVISION_ENABLE
@@ -151,19 +169,19 @@ static const uint8 devInfoFirmwareRev[]		=	"github.com/pvvx";
 #if	HARDWARE_REVISION_ENABLE
 // Hardware Revision String characteristic
 static uint8 devInfoHardwareRevProps		=	GATT_PROP_READ;
-static const uint8 devInfoHardwareRev[]		=	"0.1";
+static const uint8 devInfoHardwareRev[]		=	DEF_HARDWARE_REVISION;
 #endif
 
 #if	SOFTWARE_REVISION_ENABLE
 // Software Revision String characteristic
 static uint8 devInfoSoftwareRevProps		=	GATT_PROP_READ;
-static const uint8 devInfoSoftwareRev[]		=	"V0.3";
+static const uint8 devInfoSoftwareRev[]		=	DEF_SOFTWARE_REVISION;
 #endif
 
 #if	MANUFACTURE_NAME_STR_ENABLE
 // Manufacturer Name String characteristic
 static uint8 devInfoMfrNameProps			=	GATT_PROP_READ;
-static const uint8 devInfoMfrName[]			=	"Tuya";
+static const uint8 devInfoMfrName[]			=	DEF_MANUFACTURE_NAME_STR;
 #endif
 
 #if	IEEE_DATA_ENABLE

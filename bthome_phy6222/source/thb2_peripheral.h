@@ -1,13 +1,13 @@
 /**
-	@headerfile:	peripheral.h
+	@headerfile:	th_peripheral.h
 	$Date:
 	$Revision:
 
 	This GAP profile advertises and allows connections.
 */
 
-#ifndef PERIPHERAL_H
-#define PERIPHERAL_H
+#ifndef TH_PERIPHERAL_H
+#define TH_PERIPHERAL_H
 
 
 #ifdef __cplusplus
@@ -18,6 +18,7 @@ extern "C"
 /*	-------------------------------------------------------------------
 	INCLUDES
 */
+#include "bcomdef.h"
 
 /*	-------------------------------------------------------------------
 	CONSTANTS
@@ -326,4 +327,4 @@ extern gaprole_States_t gapRole_state;
 }
 #endif
 
-#endif /* PERIPHERAL_H */
+#endif /* TH_PERIPHERAL_H */

@@ -49,7 +49,6 @@ static xflash_Ctx_t s_xflashCtx = {
 		.spif_ref_clk = SYS_CLK_DLL_64M,
 		.rd_instr =	XFRD_FCMD_READ_DUAL };
 
-chipMAddr_t g_chipMAddr;
 
 __ATTR_SECTION_SRAM__ static inline uint32_t spif_lock() {
 	HAL_ENTER_CRITICAL_SECTION();
@@ -150,7 +149,7 @@ FLASH_CHIP_INFO phy_flash = { .init_flag = FALSE, .IdentificationID = 0x00,
 
 int hal_get_flash_info(void) {
 	uint32_t cs;
-	uint8_t data[17];
+	uint8_t data[4];
 
 	if (phy_flash.init_flag == TRUE) {
 		return PPlus_SUCCESS;
@@ -426,7 +425,7 @@ int flash_write_word(unsigned int offset, uint32_t value) {
 	return (hal_flash_write(offset, (uint8_t*) &temp, 4));
 }
 
-CHIP_ID_STATUS_e read_chip_mAddr(void) {
+CHIP_ID_STATUS_e read_chip_mAddr(uint8_t * mAddr) {
 	CHIP_ID_STATUS_e ret = CHIP_ID_UNCHECK;
 	uint8_t b;
 	for (int i = 0; i < CHIP_MADDR_LEN; i++) {
@@ -434,18 +433,18 @@ CHIP_ID_STATUS_e read_chip_mAddr(void) {
 				read_reg(CHIP_MADDR_FLASH_ADDRESS+(i<<2)));
 
 		if (ret == CHIP_ID_VALID) {
-			g_chipMAddr.mAddr[CHIP_MADDR_LEN - 1 - i] = b;
+			mAddr[CHIP_MADDR_LEN - 1 - i] = b;
 		} else {
 			if (i > 0 && ret == CHIP_ID_EMPTY) {
 				ret = CHIP_ID_INVALID;
 			}
-
 			return ret;
 		}
 	}
-
 	return ret;
 }
+
+/*
 
 void check_chip_mAddr(void) {
 	//chip id check
@@ -474,3 +473,4 @@ void LOG_CHIP_MADDR(void) {
 	}
 }
 
+*/

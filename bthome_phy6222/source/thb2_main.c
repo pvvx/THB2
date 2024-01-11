@@ -11,6 +11,7 @@
  * INCLUDES
  */
 #include "bcomdef.h"
+#include "config.h"
 #include "rf_phy_driver.h"
 #include "global_config.h"
 #include "OSAL.h"
@@ -42,7 +43,7 @@
 /*********************************************************************
  * MACROS
  */
-//#define LOG(...)
+
 /*********************************************************************
  * CONSTANTS
  */
@@ -69,10 +70,13 @@
  */
 perStatsByChan_t g_perStatsByChanTest;
 
+uint8 adv_count;
+uint8 adv_con_count;
+
 /*********************************************************************
  * EXTERNAL VARIABLES
  */
-volatile uint8_t g_current_advType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
+//volatile uint8_t g_current_advType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
 
 
 /*********************************************************************
@@ -124,24 +128,16 @@ static void set_mac(void)
 {
 		extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
 		uint8 * p = &attDeviceName[5];
-#if 1 // =0 - test!
-		uint16 len;
-		if(hal_fs_item_read(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
-			LL_Rand(ownPublicAddr,3);
-			ownPublicAddr[3] = 0x8d;
-			ownPublicAddr[4] = 0x1f;
-			ownPublicAddr[5] = 0x38;
-			hal_fs_item_write(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN);
+		if (read_chip_mAddr(ownPublicAddr) != CHIP_ID_VALID) {
+			uint16 len;
+			if(hal_fs_item_read(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
+				LL_Rand(ownPublicAddr,3);
+				ownPublicAddr[3] = 0x8d;
+				ownPublicAddr[4] = 0x1f;
+				ownPublicAddr[5] = 0x38;
+				hal_fs_item_write(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN);
+			}
 		}
-#else
-			ownPublicAddr[0] = 0x56;
-			ownPublicAddr[1] = 0x34;
-			ownPublicAddr[2] = 0x12;
-			ownPublicAddr[3] = 0x34;
-			ownPublicAddr[4] = 0x12;
-			ownPublicAddr[5] = 0x25;
-#endif
-
 		p = str_bin2hex(p, &ownPublicAddr[2], 1);
 		p = str_bin2hex(p, &ownPublicAddr[1], 1);
 		str_bin2hex(p, &ownPublicAddr[0], 1);
@@ -150,9 +146,29 @@ static void set_mac(void)
 		osal_memcpy(&scanRspData[2], attDeviceName, sizeof(attDeviceName));
 }
 
+typedef enum
+{
+    EFUSE_BLOCK_0 = 0,
+    EFUSE_BLOCK_1 = 1,
+    EFUSE_BLOCK_2 = 2,
+    EFUSE_BLOCK_3 = 3,
 
-uint8 adv_count;
-uint8 adv_con_count;
+} EFUSE_block_t;
+
+extern int efuse_read(EFUSE_block_t block,uint32_t* buf);
+
+static void set_serial_number(void)
+{
+	hal_get_flash_info();
+	uint32_t temp_rd[2] = {0, 0};
+	efuse_read(EFUSE_BLOCK_0, temp_rd);
+	uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
+	*p++ = '-';
+	p = str_bin2hex(p, (uint8_t *)&th_sensor_id, 2);
+	*p++ = '-';
+	p = str_bin2hex(p, (uint8_t *)&temp_rd[0], 2);
+}
+
 /*
 extern uint8  gapRole_AdvEnabled;
 extern uint8  gapRole_AdvertData[B_MAX_ADV_LEN];
@@ -169,24 +185,24 @@ extern gaprole_States_t gapRole_state;
 */
 
 extern gapPeriConnectParams_t periConnParameters;
+extern uint16 gapParameters[];
 
 // Set new advertising interval
 static void set_adv_interval(uint16 advInt)
 {
+#if 0
 	GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MIN, advInt );
 	GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MAX, advInt );
 	GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MIN, advInt );
 	GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MAX, advInt );
+#else
+	gapParameters[TGAP_LIM_DISC_ADV_INT_MIN] = advInt;
+	gapParameters[TGAP_LIM_DISC_ADV_INT_MAX] = advInt;
+	gapParameters[TGAP_GEN_DISC_ADV_INT_MIN] = advInt;
+	gapParameters[TGAP_GEN_DISC_ADV_INT_MAX] = advInt;
+#endif
 	GAP_EndDiscoverable( gapRole_TaskID );
 	gapRole_state = GAPROLE_WAITING_AFTER_TIMEOUT;
-/*
-	LL_SetAdvParam(advInt, advInt, // actual time = advInt * 625us
-		LL_ADV_CONNECTABLE_UNDIRECTED_EVT,
-		gapRole_AdvEventType,
-		gapRole_AdvDirectType,
-		gapRole_AdvDirectAddr,
-		gapRole_AdvChanMap,
-		gapRole_AdvFilterPolicy ); */
 	// Turn advertising back on.
 	osal_set_event( gapRole_TaskID, START_ADVERTISING_EVT );
 }
@@ -214,7 +230,7 @@ static void adv_measure(void) {
 /*********************************************************************
  * LED and Key
  */
-static void posedge_int_wakeup_cb(GPIO_Pin_e pin,IO_Wakeup_Pol_e type)
+static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 {
 	(void) pin;
 	if(type == POSEDGE)
@@ -232,7 +248,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin,IO_Wakeup_Pol_e type)
 	}
 }
 
-static void negedge_int_wakeup_cb(GPIO_Pin_e pin,IO_Wakeup_Pol_e type)
+static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 {
 	(void) pin;
 	if(type == NEGEDGE)
@@ -246,12 +262,10 @@ static void negedge_int_wakeup_cb(GPIO_Pin_e pin,IO_Wakeup_Pol_e type)
 	}
 }
 
-static void init_led_key(void)
+void init_led_key(void)
 {
-	//hal_gpio_pin_init(GPIO_KEY, GPIO_INPUT);
 	hal_gpioin_register(GPIO_KEY, posedge_int_wakeup_cb, negedge_int_wakeup_cb);
 	hal_gpioretention_register(GPIO_LED);//enable this pin retention
-	//hal_gpioretention_unregister(pin);//disable this pin retention
 	hal_gpio_write(GPIO_LED, 1);
 }
 
@@ -307,8 +321,14 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 
 	init_sensor();
 
+	set_serial_number();
+
 	// Setup the GAP
-	VOID GAP_SetParamValue( TGAP_CONN_PAUSE_PERIPHERAL, DEFAULT_CONN_PAUSE_PERIPHERAL );
+#if 0
+	GAP_SetParamValue( TGAP_CONN_PAUSE_PERIPHERAL, DEFAULT_CONN_PAUSE_PERIPHERAL );
+#else
+	gapParameters[TGAP_CONN_PAUSE_PERIPHERAL] = DEFAULT_CONN_PAUSE_PERIPHERAL;
+#endif
 
 	// Setup the GAP Peripheral Role Profile
 	{
@@ -355,12 +375,19 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	// Set advertising interval
 	{
 				uint16 advInt = DEF_ADV_INERVAL; // actual time = advInt * 625us
+#if 0
 				GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MIN, advInt );
 				GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MAX, advInt );
 				GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MIN, advInt );
 				GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MAX, advInt );
+#else
+				gapParameters[TGAP_LIM_DISC_ADV_INT_MIN] = advInt;
+				gapParameters[TGAP_LIM_DISC_ADV_INT_MAX] = advInt;
+				gapParameters[TGAP_GEN_DISC_ADV_INT_MIN] = advInt;
+				gapParameters[TGAP_GEN_DISC_ADV_INT_MAX] = advInt;
+#endif
 	}
-		HCI_PPLUS_AdvEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, ADV_BROADCAST_EVT);
+	HCI_PPLUS_AdvEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, ADV_BROADCAST_EVT);
 #if (DEF_GAPBOND_MGR_ENABLE==1)
 	// Setup the GAP Bond Manager, add 2017-11-15
 	{
@@ -500,7 +527,7 @@ uint16 SimpleBLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 	}
 	if(events & SBP_DEALDATA)
 	{
-		LOG("\ndeal app datas in events!!!\n");
+		LOG("\ndeal app datas in events!\n");
 		// return unprocessed events
 		return(events ^ SBP_DEALDATA);
 	}

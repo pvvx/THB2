@@ -1,6 +1,6 @@
-/**************************************************************************************************
+/*
  thservice.h
-**************************************************************************************************/
+*/
 
 
 #ifndef _THSERVICE_H_
@@ -21,13 +21,6 @@ extern "C"
 #define ENV_SENSING_SERV_UUID		  0x181A 
 #define TEMPERATYRE_UUID			  0x2A6E  
 #define HUMIDITY_UUID				  0x2A6F 
-
-
-// Battery Service Get/Set Parameters
-#define BATT_PARAM_LEVEL				0
-#define BATT_PARAM_CRITICAL_LEVEL		1
-#define BATT_PARAM_SERVICE_HANDLE		2
-#define BATT_PARAM_BATT_LEVEL_IN_REPORT 3
 
 // Callback events
 #define TEMP_LEVEL_NOTI_ENABLED			1
@@ -64,9 +57,9 @@ typedef void (*thServiceTeardownCB_t)(void);
 */
 
 /*********************************************************************
-	@fn		 Batt_AddService
+	@fn		 TH_AddService
 
-	@brief	 Initializes the Battery service by registering
+	@brief	 Initializes the TH service by registering
 			GATT attributes with the GATT server.
 
 	@return	 Success or Failure
@@ -74,9 +67,9 @@ typedef void (*thServiceTeardownCB_t)(void);
 extern bStatus_t TH_AddService( void );
 
 /*********************************************************************
-	@fn		 Batt_Register
+	@fn		 TH_Register
 
-	@brief	 Register a callback function with the Battery Service.
+	@brief	 Register a callback function with the TH Service.
 
 	@param	 pfnServiceCB - Callback function.
 
@@ -85,9 +78,9 @@ extern bStatus_t TH_AddService( void );
 extern void TH_Register( thServiceCB_t pfnServiceCB );
 
 /*********************************************************************
-	@fn			 Batt_HandleConnStatusCB
+	@fn			 TH_HandleConnStatusCB
 
-	@brief		 Battery Service link status change handler function.
+	@brief		 TH Service link status change handler function.
 
 	@param		 connHandle - connection handle
 	@param		 changeType - type of change
@@ -99,7 +92,7 @@ void TH_HandleConnStatusCB( uint16 connHandle, uint8 changeType );
 /*********************************************************************
 	@fn		 thNotifyLevelState
 
-	@brief	 Send a notification of the battery level state
+	@brief	 Send a notification of the TH measure state
 			characteristic if a connection is established.
 
 	@return	 None.

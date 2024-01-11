@@ -98,6 +98,8 @@ bStatus_t DevInfo_SetParameter( uint8 param, uint8 len, void* value );
 */
 extern bStatus_t DevInfo_GetParameter( uint8 param, void* value );
 
+
+extern uint8 devInfoSerialNumber[17];
 /*********************************************************************
 *********************************************************************/
 

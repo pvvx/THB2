@@ -1,5 +1,5 @@
 /**************************************************************************************************
-	Filename:		peripheral.c
+	Filename:		th_peripheral.c
 	Revised:
 	Revision:
 

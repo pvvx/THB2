@@ -1,6 +1,6 @@
-/**************************************************************************************************
+/*
  battservice.h
-**************************************************************************************************/
+*/
 
 
 #ifndef BATTSERVICE_H
@@ -19,23 +19,9 @@ extern "C"
 	CONSTANTS
 */
 
-// Battery Service Get/Set Parameters
-#define BATT_PARAM_LEVEL				0
-#define BATT_PARAM_CRITICAL_LEVEL		1
-#define BATT_PARAM_SERVICE_HANDLE		2
-#define BATT_PARAM_BATT_LEVEL_IN_REPORT 3
-
 // Callback events
 #define BATT_LEVEL_NOTI_ENABLED			1
 #define BATT_LEVEL_NOTI_DISABLED		2
-
-// HID Report IDs for the service
-#define HID_RPT_ID_BATT_LEVEL_IN		4  // Battery Level input report ID
-
-#ifdef HID_VOICE_SPEC
-#define GATT_DESC_LENGTH_UUID			 0x3111 // Used with Unit percent
-#endif
-
 
 /*********************************************************************
 	TYPEDEFS

@@ -94,6 +94,7 @@ typedef enum
     CHIP_ID_INVALID,
 } CHIP_ID_STATUS_e;
 
+
 typedef struct
 {
     CHIP_ID_STATUS_e chipMAddrStatus;
@@ -106,6 +107,7 @@ typedef struct
     uint32_t IdentificationID;
     uint32_t Capacity;
 } FLASH_CHIP_INFO;
+extern FLASH_CHIP_INFO phy_flash;
 
 extern int _spif_wait_nobusy(uint8_t flg, uint32_t tout_ns);
 extern int  spif_write(uint32_t addr, uint8_t* data, uint32_t size);
@@ -125,6 +127,7 @@ int hal_spif_cache_init(sysclk_t spif_ref_clk, uint32_t rd_instr);
 #if(FLASH_PROTECT_FEATURE == 1)
     int hal_flash_lock(void);
     int hal_flash_unlock(void);
+    uint8_t hal_flash_get_lock_state(void);
 #endif
 int hal_flash_write(uint32_t addr, uint8_t* data, uint32_t size);
 int hal_flash_write_by_dma(uint32_t addr, uint8_t* data, uint32_t size);
@@ -133,21 +136,18 @@ int hal_flash_erase_sector(unsigned int addr);
 int hal_flash_erase_block64(unsigned int addr);
 int flash_write_word(unsigned int offset, uint32_t  value);
 
-#ifdef FLASH_PROTECT_FEATURE
-    int hal_flash_lock(void);
-    int hal_flash_unlock(void);
-    uint8_t hal_flash_get_lock_state(void);
-#endif
-
 CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b,uint32_t w);
 
 void LL_PLUS_LoadMACFromFlash(uint32_t addr);
 
 CHIP_ID_STATUS_e LL_PLUS_LoadMACFromChipMAddr(void);
 
+CHIP_ID_STATUS_e read_chip_mAddr(uint8_t * mAddr);
+int hal_get_flash_info(void);
 
-void check_chip_mAddr(void);
-void LOG_CHIP_MADDR(void);
+
+//void check_chip_mAddr(void);
+//void LOG_CHIP_MADDR(void);
 
 
 #endif

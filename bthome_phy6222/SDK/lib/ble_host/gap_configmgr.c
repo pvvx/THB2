@@ -165,7 +165,7 @@ static gapConfigLLParams_t gapParams;
 
 // GAP settable parameters, these can be accessed through GAP_SetParamValue() and
 // GAP_GetParamValue() public APIs.
-static uint16 gapParameters[] =
+uint16 gapParameters[] =
 {
     // Default Timer values
     TGAP_GEN_DISC_ADV_MIN_DEFAULT,

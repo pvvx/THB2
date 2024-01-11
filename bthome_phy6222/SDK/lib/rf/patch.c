@@ -140,7 +140,7 @@ extern struct buf_tx_desc tx_scanRsp_desc;
 
 extern struct buf_rx_desc g_rx_adv_buf;
 
-extern chipMAddr_t g_chipMAddr;
+//extern chipMAddr_t g_chipMAddr;
 
 extern uint8  g_llAdvMode;
 extern uint32_t g_llHdcDirAdvTime;
@@ -8256,6 +8256,7 @@ hciStatus_t HCI_LE_ConnUpdateCmd( uint16 connHandle,
     return( HCI_SUCCESS );
 }
 
+__ATTR_SECTION_XIP__
 CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b,uint32_t w)
 {
     uint16 dh = w>>16;
@@ -8341,6 +8342,7 @@ void LL_PLUS_LoadMACFromFlash(uint32_t addr)
 
     @return      CHIP_ID_STATUS_e.
 */
+/*
 CHIP_ID_STATUS_e LL_PLUS_LoadMACFromChipMAddr(void)
 {
     check_chip_mAddr();
@@ -8354,6 +8356,7 @@ CHIP_ID_STATUS_e LL_PLUS_LoadMACFromChipMAddr(void)
 
     return g_chipMAddr.chipMAddrStatus;
 }
+*/
 
 extern const char* s_company_id;
 
