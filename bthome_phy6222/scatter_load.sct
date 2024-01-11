@@ -39,7 +39,7 @@ LR_ROM_XIP  0x11020000 0x020000 {
    linkdb.o(+RO)
    sm*.o(+RO)
    gap*.o(+RO)
-   peripheral.o(+RO)
+   thb2_peripheral.o(+RO)
    ;battservice.o(+RO)
    devinfoservice.o(+RO)
    thb2_main.o(+RO)

@@ -11,6 +11,7 @@
 	INCLUDES
 */
 #include "bcomdef.h"
+#include "config.h"
 #include "OSAL.h"
 #include "hci_tl.h"
 #include "l2cap.h"
@@ -92,7 +93,7 @@ static uint32 gapRole_signCounter;
 static uint8  gapRole_bdAddr[B_ADDR_LEN];
 uint8  gapRole_AdvEnabled = FALSE;
 
-static uint16 gapRole_AdvertOffTime = DEFAULT_ADVERT_OFF_TIME;
+uint16 gapRole_AdvertOffTime = 0; // DEFAULT_ADVERT_OFF_TIME;
 uint8  gapRole_AdvertDataLen = 3;
 uint8  gapRole_AdvertData[B_MAX_ADV_LEN] =
 {
@@ -102,27 +103,28 @@ uint8  gapRole_AdvertData[B_MAX_ADV_LEN] =
 	(GAP_ADTYPE_FLAGS_GENERAL | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED),
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
-static uint8  gapRole_ScanRspDataLen = 0;
-static uint8  gapRole_ScanRspData[B_MAX_ADV_LEN] = {0};
-uint8  gapRole_AdvEventType;
+uint8  gapRole_ScanRspDataLen = 0;
+uint8  gapRole_ScanRspData[B_MAX_ADV_LEN] = {0};
+uint8  gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
 uint8  gapRole_AdvDirectType;
-uint8  gapRole_AdvDirectAddr[B_ADDR_LEN] = {0};
-uint8  gapRole_AdvChanMap;
+uint8  gapRole_AdvDirectAddr[B_ADDR_LEN] = {1,2,3,4,5,6};
+uint8  gapRole_AdvChanMap = GAP_ADVCHAN_37 | GAP_ADVCHAN_38 | GAP_ADVCHAN_39;
 uint8  gapRole_AdvFilterPolicy;
 
-static uint16 gapRole_ConnectionHandle = INVALID_CONNHANDLE;
-static uint16 gapRole_ConnectionInterval = 0;
-static uint16 gapRole_ConnectionLatency = 0;
+uint16 gapRole_ConnectionHandle = INVALID_CONNHANDLE;
+uint16 gapRole_ConnectionInterval = 0;
+uint16 gapRole_ConnectionLatency = 0;
 
 static uint16 gapRole_RSSIReadRate = 0;
 
 static uint8  gapRole_ConnectedDevAddr[B_ADDR_LEN] = {0};
 
-static uint8  gapRole_ParamUpdateEnable = FALSE;
-static uint16 gapRole_MinConnInterval = DEFAULT_MIN_CONN_INTERVAL;
-static uint16 gapRole_MaxConnInterval = DEFAULT_MAX_CONN_INTERVAL;
-static uint16 gapRole_SlaveLatency = MIN_SLAVE_LATENCY;
-static uint16 gapRole_TimeoutMultiplier = DEFAULT_TIMEOUT_MULTIPLIER;
+uint8  gapRole_ParamUpdateEnable = FALSE;
+
+uint16 gapRole_MinConnInterval = DEFAULT_DESIRED_MIN_CONN_INTERVAL; // DEFAULT_MIN_CONN_INTERVAL;
+uint16 gapRole_MaxConnInterval = DEFAULT_DESIRED_MAX_CONN_INTERVAL; // DEFAULT_MAX_CONN_INTERVAL;
+uint16 gapRole_SlaveLatency = DEFAULT_DESIRED_SLAVE_LATENCY; // MIN_SLAVE_LATENCY;
+uint16 gapRole_TimeoutMultiplier = DEFAULT_DESIRED_CONN_TIMEOUT; // DEFAULT_TIMEOUT_MULTIPLIER;
 
 static uint16 gapRole_ConnInterval = 0;
 static uint16 gapRole_ConnSlaveLatency = 0;
@@ -180,7 +182,7 @@ static void gapRole_startConnUpdate( uint8 handleFailure );
 /*********************************************************************
 	PUBLIC FUNCTIONS
 */
-
+#if 0
 /*********************************************************************
 	@brief	 Set a GAP Role parameter.
 
@@ -262,7 +264,6 @@ bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void* pValue )
 		}
 
 		break;
-
 	case GAPROLE_ADVERT_OFF_TIME:
 		if ( len == sizeof ( uint16 ) )
 		{
@@ -650,6 +651,7 @@ bStatus_t GAPRole_GetParameter( uint16 param, void* pValue )
 
 	return ( ret );
 }
+#endif
 
 /*********************************************************************
 	@brief	 Does the device initialization.

@@ -500,29 +500,9 @@
               <FilePath>.\SDK\components\profiles\Roles\gapgattserver.c</FilePath>
             </File>
             <File>
-              <FileName>peripheral.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\SDK\components\profiles\Roles\peripheral.c</FilePath>
-            </File>
-            <File>
               <FileName>gattservapp.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\SDK\components\profiles\GATT\gattservapp.c</FilePath>
-            </File>
-            <File>
-              <FileName>ota_app_service.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\SDK\components\profiles\ota_app\ota_app_service.c</FilePath>
-            </File>
-            <File>
-              <FileName>battservice.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\SDK\components\profiles\Batt\battservice.c</FilePath>
-            </File>
-            <File>
-              <FileName>devinfoservice.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\SDK\components\profiles\DevInfo\devinfoservice.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -593,6 +573,21 @@
               <FileName>osal_peripheral.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\source\osal_peripheral.c</FilePath>
+            </File>
+            <File>
+              <FileName>thb2_peripheral.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\thb2_peripheral.c</FilePath>
+            </File>
+            <File>
+              <FileName>devinfoservice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\devinfoservice.c</FilePath>
+            </File>
+            <File>
+              <FileName>battservice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\battservice.c</FilePath>
             </File>
           </Files>
         </Group>

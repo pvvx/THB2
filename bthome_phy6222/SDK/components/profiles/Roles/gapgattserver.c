@@ -15,6 +15,7 @@
     INCLUDES
 */
 #include "bcomdef.h"
+#include "config.h"
 #include "OSAL.h"
 #include "gap.h"
 #include "gapgattserver.h"

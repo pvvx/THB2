@@ -444,14 +444,17 @@ CHIP_ID_STATUS_e read_chip_mAddr(uint8_t * mAddr) {
 	return ret;
 }
 
-/*
+
+#ifndef __GCC
+
+chipMAddr_t  g_chipMAddr;
 
 void check_chip_mAddr(void) {
 	//chip id check
 	for (int i = 0; i < CHIP_MADDR_LEN; i++) {
 		g_chipMAddr.mAddr[i] = 0xff;
 	}
-	g_chipMAddr.chipMAddrStatus = read_chip_mAddr();
+	g_chipMAddr.chipMAddrStatus = read_chip_mAddr(g_chipMAddr.mAddr);
 }
 
 void LOG_CHIP_MADDR(void) {
@@ -473,4 +476,4 @@ void LOG_CHIP_MADDR(void) {
 	}
 }
 
-*/
+#endif

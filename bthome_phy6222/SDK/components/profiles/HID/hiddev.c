@@ -342,7 +342,7 @@ uint16 HidDev_ProcessEvent( uint8 task_id, uint16 events )
         uint8 bleupdateConnParams = TRUE;
         uint8 enable_update_request= TRUE;
 
-        if(hidDevGapState==GAPROLE_CONNECTED)
+        if(hidDevGapState == GAPROLE_CONNECTED)
         {
             GAPRole_SetParameter( GAPROLE_PARAM_UPDATE_ENABLE, sizeof( uint8 ), &enable_update_request );
             GAPRole_SetParameter( GAPROLE_PARAM_UPDATE_REQ, sizeof( uint8 ), &bleupdateConnParams );

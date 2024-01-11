@@ -24,15 +24,6 @@ extern "C"
 /*********************************************************************
     CONSTANTS
 */
-// Minimum connection interval (units of 1.25ms, 80=100ms) if automatic parameter update request is enabled
-#define DEFAULT_DESIRED_MIN_CONN_INTERVAL		24 // 12 -> 15 ms
-// Maximum connection interval (units of 1.25ms, 800=1000ms) if automatic parameter update request is enabled
-#define DEFAULT_DESIRED_MAX_CONN_INTERVAL		24 // 30 ms
-// Slave latency to use if automatic parameter update request is enabled
-#define DEFAULT_DESIRED_SLAVE_LATENCY			29
-// Supervision timeout value (units of 10ms, 1000=10s) if automatic parameter update request is enabled
-#define DEFAULT_DESIRED_CONN_TIMEOUT			400 // 4s
-
 
 #define GAP_DEVICE_NAME_LEN                     (20+1)
 

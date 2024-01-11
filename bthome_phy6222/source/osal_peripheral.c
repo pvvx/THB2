@@ -63,7 +63,7 @@ const pTaskEventHandlerFn tasksArr[] =
 	GAPBondMgr_ProcessEvent,										// task , add 2017-11-15
 #endif
 	GATTServApp_ProcessEvent,										// task 7
-	SimpleBLEPeripheral_ProcessEvent,								// task 8
+	BLEPeripheral_ProcessEvent,										// task 8
 
 };
 

@@ -151,13 +151,13 @@ static uint8 devInfoSystemId[DEVINFO_SYSTEM_ID_LEN]		=	{0, 0, 0, 0, 0, 0, 0, 0};
 #if MODEL_NUMBER_STR_ENABLE
 // Model Number String characteristic
 static uint8 devInfoModelNumberProps		=	GATT_PROP_READ;
-static const uint8 devInfoModelNumber[]		=	DEF_MODEL_NUMBER_STR;
+const uint8 devInfoModelNumber[]		=	DEF_MODEL_NUMBER_STR;
 #endif
 
 #if	SERIAL_NUMBER_STR_ENABLE
 // Serial Number String characteristic
 static uint8 devInfoSerialNumberProps	=	GATT_PROP_READ;
-uint8 devInfoSerialNumber[17] = "000000-0000-0000"; // FLASH_ID-SENSOR_ID-EFUSE
+uint8 devInfoSerialNumber[17]; // = "000000-0000-0000"; // FLASH_ID-SENSOR_ID-EFUSE
 #endif
 
 #if FIRMWARE_REVISION_ENABLE

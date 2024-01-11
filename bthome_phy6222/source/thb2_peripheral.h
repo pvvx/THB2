@@ -312,8 +312,12 @@ extern bStatus_t GAPRole_extAdv_GetParameter( uint8 adv_handler, uint16 param, v
 #define START_CONN_UPDATE_EVT		  0x0004  // Start Connection Update Procedure
 #define CONN_PARAM_TIMEOUT_EVT		  0x0008  // Connection Parameters Update Timeout
 
+extern uint16 gapRole_AdvertOffTime;
 extern uint8  gapRole_AdvEnabled;
+extern uint8  gapRole_AdvertDataLen;
 extern uint8  gapRole_AdvertData[B_MAX_ADV_LEN];
+extern uint8  gapRole_ScanRspDataLen;
+extern uint8  gapRole_ScanRspData[B_MAX_ADV_LEN];
 extern uint8  gapRole_AdvDirectAddr[B_ADDR_LEN];
 extern uint8  gapRole_AdvEventType;
 extern uint8  gapRole_AdvDirectType;
@@ -321,6 +325,11 @@ extern uint8  gapRole_AdvChanMap;
 extern uint8  gapRole_AdvFilterPolicy;
 extern uint8  gapRole_TaskID;
 extern gaprole_States_t gapRole_state;
+extern uint8  gapRole_ParamUpdateEnable;
+extern uint16 gapRole_MinConnInterval;
+extern uint16 gapRole_MaxConnInterval;
+extern uint16 gapRole_SlaveLatency;
+extern uint16 gapRole_TimeoutMultiplier;
 
 
 #ifdef __cplusplus

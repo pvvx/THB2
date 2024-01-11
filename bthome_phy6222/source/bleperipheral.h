@@ -68,7 +68,7 @@ extern void SimpleBLEPeripheral_Init( uint8 task_id );
 /*
  * Task Event Processor for the BLE Application
  */
-extern uint16 SimpleBLEPeripheral_ProcessEvent( uint8 task_id, uint16 events );
+extern uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events );
 
 /*********************************************************************
 *********************************************************************/

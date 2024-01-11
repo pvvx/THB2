@@ -91,22 +91,6 @@ uint8	simpleBLEPeripheral_TaskID;	  // Task ID for internal task/event processin
 
 static	gaprole_States_t	gapProfileState	=	GAPROLE_INIT;
 
-
-/** Advertisement payload */
-static const uint8 advertData[] =
-{
-	0x02,	// length of this data
-	GAP_ADTYPE_FLAGS,
-	GAP_ADTYPE_FLAGS_GENERAL | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED
-};
-
-// GAP GATT Attributes
-static uint8 attDeviceName[] = "THB2-000000"; // GAP_DEVICE_NAME_LEN
-
-// GAP - SCAN RSP data (max size = 31 bytes)
-static uint8 scanRspData[GAP_DEVICE_NAME_LEN + 2];
-
-
 /*********************************************************************
  * LOCAL FUNCTIONS
  */
@@ -124,26 +108,36 @@ uint8_t * str_bin2hex(uint8_t *d, uint8_t *s, int len) {
 	return d;
 }
 
+// GAP - SCAN RSP data (max size = 31 bytes)
+static void set_def_name(uint8_t * mac)
+{
+	uint8 * p = gapRole_ScanRspData;
+	gapRole_ScanRspDataLen = sizeof(DEF_MODEL_NUMBER_STR) + 8;
+	*p++ = sizeof(DEF_MODEL_NUMBER_STR) + 7;
+	*p++ = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
+	osal_memcpy(p, devInfoModelNumber, sizeof(DEF_MODEL_NUMBER_STR)-1);
+	p += sizeof(DEF_MODEL_NUMBER_STR) - 1;
+	*p++ = '-';
+	p = str_bin2hex(p, mac+2, 1);
+	p = str_bin2hex(p, mac+1, 1);
+	str_bin2hex(p, mac, 1);
+}
+
 static void set_mac(void)
 {
-		extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
-		uint8 * p = &attDeviceName[5];
-		if (read_chip_mAddr(ownPublicAddr) != CHIP_ID_VALID) {
-			uint16 len;
-			if(hal_fs_item_read(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
-				LL_Rand(ownPublicAddr,3);
-				ownPublicAddr[3] = 0x8d;
-				ownPublicAddr[4] = 0x1f;
-				ownPublicAddr[5] = 0x38;
-				hal_fs_item_write(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN);
-			}
+	extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
+	uint16 len;
+	if (read_chip_mAddr(ownPublicAddr) != CHIP_ID_VALID) {
+		if(hal_fs_item_read(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
+			LL_Rand(ownPublicAddr,3);
+			// Tuya mac[0:3]
+			ownPublicAddr[3] = 0x8d;
+			ownPublicAddr[4] = 0x1f;
+			ownPublicAddr[5] = 0x38;
+			hal_fs_item_write(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN);
 		}
-		p = str_bin2hex(p, &ownPublicAddr[2], 1);
-		p = str_bin2hex(p, &ownPublicAddr[1], 1);
-		str_bin2hex(p, &ownPublicAddr[0], 1);
-		scanRspData[0] = sizeof(attDeviceName) + 1;
-		scanRspData[1] = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
-		osal_memcpy(&scanRspData[2], attDeviceName, sizeof(attDeviceName));
+	}
+	set_def_name(ownPublicAddr);
 }
 
 typedef enum
@@ -169,42 +163,33 @@ static void set_serial_number(void)
 	p = str_bin2hex(p, (uint8_t *)&temp_rd[0], 2);
 }
 
-/*
-extern uint8  gapRole_AdvEnabled;
-extern uint8  gapRole_AdvertData[B_MAX_ADV_LEN];
-extern uint8  gapRole_AdvDirectAddr[B_ADDR_LEN];
-extern uint8  gapRole_AdvEventType;
-extern uint8  gapRole_AdvDirectType;
-extern uint8  gapRole_AdvChanMap;
-extern uint8  gapRole_AdvFilterPolicy;
-extern uint8 gapRole_TaskID;
-extern gaprole_States_t gapRole_state;
-#ifndef START_ADVERTISING_EVT
-#define START_ADVERTISING_EVT 1
-#endif
-*/
-
 extern gapPeriConnectParams_t periConnParameters;
 extern uint16 gapParameters[];
+static void set_adv_interval(uint16 advInt);
 
 // Set new advertising interval
-static void set_adv_interval(uint16 advInt)
+static void set_new_adv_interval(uint16 advInt)
 {
-#if 0
-	GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MIN, advInt );
-	GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MAX, advInt );
-	GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MIN, advInt );
-	GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MAX, advInt );
-#else
-	gapParameters[TGAP_LIM_DISC_ADV_INT_MIN] = advInt;
-	gapParameters[TGAP_LIM_DISC_ADV_INT_MAX] = advInt;
-	gapParameters[TGAP_GEN_DISC_ADV_INT_MIN] = advInt;
-	gapParameters[TGAP_GEN_DISC_ADV_INT_MAX] = advInt;
-#endif
+	set_adv_interval(advInt);
 	GAP_EndDiscoverable( gapRole_TaskID );
 	gapRole_state = GAPROLE_WAITING_AFTER_TIMEOUT;
 	// Turn advertising back on.
 	osal_set_event( gapRole_TaskID, START_ADVERTISING_EVT );
+}
+// Set advertising interval
+static void set_adv_interval(uint16 advInt)
+{
+#ifdef __GCC
+	gapParameters[TGAP_LIM_DISC_ADV_INT_MIN] = advInt;
+	gapParameters[TGAP_LIM_DISC_ADV_INT_MAX] = advInt;
+	gapParameters[TGAP_GEN_DISC_ADV_INT_MIN] = advInt;
+	gapParameters[TGAP_GEN_DISC_ADV_INT_MAX] = advInt;
+#else
+	GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MIN, advInt );
+	GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MAX, advInt );
+	GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MIN, advInt );
+	GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MAX, advInt );
+#endif
 }
 
 static void adv_measure(void) {
@@ -215,7 +200,7 @@ static void adv_measure(void) {
 			LL_SetAdvData(sizeof(adv_bthome_ns1_t), gapRole_AdvertData);
 			if(adv_con_count) {
 				if(--adv_con_count == 0) {
-					set_adv_interval(DEF_ADV_INERVAL);
+					set_new_adv_interval(DEF_ADV_INERVAL);
 				}
 			}
 		}
@@ -239,7 +224,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 		LOG("int or wakeup(pos):gpio:%d type:%d\n",pin,type);
 		hal_gpio_write(GPIO_LED,1);
 		if(gapRole_AdvEnabled) {
-			set_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
+			set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
 		}
 	}
 	else
@@ -267,6 +252,36 @@ void init_led_key(void)
 	hal_gpioin_register(GPIO_KEY, posedge_int_wakeup_cb, negedge_int_wakeup_cb);
 	hal_gpioretention_register(GPIO_LED);//enable this pin retention
 	hal_gpio_write(GPIO_LED, 1);
+}
+
+/*********************************************************************
+ * GAPROLE ADVERTISING
+ */
+void gatrole_advert_enable(bool enable) {
+	uint8 oldAdvEnabled = gapRole_AdvEnabled;
+	gapRole_AdvEnabled = enable;
+
+	if ( (oldAdvEnabled) && (gapRole_AdvEnabled == FALSE) )
+	{
+		// Turn off Advertising
+		if ( ( gapRole_state == GAPROLE_ADVERTISING )
+				|| ( gapRole_state == GAPROLE_CONNECTED_ADV )
+				|| ( gapRole_state == GAPROLE_WAITING_AFTER_TIMEOUT ) )
+		{
+			GAP_EndDiscoverable( gapRole_TaskID );
+		}
+	}
+	else if ( (oldAdvEnabled == FALSE) && (gapRole_AdvEnabled) )
+	{
+		// Turn on Advertising
+		if ( (gapRole_state == GAPROLE_STARTED)
+				|| (gapRole_state == GAPROLE_WAITING)
+				|| (gapRole_state == GAPROLE_CONNECTED)
+				|| (gapRole_state == GAPROLE_WAITING_AFTER_TIMEOUT) )
+		{
+			osal_set_event( gapRole_TaskID, START_ADVERTISING_EVT );
+		}
+	}
 }
 
 /*********************************************************************
@@ -298,7 +313,6 @@ simpleProfileCBs_t simpleBLEPeripheral_SimpleProfileCBs =
 /*********************************************************************
  * PUBLIC FUNCTIONS
  */
-extern gapPeriConnectParams_t periConnParameters;
 /*********************************************************************
  * @fn		SimpleBLEPeripheral_Init
  *
@@ -324,69 +338,42 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	set_serial_number();
 
 	// Setup the GAP
-#if 0
-	GAP_SetParamValue( TGAP_CONN_PAUSE_PERIPHERAL, DEFAULT_CONN_PAUSE_PERIPHERAL );
-#else
+#ifdef __GCC
 	gapParameters[TGAP_CONN_PAUSE_PERIPHERAL] = DEFAULT_CONN_PAUSE_PERIPHERAL;
+#else
+	GAP_SetParamValue( TGAP_CONN_PAUSE_PERIPHERAL, DEFAULT_CONN_PAUSE_PERIPHERAL );
 #endif
 
 	// Setup the GAP Peripheral Role Profile
 	{
-		// device starts advertising upon initialization
-		uint8 initial_advertising_enable	=	FALSE;
 
-		uint8 enable_update_request			=	DEFAULT_ENABLE_UPDATE_REQUEST;
-		uint8 advChnMap		=	GAP_ADVCHAN_37 | GAP_ADVCHAN_38 | GAP_ADVCHAN_39;
-
-		// By setting this to zero, the device will go into the waiting state after
-		// being discoverable for 30.72 second, and will not being advertising again
-		// until the enabler is set back to TRUE
-		uint16 gapRole_AdvertOffTime	=	0;
-
-		uint8 peerPublicAddr[] = {
-			0x01,
-			0x02,
-			0x03,
-			0x04,
-			0x05,
-			0x06
-		};
 		set_mac();
-				uint8 advType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
-		GAPRole_SetParameter( GAPROLE_ADV_EVENT_TYPE,	sizeof( uint8 ),		&advType );
-				GAPRole_SetParameter( GAPROLE_ADV_DIRECT_ADDR,	sizeof(peerPublicAddr), peerPublicAddr);
-		// set adv channel map
-		GAPRole_SetParameter( GAPROLE_ADV_CHANNEL_MAP,	sizeof( uint8 ),		&advChnMap);
+		// gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT; // already set default
+		// gapRole_AdvDirectAddr[B_ADDR_LEN] = {1,2,3,4,5,6}; // already set default
+		// gapRole_AdvChanMap = GAP_ADVCHAN_37 | GAP_ADVCHAN_38 | GAP_ADVCHAN_39; // already set default
 		// Set the GAP Role Parameters
-		GAPRole_SetParameter( GAPROLE_ADVERT_ENABLED,	sizeof( uint8 ),		&initial_advertising_enable );
-		GAPRole_SetParameter( GAPROLE_ADVERT_OFF_TIME,	sizeof( uint16 ),		&gapRole_AdvertOffTime	);
-		GAPRole_SetParameter( GAPROLE_ADVERT_DATA,	sizeof(advertData), (void *)advertData); //		advertData
-		GAPRole_SetParameter( GAPROLE_SCAN_RSP_DATA, scanRspData[0] + 1, scanRspData );
-		GAPRole_SetParameter( GAPROLE_PARAM_UPDATE_ENABLE,	sizeof( uint8  ),	&enable_update_request);
-		GAPRole_SetParameter( GAPROLE_MIN_CONN_INTERVAL,	sizeof( uint16 ),	&periConnParameters.intervalMin);
-		GAPRole_SetParameter( GAPROLE_MAX_CONN_INTERVAL,	sizeof( uint16 ),	&periConnParameters.intervalMax	);
-		GAPRole_SetParameter( GAPROLE_SLAVE_LATENCY,		sizeof( uint16 ),	&periConnParameters.latency	);
-		GAPRole_SetParameter( GAPROLE_TIMEOUT_MULTIPLIER,	sizeof( uint16 ),	&periConnParameters.timeout	);
+		// device starts advertising upon initialization
+		gatrole_advert_enable(FALSE);
+		// gapRole_AdvertOffTime = 0; // already set default
+		GAP_UpdateAdvertisingData( gapRole_TaskID, TRUE, gapRole_AdvertDataLen, gapRole_AdvertData );
+		GAP_UpdateAdvertisingData( gapRole_TaskID, FALSE, gapRole_ScanRspDataLen, gapRole_ScanRspData );
+		gapRole_ParamUpdateEnable = DEFAULT_ENABLE_UPDATE_REQUEST;
+
+		/*  already set default
+		// extern gapPeriConnectParams_t periConnParameters;
+		gapRole_MinConnInterval = periConnParameters.intervalMin;
+		gapRole_MaxConnInterval = periConnParameters.intervalMax;
+		gapRole_SlaveLatency = periConnParameters.latency;
+		gapRole_TimeoutMultiplier = periConnParameters.timeout;
+		*/
 	}
 
 	// Set the GAP Characteristics
-	GGS_SetParameter( GGS_DEVICE_NAME_ATT, sizeof(attDeviceName), (void *)attDeviceName ); // GAP_DEVICE_NAME_LEN, attDeviceName );
+	GGS_SetParameter( GGS_DEVICE_NAME_ATT, gapRole_ScanRspData[0] - 1, (void *)&gapRole_ScanRspData[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
 
 	// Set advertising interval
-	{
-				uint16 advInt = DEF_ADV_INERVAL; // actual time = advInt * 625us
-#if 0
-				GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MIN, advInt );
-				GAP_SetParamValue( TGAP_LIM_DISC_ADV_INT_MAX, advInt );
-				GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MIN, advInt );
-				GAP_SetParamValue( TGAP_GEN_DISC_ADV_INT_MAX, advInt );
-#else
-				gapParameters[TGAP_LIM_DISC_ADV_INT_MIN] = advInt;
-				gapParameters[TGAP_LIM_DISC_ADV_INT_MAX] = advInt;
-				gapParameters[TGAP_GEN_DISC_ADV_INT_MIN] = advInt;
-				gapParameters[TGAP_GEN_DISC_ADV_INT_MAX] = advInt;
-#endif
-	}
+	set_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
+
 	HCI_PPLUS_AdvEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, ADV_BROADCAST_EVT);
 #if (DEF_GAPBOND_MGR_ENABLE==1)
 	// Setup the GAP Bond Manager, add 2017-11-15
@@ -441,7 +428,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 }
 
 /*********************************************************************
- * @fn		SimpleBLEPeripheral_ProcessEvent
+ * @fn		BLEPeripheral_ProcessEvent
  *
  * @brief	Simple BLE Peripheral Application Task event processor.	 This function
  *			is called to process all events for the task.  Events
@@ -453,7 +440,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
  *
  * @return	events not processed
  */
-uint16 SimpleBLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
+uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 {
 	VOID task_id; // OSAL required parameter that isn't used in this function
 	if ( events & ADV_BROADCAST_EVT)
@@ -485,9 +472,8 @@ uint16 SimpleBLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		LOG("SBP_RESET_ADV_EVT\n");
 		adv_count = 0;
 		//adv_con_count = 1;
-		// set_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
-		uint8 initial_advertising_enable = TRUE;
-		GAPRole_SetParameter( GAPROLE_ADVERT_ENABLED, sizeof( uint8 ), &initial_advertising_enable );
+		// set_new_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
+		gatrole_advert_enable(TRUE);
 		return ( events ^ SBP_RESET_ADV_EVT );
 	}
 	if( events & TIMER_BATT_EVT)
@@ -615,7 +601,8 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 
 		case GAPROLE_CONNECTED:
 			adv_con_count = 0;
-			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, 2*DEF_ADV_INERVAL_MS);
+			//osal_start_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, 1000000);
+			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, 10000); // 2*DEF_ADV_INERVAL_MS); // 5000 ms
 			HCI_PPLUS_ConnEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, NULL);
 			LOG("Gaprole_Connected\n");
 		break;
@@ -642,7 +629,7 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 		break;
 	}
 	gapProfileState = newState;
-		LOG("[GAP ROLE %d]\n",newState);
+	LOG("[GAP ROLE %d]\n",newState);
 
 	VOID gapProfileState;
 }

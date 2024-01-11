@@ -100,6 +100,7 @@ extern bStatus_t DevInfo_GetParameter( uint8 param, void* value );
 
 
 extern uint8 devInfoSerialNumber[17];
+extern const uint8 devInfoModelNumber[];
 /*********************************************************************
 *********************************************************************/
 

@@ -158,9 +158,9 @@ SRCS += $(SDK_PATH)/components/driver/log/my_printf.c
 #SRCS += $(SDK_PATH)/components/profiles/Roles/central.c
 #SRCS += $(SDK_PATH)/components/profiles/ota_app/ota_app_service.c
 #SRCS += $(SDK_PATH)/components/profiles/Roles/peripheral.c
+SRCS += $(SDK_PATH)/components/profiles/Roles/gap.c
 SRCS += $(SDK_PATH)/components/profiles/Roles/gapbondmgr.c
 SRCS += $(SDK_PATH)/components/profiles/Roles/gapgattserver.c
-SRCS += $(SDK_PATH)/components/profiles/Roles/gap.c
 SRCS += $(SDK_PATH)/components/profiles/GATT/gattservapp.c
 #SRCS += $(SDK_PATH)/components/profiles/DevInfo/devinfoservice.c
 

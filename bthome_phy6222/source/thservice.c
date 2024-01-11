@@ -242,7 +242,7 @@ static uint8 thReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 	// Measure temp level if reading level
 	if ( uuid == TEMPERATYRE_UUID )
 	{
-				*pLen = 2;
+		*pLen = 2;
 		pValue[0] = measured_data.temp;
 		pValue[1] = measured_data.temp >> 8;
 	}
