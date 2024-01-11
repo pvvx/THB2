@@ -65,7 +65,7 @@ SECTIONS
         _ebss = ABSOLUTE(.);
     } > sram
 
- /*   
+/*   
     .int_stack : {
         . = ALIGN(4);
         *(int_stack)
@@ -73,7 +73,7 @@ SECTIONS
         _stack_top = ABSOLUTE(.);
     } > sram
 */
-    /* stack 32 kbytes */
+	   
     g_top_irqstack = ORIGIN(sram) + LENGTH(sram);
 
    .common_text : {

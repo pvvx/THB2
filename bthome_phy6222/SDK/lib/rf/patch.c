@@ -5445,16 +5445,16 @@ void wakeup_init1()
     // < 14>:en_dig_clk_48M;
     // < 15>:en_dig_clk_64M;
     // < 16>:en_dig_clk_96M;
-    #if (DBG_BUILD_LL_TIMING)
+#if (DBG_BUILD_LL_TIMING)
     //====== for timing debug============
     gpio_write(DBG_PIN_SYS_CLK_SWITCH, 1);
     gpio_write(DBG_PIN_SYS_CLK_SWITCH, 0);
     //PHY_REG_WT(AP_IOMUX_BASE+8,1);//en debugMux[0]
-    #endif
+#endif
     //each rtc count is about 30.5us
     //after 15count , xtal will be feedout to dll and doubler
     //WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
-    #if 0
+#if 0
     volatile uint32_t delay=0;
 
     for(uint8_t i=0; i<10; i++)
@@ -5465,7 +5465,7 @@ void wakeup_init1()
         while(delay -- > 0) {};
     }
 
-    #endif
+#endif
 
     if(g_system_clk == SYS_CLK_XTAL_16M )
     {
@@ -5550,14 +5550,14 @@ void wakeup_init1()
     set_max_length(0xff);
     ll_hw_set_empty_head(0x0001);
     //time related setting
-    ll_hw_set_rx_timeout_1st(   500);
-    ll_hw_set_rx_timeout(        88);       //ZQ 20180606, reduce rx timeout for power saving
+    ll_hw_set_rx_timeout_1st(500);
+    ll_hw_set_rx_timeout(88);       //ZQ 20180606, reduce rx timeout for power saving
     //preamble + syncword=40us, sync process = 8us
     //timeout should be larger then 48us,
     //ll_hw_set_rx_timeout(       268);     //for ble shoulde be larger than 80+128. if sync, the timeout timer stop.
     // (80 + 128) - BLE 5.0 preamble + access time, 60 for HW process delay
     // this time doesn't consider HW startup time, it is set in other regs
-    ll_hw_set_loop_timeout(   30000);
+    ll_hw_set_loop_timeout(30000);
 //      ll_hw_set_tx_rx_release (10,     1);
 //      ll_hw_set_rx_tx_interval(       57);        //T_IFS=150us for BLE 1M
 //      ll_hw_set_tx_rx_interval(       65);        //T_IFS=150us for BLE 1M
@@ -5615,10 +5615,10 @@ void config_RTC1(uint32 time)
         }
     }
 
-    #if 0
+#if 0
     extern uint32 sleep_total;
     LOG("%d %d %d\n",conn_param[0].currentEvent,sleep_total,counter_tracking);
-    #endif
+ #endif
 }
 
 #if 1
@@ -5821,6 +5821,8 @@ void wakeupProcess1(void)
     // start task loop
     osal_start_system();
 }
+
+
 void enter_sleep_off_mode1(Sleep_Mode mode)
 {
     if(mode==SYSTEM_SLEEP_MODE)
@@ -7651,7 +7653,7 @@ __ATTR_SECTION_XIP__ void init_config(void)
         pGlobal_config[i] = 0;
 
     //save the app initial_sp  which will be used in wakeupProcess 20180706 by ZQ
-    pGlobal_config[INITIAL_STACK_PTR] = (uint32_t)&g_top_irqstack;
+//    pGlobal_config[INITIAL_STACK_PTR] = 0x400 + (uint32_t)&_ebss; // g_top_irqstack;
     // LL switch setting
     pGlobal_config[LL_SWITCH] =  LL_DEBUG_ALLOW | SLAVE_LATENCY_ALLOW | LL_WHITELIST_ALLOW
                                  | SIMUL_CONN_ADV_ALLOW | SIMUL_CONN_SCAN_ALLOW; //RC32_TRACKINK_ALLOW

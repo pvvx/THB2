@@ -301,11 +301,11 @@ void peripheral_interrupt_restore_default(void)
 int __attribute__((used)) hal_pwrmgr_wakeup_process(void)
 {
 	int i;
-	#ifdef CFG_FLASH_ENABLE_DEEP_SLEEP
+#ifdef CFG_FLASH_ENABLE_DEEP_SLEEP
 	extern void spif_release_deep_sleep(void);
 	spif_release_deep_sleep();
 	WaitRTCCount(8);
-	#endif
+#endif
 	AP_PCR->SW_CLK	= s_config_swClk0;
 	AP_PCR->SW_CLK1 = s_config_swClk1|0x01;//force set M0 CPU
 	s_gpio_wakeup_src_group1 = AP_AON->GPIO_WAKEUP_SRC[0];

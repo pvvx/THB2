@@ -5,6 +5,7 @@
 #include "bus_dev.h"
 #include "gpio.h"
 #include "clock.h"
+#include "global_config.h"
 #include "timer.h"
 #include "jump_function.h"
 #include "pwrmgr.h"
@@ -152,10 +153,19 @@ static void hal_low_power_io_init(void) {
 	DIG_LDO_CURRENT_SETTING(0x01);
 #if defined ( __GNUC__ )
 	extern int _ebss;
-	if ((uint32_t) &_ebss >= 0x1fff8000)
+/*
+	if ((uint32_t) &_ebss >= (0x20000000 - 0x400)) { // - INITIAL_STACK 1kbytes
+		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2); // RET_SRAM0|RET_SRAM1|RET_SRAM2
+		pGlobal_config[INITIAL_STACK_PTR] = 0x20000000;
+    } else
+*/
+    if ((uint32_t) &_ebss >= (0x1fff8000 - 0x400)) { // - INITIAL_STACK 1kbytes
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
-	else
+		pGlobal_config[INITIAL_STACK_PTR] = 0x1fffC000;
+    } else {
 		hal_pwrmgr_RAM_retention(RET_SRAM0); // RET_SRAM0|RET_SRAM1|RET_SRAM2
+		pGlobal_config[INITIAL_STACK_PTR] = 0x1fff8000;
+	}
 #else
 
 #if DEBUG_INFO || SDK_VER_RELEASE_ID != 0x03010102

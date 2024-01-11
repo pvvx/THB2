@@ -151,7 +151,7 @@ __ATTR_SECTION_XIP__ void init_sensor(void) {
 	send_i2c_byte(0, 0x06); // Reset command using the general call address
 	WaitMs(3);
 	send_i2c_wreg(CHT8310_I2C_ADDR0, CHT8310_REG_CRT, 0x0300); // Set conversion ratio 5 sec
-	WaitMs(1);
+	//WaitMs(1);
 	read_i2c_bytes(CHT8310_I2C_ADDR0, CHT8310_REG_ID, (uint8 *)&th_sensor_id, 2);
 	deinit_i2c();
 }

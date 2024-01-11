@@ -455,6 +455,7 @@ void wakeupProcess0(void)
 //    uart_tx0(" 111 ");
     ll_debug_output(DEBUG_WAKEUP);
     set_sleep_flag(0);
+
     // ==== measure value, from RTC counter meet comparator 0 -> here : 260us ~ 270us
     // start task loop
     osal_start_system();
