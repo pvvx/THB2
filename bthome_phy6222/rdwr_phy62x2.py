@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2 Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "09.01.24"
+__version__ = "11.01.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -236,7 +236,7 @@ class phyflasher:
 		else:
 			print ('ok')
 		return ret
-	def cmd_erase_all_chipf(self):
+	def cmd_erase_work_flash(self):
 		print ('Erase Flash work area...', end = ' '),
 		tmp = self._port.timeout
 		self._port.timeout = 7
@@ -344,11 +344,14 @@ class phyflasher:
 		return True
 	def ReadBusToFile(self, ff, addr=0x11000000, size=0x80000):
 		flg = size > 128
+		if not flg:
+			print('\rRead 0x%08x...' % addr, end=' ') #, flush=True
 		while size > 0:
 			if flg and addr & 127 == 0:
-				print('\rRead 0x%08x...' % addr, end='') #, flush=True
+				print('\rRead 0x%08x...' % addr, end=' ') #, flush=True
 			rw = self.read_reg(addr)
 			if rw == None:
+				print('error!')
 				print('\rError read address 0x%08x!' % addr)
 				return False
 			dw = struct.pack('<I',rw)
@@ -469,9 +472,13 @@ def main():
 	parser_erase_sec_flash.add_argument('address', help = 'Start address', type = arg_auto_int)
 	parser_erase_sec_flash.add_argument('size', help = 'Size of region', type = arg_auto_int)
 
+	parser_erase_work_flash = subparsers.add_parser(
+			'ew',
+			help = 'Erase Flash Work Area')
+
 	parser_erase_all_flash = subparsers.add_parser(
 			'ea',
-			help = 'Erase All Flash')
+			help = 'Erase All Flash (MAC, ChipID/IV)')
 
 	parser_read_chip = subparsers.add_parser(
 			'rc',
@@ -505,8 +512,8 @@ def main():
 		if not phy.ReadBusToFile(ff, args.address, args.size):
 			ff.close()
 			exit(4)
-		print
-		print ('---------------------------------------------------------')
+		#print
+		print ('\r---------------------------------------------------------')
 		byteSaved = (args.size + 3) & 0xfffffffc
 		if byteSaved > 1024:
 			print("%.3f KBytes saved to file '%s'" % (byteSaved/1024, args.filename))
@@ -542,7 +549,7 @@ def main():
 					sys.exit(3)
 			else:
 				if args.erase == True:
-					if not phy.cmd_erase_all_chipf():
+					if not phy.cmd_erase_work_flash():
 						stream.close
 						print ('Error: Erase Flash!')
 						sys.exit(3)
@@ -580,7 +587,7 @@ def main():
 					sys.exit(3)
 			else:
 				if args.erase == True:
-					if not phy.cmd_erase_all_chipf():
+					if not phy.cmd_erase_work_flash():
 						stream.close
 						print ('Error: Erase Flash!')
 						sys.exit(3)
@@ -622,8 +629,12 @@ def main():
 			sys.exit(2)
 	#--------------------------------erase flash all
 	if args.operation == 'ea':
-		if not phy.cmd_erase_all_chipf():
-			print ('Error: Erase Flash!')
+		if not phy.cmd_erase_all_flash():
+			print ('Error: Erase All Flash!')
+			sys.exit(3)
+	if args.operation == 'ew':
+		if not phy.cmd_erase_work_flash():
+			print ('Error: Erase Flash Work Area!')
 			sys.exit(3)
 	if args.reset:
 		phy.SendResetCmd()
