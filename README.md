@@ -22,7 +22,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2).
 1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
 2. Запустить:
 ```
-python3 rdwr_phy62x2.py -p COM11 -r wh TestTHB2.hex
+python3 rdwr_phy62x2.py -p COM11 -e -r wh TestTHB2.hex
 ```
 3. Прошивка зашита. Устройство работает.
 
