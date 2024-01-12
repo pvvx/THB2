@@ -1,11 +1,20 @@
-
+/* SRAM + XIP linker script */
+/* https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fds/index.html */
+PHDRS 
+{
+  romdata PT_LOAD FLAGS(6);
+  text    PT_LOAD FLAGS(5);
+  data    PT_LOAD FLAGS(6);
+  xip     PT_LOAD FLAGS(5);
+  rodata  PT_LOAD FLAGS(4);
+}
 
 MEMORY
 {
-  jumptbl (rwx) : ORIGIN = 0x1fff0000, LENGTH = 0x00400
+  jumptbl (rw)  : ORIGIN = 0x1fff0000, LENGTH = 0x00400
   gcfgtbl (rw)  : ORIGIN = 0x1fff0400, LENGTH = 0x00400
-  flash (rx)    : ORIGIN = 0x11020000, LENGTH = 0x20000
-  sram (rwx)  	: ORIGIN = 0x1fff1838, LENGTH = 0x0E7C8
+  sram    (rwx) : ORIGIN = 0x1fff1838, LENGTH = 0x0E7C8
+  flash   (rx)  : ORIGIN = 0x11020000, LENGTH = 0x20000
 }
 
 OUTPUT_ARCH(arm)
@@ -15,20 +24,21 @@ ENTRY(__start)
 SECTIONS
 {
     .jumptbl : {
-       KEEP(*(jump_table_mem_area))
-    } > jumptbl  
+        *(jump_table_mem_area)
+    } > jumptbl : romdata
 
-    .gcfgtbl : {
-      *(global_config_area)
+    .gcfgtbl (NOLOAD) : {
+        *(global_config_area)
     } > gcfgtbl
 
     .textentry : {
         *(*.isr_vector)
-    } > sram
+    } > sram : text
 
-    .data : {
-        _sdata = ABSOLUTE(.);
+    _sdata = ABSOLUTE(.);
+    .text : {
         _stextram = ABSOLUTE(.);
+
         *phy6222_start.o(.text)
         *.o(_section_standby_code_)
         *.o(_section_sram_code_)
@@ -48,13 +58,15 @@ SECTIONS
         *libgcc.a:*.o(.text .text.*)
    
         _etextram = ABSOLUTE(.);
+    } > sram : text
 
+    .data : {
         *(.data .data.*)
         *(.gnu.linkonce.d.*)
         CONSTRUCTORS
-        . = ALIGN(4);
-        _edata = ABSOLUTE(.);
-    } > sram 
+    } > sram  : data
+    . = ALIGN(4);
+    _edata = ABSOLUTE(.);
 
     .bss : {
         _sbss = ABSOLUTE(.);
@@ -65,20 +77,23 @@ SECTIONS
         _ebss = ABSOLUTE(.);
     } > sram
 
-/*   
-    .int_stack : {
-        . = ALIGN(4);
-        *(int_stack)
-        . = ALIGN(4);
-        _stack_top = ABSOLUTE(.);
+    .irq_stack : {
+        *(g_irqstack_base)
     } > sram
-*/
 	   
-    g_top_irqstack = ORIGIN(sram) + LENGTH(sram);
+    g_stack = ORIGIN(sram) + LENGTH(sram);
 
-   .common_text : {
+    .xip : {
         _stext = ABSOLUTE(.);   
-       *(.text .text.*)
+
+        *.o(_func_xip_code_)
+        *.o(_section_xip_code_)
+        *(.text .text.*)
+
+        _etext = ABSOLUTE(.);
+    } > flash : xip
+
+    .rodata : {
        *(.rodata .rodata.*)
        *(.fixup)
         *(.gnu.warning)
@@ -89,29 +104,27 @@ SECTIONS
         *(.got)
         *(.gcc_except_table)
         *(.gnu.linkonce.r.*)
-        _etext = ABSOLUTE(.);
-   } > flash
+    } > flash : rodata
 
     .init_section : {
         _sinit = ABSOLUTE(.);
         *(.init_array .init_array.*)
         _einit = ABSOLUTE(.);
-    } > flash
+    } > flash : rodata
 
     .ARM.extab : {
         *(.ARM.extab*)
-    } > flash
+    } > flash : rodata
 
-    __exidx_start = ABSOLUTE(.);
     .ARM.exidx : {
+        __exidx_start = ABSOLUTE(.);
         *(.ARM.exidx*)
-    } > flash
-    __exidx_end = ABSOLUTE(.);
-
+        __exidx_end = ABSOLUTE(.);
+    } > flash : rodata
  
     ._sjtblsstore : {
        _sjtblss = ABSOLUTE(.);
-    } > flash   
+    } > flash : rodata
  
     /* Stabs debugging sections. */
     .stab 0 : { *(.stab) }
