@@ -37,26 +37,32 @@ OBJCOPY = $(GCC_PATH)arm-none-eabi-objcopy
 OBJDUMP = $(GCC_PATH)arm-none-eabi-objdump
 SIZE = $(GCC_PATH)arm-none-eabi-size
 READELF = $(GCC_PATH)arm-none-eabi-readelf
+##############################################################################
+ARCH_FLAGS := -mcpu=cortex-m0 -mthumb -mthumb-interwork
+OPT_CFLAGS ?= -Os
+DEB_CFLAGS ?= -g3 -ggdb
+##############################################################################
+ASFLAGS	   := $(ARCH_FLAGS) $(OPT_CFLAGS) $(DEB_CFLAGS)
 
-CFLAGS = -Os
-CFLAGS += -W -Wall --std=gnu99
-CFLAGS += -mcpu=cortex-m0 -mthumb -mthumb-interwork
-CFLAGS += -fno-diagnostics-show-caret
-CFLAGS += -fdata-sections -ffunction-sections
-CFLAGS += -funsigned-char -funsigned-bitfields
-CFLAGS += -specs=nosys.specs
-CFLAGS += -Wl,--gc-sections
-#CFLAGS +=  -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
+CFLAGS     := $(ARCH_FLAGS) $(OPT_CFLAGS) $(DEB_CFLAGS)
+CFLAGS     += -W -Wall --std=gnu99
+CFLAGS     += -fno-diagnostics-show-caret
+CFLAGS     += -fdata-sections -ffunction-sections
+CFLAGS     += -funsigned-char -funsigned-bitfields
+CFLAGS     += -specs=nosys.specs
+CFLAGS     += -Wl,--gc-sections
+#CFLAGS     +=  -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
 
-LDSCRIPT?= $(SDK_PATH)/misc/phy6222.ld
-LDFLAGS += -mcpu=cortex-m0 -mthumb -mthumb-interwork
-LDFLAGS += --static -nostartfiles -nostdlib
-LDFLAGS += -Wl,--gc-sections
-LDFLAGS += -Wl,--script=$(LDSCRIPT)
-LDFLAGS += -Wl,--no-warn-rwx-segments
-LDFLAGS += -Wl,--just-symbols=$(SDK_PATH)/misc/bb_rom_sym_m0.gcc
-LDFLAGS += -Wl,-Map=$(OBJ_DIR)/$(PROJECT_NAME).map 
-LIBS    += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
+LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
+LDFLAGS    := $(ARCH_FLAGS)
+LDFLAGS    += --static -nostartfiles -nostdlib
+LDFLAGS    += -Wl,--gc-sections
+LDFLAGS    += -Wl,--script=$(LDSCRIPT)
+# LDFLAGS    += -Wl,--no-warn-rwx-segments
+LDFLAGS    += -Wl,--just-symbols=$(SDK_PATH)/misc/bb_rom_sym_m0.gcc
+LDFLAGS    += -Wl,-Map=$(OBJ_DIR)/$(PROJECT_NAME).map 
+LIBS       += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
+##############################################################################
 
 INCLUDES += -I$(SDK_PATH)/misc
 INCLUDES += -I$(SDK_PATH)/misc/CMSIS/include
@@ -211,7 +217,7 @@ DEFINES += -DUSE_FS=0
 DEFINES += -DMAX_NUM_LL_CONN=1
 #DEFINES += -DXFLASH_HIGH_SPEED=1
 
-CFLAGS += $(DEFINES) $(INCLUDES) 
+CFLAGS  += $(DEFINES) $(INCLUDES) 
 
 #SRC_O = $(patsubst %.c,%.o,$(patsubst sdk/%, $(SDK_PATH)%, $(SRCS)))
 
@@ -225,7 +231,7 @@ DEPENDENCY_LIST = $(OBJS:%o=%d)
 
 all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex  $(OBJ_DIR)/$(PROJECT_NAME).asm size
 
-%.elf: $(SRC_O)
+%.elf %.map: $(SRC_O) $(LDSCRIPT) Makefile
 	@echo LD: $@
 	@$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
 
