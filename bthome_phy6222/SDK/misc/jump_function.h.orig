@@ -27,13 +27,8 @@
 #include "l2cap.h"
 
 // =====================  MACROS =======================
-#if 0
 #define JUMP_BASE_ADDR 0x1fff0000
 #define JUMP_FUNCTION(x)    (*(uint32 *)(JUMP_BASE_ADDR + (x << 2)))
-#else
-extern const uint32_t* jump_table_base[];
-#define JUMP_FUNCTION(x)    (*(uint32 *)(jump_table_base + x))
-#endif
 
 // ROM function entries
 
