@@ -1,7 +1,7 @@
 # THB2
 Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2). 
 
-* Проект в начальной стадии разработки, до появления функционального OTA.
+* По настойчивым просьбам от [aZholtikov](https://github.com/aZholtikov) проект остановлен и переведен в закрытый.
 
 В плане проекта предусматривается дальнейшая поддержка BTH01 и [TH-05](https://pvvx.github.io/TH-05).
 
