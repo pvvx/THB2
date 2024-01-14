@@ -3,6 +3,7 @@
 */
 
 #include "bus_dev.h"
+#include "config.h"
 #include "gpio.h"
 #include "clock.h"
 #include "global_config.h"
@@ -14,9 +15,9 @@
 #include "log.h"
 #include "rf_phy_driver.h"
 #include "flash.h"
+#include "flash_eep.h"
 #include "version.h"
 #include "watchdog.h"
-#include "fs.h"
 #include "adc.h"
 #define DEFAULT_UART_BAUD	115200
 
@@ -103,9 +104,10 @@ volatile sysclk_t g_spif_clk_config;
 //extern uint32_t __initial_sp;
 
 static void hal_low_power_io_init(void) {
-	//========= disable all gpio pullup/down to preserve juice
-	const ioinit_cfg_t ioInit[] = {
+//========= disable all gpio pullup/down to preserve juice
+const ioinit_cfg_t ioInit[] = {
 #if(SDK_VER_CHIP == __DEF_CHIP_QFN32__)
+#if DEVICE == DEVICE_THB2
 		{ GPIO_P00, GPIO_PULL_DOWN },
 		{ GPIO_P01, GPIO_PULL_DOWN },
 		{ GPIO_P02, GPIO_PULL_DOWN },
@@ -129,6 +131,33 @@ static void hal_low_power_io_init(void) {
 		{ GPIO_P32, GPIO_PULL_DOWN },
 		{ GPIO_P33, GPIO_PULL_DOWN },
 		{ GPIO_P34, GPIO_PULL_DOWN }
+#elif DEVICE == DEVICE_BTH01
+		{ GPIO_P00, GPIO_PULL_UP },	// Sensor Vdd
+		{ GPIO_P01, GPIO_PULL_DOWN },
+		{ GPIO_P02, GPIO_PULL_DOWN },
+		{ GPIO_P03, GPIO_PULL_DOWN },
+		{ GPIO_P07, GPIO_PULL_DOWN },
+		{ GPIO_P09, GPIO_PULL_UP }, // TX1
+		{ GPIO_P10, GPIO_PULL_UP }, // RX1
+		{ GPIO_P11, GPIO_PULL_UP }, // ADC Vbat
+		{ GPIO_P14, GPIO_PULL_UP }, // KEY
+		{ GPIO_P15, GPIO_FLOATING }, // LED
+		{ GPIO_P16, GPIO_PULL_DOWN },
+		{ GPIO_P17, GPIO_PULL_DOWN },
+		{ GPIO_P18, GPIO_PULL_UP }, // RX2
+		{ GPIO_P20, GPIO_PULL_UP }, // TX2
+		{ GPIO_P23, GPIO_PULL_DOWN },
+		{ GPIO_P24, GPIO_PULL_DOWN },
+		{ GPIO_P25, GPIO_PULL_DOWN }, // P25
+		{ GPIO_P26, GPIO_PULL_DOWN },
+//		{GPIO_P27, GPIO_FLOATING },
+		{ GPIO_P31, GPIO_PULL_DOWN },
+		{ GPIO_P32, GPIO_PULL_DOWN },
+		{ GPIO_P33, GPIO_FLOATING }, // I2C_SDA
+		{ GPIO_P34, GPIO_FLOATING } // // I2C_SCL
+#else
+#error "DEVICE Not released!"
+#endif
 #else
 		{GPIO_P02, GPIO_FLOATING },
 		{GPIO_P03, GPIO_FLOATING },
@@ -147,26 +176,31 @@ static void hal_low_power_io_init(void) {
 
 	for (uint8_t i = 0; i < sizeof(ioInit) / sizeof(ioinit_cfg_t); i++)
 		hal_gpio_pull_set(ioInit[i].pin, ioInit[i].type);
-
+#if DEVICE == DEVICE_BTH01
+	hal_gpio_pin_init(GPIO_SPWR, GPIO_OUTPUT);
+	hal_gpio_write(GPIO_SPWR, 1);
+#endif
+	hal_gpio_write(GPIO_LED, LED_ON);
 	DCDC_CONFIG_SETTING(0x0a);
 	DCDC_REF_CLK_SETTING(1);
 	DIG_LDO_CURRENT_SETTING(0x01);
 #if defined ( __GNUC__ )
 	extern uint32 g_irqstack_top;
 	// Check IRQ STACK (1KB) location
-    if ((uint32_t) &g_irqstack_top > 0x1fff8000) { 
-		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1);
-		// pGlobal_config[INITIAL_STACK_PTR] = 0x1fffC000;
-    } else if ((uint32_t) &g_irqstack_top > 0x1fffc000) { 
+/*
+	if ((uint32_t) &g_irqstack_top > 0x1fffc000) {
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
+	} else
+*/
+	if ((uint32_t) &g_irqstack_top > 0x1fff8000) {
+		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1);
     } else {
 		hal_pwrmgr_RAM_retention(RET_SRAM0); // RET_SRAM0|RET_SRAM1|RET_SRAM2
-		// pGlobal_config[INITIAL_STACK_PTR] = 0x1fff8000;
 	}
 #else
 
 #if DEBUG_INFO || SDK_VER_RELEASE_ID != 0x03010102
-		hal_pwrmgr_RAM_retention(RET_SRAM0|RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
+		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
 #else
 		hal_pwrmgr_RAM_retention(RET_SRAM0); // RET_SRAM0|RET_SRAM1|RET_SRAM2
 #endif
@@ -240,7 +274,8 @@ static void hal_init(void) {
 	hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
 	hal_gpio_init();
 	LOG_INIT();
-	hal_fs_init(0x1103C000, 2);
+	//hal_fs_init(0x1103C000, 2);
+	flash_supported_eep_ver(0, APP_VERSION);
 	hal_adc_init();
 }
 

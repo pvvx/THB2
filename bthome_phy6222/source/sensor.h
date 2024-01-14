@@ -8,12 +8,12 @@
 
 #include <stdint.h>
 
-
 // Timing
-#define SENSOR_POWER_TIMEOUT_ms		5
-#define SENSOR_RESET_TIMEOUT_ms		5
+#define SENSOR_POWER_TIMEOUT_ms		3
+#define SENSOR_RESET_TIMEOUT_ms		3
 #define SENSOR_MEASURING_TIMEOUT_ms	7
 
+/* CHT8310 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310.Advanced.Datasheet_Ver1.0.20230407.pdf */
 //	I2C addres
 #define CHT8310_I2C_ADDR0	0x40
 #define CHT8310_I2C_ADDR1	0x44
@@ -32,7 +32,8 @@
 #define CHT8310_REG_HLM		0x08
 #define CHT8310_REG_OST		0x0f
 #define CHT8310_REG_RST		0xfc
-#define CHT8310_REG_ID		0xfe
+#define CHT8310_REG_MID		0xfe
+#define CHT8310_REG_VID		0xff
 
 //	Status register mask
 #define CHT8310_STA_BUSY	0x8000
@@ -53,6 +54,60 @@
 #define CHT8310_CFG_CONSEC_FQ	0x0006
 #define CHT8310_CFG_ATM			0x0001
 
+#define CHT8310_ID	0x5959
+
+/* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/BTH01/CHT8305.pdf */
+
+//  I2C addres
+#define CHT8305_I2C_ADDR0		0x40
+#define CHT8305_I2C_ADDR1		0x41
+#define CHT8305_I2C_ADDR2		0x42
+#define CHT8305_I2C_ADDR3		0x43
+#define CHT8305_I2C_ADDR_MAX	0x43
+
+//  Registers
+#define CHT8305_REG_TMP		0x00
+#define CHT8305_REG_HMD		0x01
+#define CHT8305_REG_CFG		0x02
+#define CHT8305_REG_ALR		0x03
+#define CHT8305_REG_VLT		0x04
+#define CHT8305_REG_MID		0xfe
+#define CHT8305_REG_VID		0xff
+
+//  Config register mask
+#define CHT8305_CFG_SOFT_RESET          0x8000
+#define CHT8305_CFG_CLOCK_STRETCH       0x4000
+#define CHT8305_CFG_HEATER              0x2000
+#define CHT8305_CFG_MODE                0x1000
+#define CHT8305_CFG_VCCS                0x0800
+#define CHT8305_CFG_TEMP_RES            0x0400
+#define CHT8305_CFG_HUMI_RES            0x0300
+#define CHT8305_CFG_ALERT_MODE          0x00C0
+#define CHT8305_CFG_ALERT_PENDING       0x0020
+#define CHT8305_CFG_ALERT_HUMI          0x0010
+#define CHT8305_CFG_ALERT_TEMP          0x0008
+#define CHT8305_CFG_VCC_ENABLE          0x0004
+#define CHT8305_CFG_RESERVED	        0x0003
+
+/*
+struct __attribute__((packed)) _cht8305_config_t{
+	uint16_t reserved 	: 2;
+	uint16_t vccen		: 1;
+	uint16_t talt		: 1;
+	uint16_t halt 		: 1;
+	uint16_t aps 		: 1;
+	uint16_t altm		: 2;
+	uint16_t h_res 		: 2;
+	uint16_t t_res		: 1;
+	uint16_t vccs		: 1;
+	uint16_t mode		: 1;
+	uint16_t heater		: 1;
+	uint16_t clkstr		: 1;
+	uint16_t srst		: 1;
+} cht8305_config_t;
+*/
+
+#define CHT8305_ID	0x5959
 
 typedef struct _measured_data_t {
 	uint16_t	count;
@@ -62,8 +117,18 @@ typedef struct _measured_data_t {
 	uint8_t		battery; // 0..100 % 
 } measured_data_t;
 
+typedef struct _thsensor_cfg_t {
+	union {
+		uint32_t id;
+		uint16_t _id[2];
+	};
+	int16_t temp_offset;
+	int16_t humi_offset;
+	uint8_t 	i2c_addr;
+} thsensor_cfg_t;
+
 extern measured_data_t measured_data;
-extern unsigned short th_sensor_id;
+extern thsensor_cfg_t thsensor_cfg;
 
 void init_sensor(void);
 int read_sensor(void);

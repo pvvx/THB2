@@ -13,14 +13,10 @@
 #ifndef USE_FS
     #define USE_FS 1
 #endif
-#ifdef USE_FS
-    #include "fs.h"
-#endif
-
 
 #if (USE_FS == 0)
-#define NVM_BASE_ADDR           0x1103C000  //16K bytes
 
+#define NVM_BASE_ADDR           0x1103C000  //16K bytes
 
 uint8 osal_snv_init( void )
 {
@@ -50,6 +46,8 @@ uint8 osal_snv_compact( uint8 threshold )
 }
 
 #else
+
+#include "fs.h"
 
 uint8 osal_snv_init( void )
 {

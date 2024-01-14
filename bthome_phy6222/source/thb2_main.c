@@ -33,7 +33,8 @@
 #include "ll_def.h"
 #include "hci_tl.h"
 #include "flash.h"
-#include "fs.h"
+//#include "fs.h"
+#include "flash_eep.h"
 #include "battservice.h"
 #include "thservice.h"
 #include "thb2_peripheral.h"
@@ -126,15 +127,17 @@ static void set_def_name(uint8_t * mac)
 static void set_mac(void)
 {
 	extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
-	uint16 len;
 	if (read_chip_mAddr(ownPublicAddr) != CHIP_ID_VALID) {
-		if(hal_fs_item_read(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
+		//uint16 len;
+		//if(hal_fs_item_read(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
+		if(flash_read_cfg(ownPublicAddr, EEP_ID_MAC, LL_DEVICE_ADDR_LEN) != LL_DEVICE_ADDR_LEN) {
 			LL_Rand(ownPublicAddr,3);
 			// Tuya mac[0:3]
 			ownPublicAddr[3] = 0x8d;
 			ownPublicAddr[4] = 0x1f;
 			ownPublicAddr[5] = 0x38;
-			hal_fs_item_write(0xACAD, ownPublicAddr, LL_DEVICE_ADDR_LEN);
+			flash_write_cfg(ownPublicAddr, EEP_ID_MAC, LL_DEVICE_ADDR_LEN);
+			//hal_fs_item_write(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN);
 		}
 	}
 	set_def_name(ownPublicAddr);
@@ -158,7 +161,7 @@ static void set_serial_number(void)
 	efuse_read(EFUSE_BLOCK_0, temp_rd);
 	uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
 	*p++ = '-';
-	p = str_bin2hex(p, (uint8_t *)&th_sensor_id, 2);
+	p = str_bin2hex(p, (uint8_t *)&thsensor_cfg.id, 4);
 	*p++ = '-';
 	p = str_bin2hex(p, (uint8_t *)&temp_rd[0], 2);
 }
@@ -221,8 +224,8 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	if(type == POSEDGE)
 	{
 		adv_con_count = 30000/DEF_CON_ADV_INERVAL_MS; // 60 sec
-		LOG("int or wakeup(pos):gpio:%d type:%d\n",pin,type);
-		hal_gpio_write(GPIO_LED,1);
+		LOG("int or wakeup(pos):gpio:%d type:%d\n", pin, type);
+		hal_gpio_write(GPIO_LED, LED_OFF);
 		if(gapRole_AdvEnabled) {
 			set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
 		}
@@ -238,8 +241,8 @@ static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	(void) pin;
 	if(type == NEGEDGE)
 	{
-		LOG("int or wakeup(neg):gpio:%d type:%d\n",pin,type);
-		hal_gpio_write(GPIO_LED,0);
+		LOG("int or wakeup(neg):gpio:%d type:%d\n", pin, type);
+		hal_gpio_write(GPIO_LED, LED_ON);
 	}
 	else
 	{
@@ -251,7 +254,11 @@ void init_led_key(void)
 {
 	hal_gpioin_register(GPIO_KEY, posedge_int_wakeup_cb, negedge_int_wakeup_cb);
 	hal_gpioretention_register(GPIO_LED);//enable this pin retention
-	hal_gpio_write(GPIO_LED, 1);
+	hal_gpio_write(GPIO_LED, LED_ON);
+#if DEVICE == DEVICE_BTH01
+	hal_gpioretention_register(GPIO_SPWR);//enable this pin retention
+	hal_gpio_write(GPIO_SPWR, 1);
+#endif
 }
 
 /*********************************************************************
@@ -359,7 +366,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 		GAP_UpdateAdvertisingData( gapRole_TaskID, FALSE, gapRole_ScanRspDataLen, gapRole_ScanRspData );
 		gapRole_ParamUpdateEnable = DEFAULT_ENABLE_UPDATE_REQUEST;
 
-		/*  already set default
+		/*  already set default -> config.h
 		// extern gapPeriConnectParams_t periConnParameters;
 		gapRole_MinConnInterval = periConnParameters.intervalMin;
 		gapRole_MaxConnInterval = periConnParameters.intervalMax;
@@ -404,12 +411,22 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	// ota_app_AddService();
 
 #if (1)
+#if 1 // CODED PHY not work?
+	deviceFeatureSet.featureSet[1] |= (uint8)(
+			LL_FEATURE_2M_PHY
+			| LL_FEATURE_CODED_PHY
+			| LL_FEATURE_CSA2);
+   // CSA2 feature setting
+	pGlobal_config[LL_SWITCH] |= CONN_CSA2_ALLOW;
+	llInitFeatureSetCodedPHY(TRUE);
+#endif
 	llInitFeatureSet2MPHY(TRUE);
 	llInitFeatureSetDLE(TRUE);
 #else
 	llInitFeatureSet2MPHY(FALSE);
 	llInitFeatureSetDLE(FALSE);
 #endif
+    HCI_LE_SetDefaultPhyMode(0,0x03,0x01,0x01);
 
 #ifdef MTU_SIZE
 	ATT_SetMTUSizeMax(MTU_SIZE);
@@ -421,7 +438,6 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	// for receive HCI complete message
 	GAP_RegisterForHCIMsgs(simpleBLEPeripheral_TaskID);
 	LL_PLUS_PerStats_Init(&g_perStatsByChanTest);
-
 	batt_start_measure();
 
 	LOG("=====SimpleBLEPeripheral_Init Done=======\n");
@@ -466,7 +482,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		return (events ^ SYS_EVENT_MSG);
 	}
 
-	// enable adv
+	// enable adv (from gaprole start)
 	if ( events & SBP_RESET_ADV_EVT )
 	{
 		LOG("SBP_RESET_ADV_EVT\n");
@@ -508,6 +524,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		VOID GAPBondMgr_Register( &simpleBLEPeripheral_BondMgrCBs );
 #endif
 		HCI_LE_ReadResolvingListSizeCmd();
+		hal_gpio_write(GPIO_LED, LED_OFF);
 		// return unprocessed events
 		return ( events ^ SBP_START_DEVICE_EVT );
 	}

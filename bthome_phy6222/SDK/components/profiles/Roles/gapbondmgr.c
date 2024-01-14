@@ -486,7 +486,7 @@ bStatus_t GAPBondMgr_SetParameter( uint16 param, uint8 len, void* pValue )
         }
 
         break;
-        #if ( HOST_CONFIG & CENTRAL_CFG )
+#if ( HOST_CONFIG & CENTRAL_CFG )
 
     case GAPBOND_BOND_FAIL_ACTION:
         if ( (len == sizeof ( uint8 )) && (*((uint8*)pValue) <= GAPBOND_FAIL_TERMINATE_ERASE_BONDS) )
@@ -499,7 +499,7 @@ bStatus_t GAPBondMgr_SetParameter( uint16 param, uint8 len, void* pValue )
         }
 
         break;
-        #endif
+#endif
 
     default:
 
@@ -669,7 +669,7 @@ bStatus_t GAPBondMgr_LinkEst( uint8 addrType, uint8* pDevAddr, uint16 connHandle
         }
     }
 
-    #if ( HOST_CONFIG & CENTRAL_CFG )
+#if ( HOST_CONFIG & CENTRAL_CFG )
     else if ( role == GAP_PROFILE_CENTRAL &&
               gapBond_PairingMode[connHandle] == GAPBOND_PAIRING_MODE_INITIATE )
     {
@@ -683,8 +683,8 @@ bStatus_t GAPBondMgr_LinkEst( uint8 addrType, uint8* pDevAddr, uint16 connHandle
         }
     }
 
-    #endif
-    #if ( HOST_CONFIG & PERIPHERAL_CFG )
+#endif
+#if ( HOST_CONFIG & PERIPHERAL_CFG )
 
     // If Peripheral and initiating, send a slave security request to
     // initiate either pairing or encryption
@@ -694,7 +694,7 @@ bStatus_t GAPBondMgr_LinkEst( uint8 addrType, uint8* pDevAddr, uint16 connHandle
         gapBondMgrSlaveSecurityReq( connHandle );
     }
 
-    #endif
+#endif
     return ( SUCCESS );
 }
 
@@ -993,7 +993,7 @@ uint8 GAPBondMgr_ProcessGAPMsg( gapEventHdr_t* pMsg )
         // dropped at the LL because of a MIC failure, so again nothing to do.
     {
         gapBondCompleteEvent_t* pPkt = (gapBondCompleteEvent_t*)pMsg;
-        #if ( HOST_CONFIG & CENTRAL_CFG )
+#if ( HOST_CONFIG & CENTRAL_CFG )
 
         if ( pPkt->hdr.status == LL_ENC_KEY_REQ_REJECTED )
         {
@@ -1032,7 +1032,7 @@ uint8 GAPBondMgr_ProcessGAPMsg( gapEventHdr_t* pMsg )
             }
         }
 
-        #endif
+#endif
 
         if ( pGapBondCB && pGapBondCB->pairStateCB )
         {
@@ -1054,7 +1054,7 @@ uint8 GAPBondMgr_ProcessGAPMsg( gapEventHdr_t* pMsg )
         }
     }
     break;
-    #if ( HOST_CONFIG & PERIPHERAL_CFG )
+#if ( HOST_CONFIG & PERIPHERAL_CFG )
 
     case GAP_PAIRING_REQ_EVENT:
     {
@@ -1110,8 +1110,8 @@ uint8 GAPBondMgr_ProcessGAPMsg( gapEventHdr_t* pMsg )
         }
     }
     break;
-    #endif
-    #if ( HOST_CONFIG & CENTRAL_CFG )
+#endif
+#if ( HOST_CONFIG & CENTRAL_CFG )
 
     case GAP_SLAVE_REQUESTED_SECURITY_EVENT:
     {
@@ -1142,7 +1142,7 @@ uint8 GAPBondMgr_ProcessGAPMsg( gapEventHdr_t* pMsg )
         }
     }
     break;
-    #endif
+#endif
 
     case GAP_LINK_TERMINATED_EVENT:
     {
@@ -1393,7 +1393,7 @@ static uint8 gapBondMgrAddBond( gapBondRec_t* pBondRec, gapAuthCompleteEvent_t* 
             bondIdx = gapBondMgrFindEmpty();
         }
 
-        #if(GAP_BOND_MGR_INDEX_REPLACE)
+#if(GAP_BOND_MGR_INDEX_REPLACE)
 
         /*replace bondIdx*/
         if(bondIdx==GAP_BONDINGS_MAX)
@@ -1401,7 +1401,7 @@ static uint8 gapBondMgrAddBond( gapBondRec_t* pBondRec, gapAuthCompleteEvent_t* 
             bondIdx = (bondReplaceCnt++)%GAP_BONDINGS_MAX;
         }
 
-        #endif
+#endif
     }
 
     if ( bondIdx < GAP_BONDINGS_MAX )

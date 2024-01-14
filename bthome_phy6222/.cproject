@@ -322,6 +322,14 @@
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
+			<target name="reset" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>${cross_make}</buildCommand>
+				<buildArguments>-j24</buildArguments>
+				<buildTarget>reset</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>true</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
 		</buildTargets>
 	</storageModule>
 </cproject>

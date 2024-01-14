@@ -573,9 +573,13 @@ int hal_fs_item_write(uint16_t id,uint8_t* buf,uint16_t len)
     if((buf == NULL) || (len == 0)||(len > 4095))
         return PPlus_ERR_FS_PARAMETER;
 
-    if(len > hal_fs_get_free_size())
-        return PPlus_ERR_FS_NOT_ENOUGH_SIZE;
+    if(len > hal_fs_get_free_size()) {
 
+    	if(hal_fs_get_garbage_size(NULL) > len+32)
+            hal_fs_garbage_collect();
+        else
+        	return PPlus_ERR_FS_NOT_ENOUGH_SIZE;
+    }
     //if(hal_fs_item_find_id(id,&addr) == PPlus_SUCCESS)
     //  return PPlus_ERR_FS_EXIST_SAME_ID;
     if(hal_fs_item_find_id(id,&addr) == PPlus_SUCCESS)

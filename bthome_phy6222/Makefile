@@ -1,8 +1,8 @@
 ##############################################################################
-PROJECT_NAME = bthome_phy6222
+PROJECT_NAME ?= bthome_phy6222
+#POJECT_DEF ?= -DDEVICE=DEVICE_THB2
 ##############################################################################
 COM_PORT = COM11
-
 ##############################################################################
 # Source
 
@@ -14,12 +14,13 @@ SRC_PRJ += battservice.c
 SRC_PRJ += bthome_beacon.c
 SRC_PRJ += osal_peripheral.c
 SRC_PRJ += peripheral_main.c
-SRC_PRJ += sbp_profile_ota.c
+#SRC_PRJ += sbp_profile_ota.c
 SRC_PRJ += devinfoservice.c
 SRC_PRJ += sensors.c
 SRC_PRJ += thb2_main.c
 SRC_PRJ += thb2_peripheral.c
 SRC_PRJ += thservice.c
+SRC_PRJ += flash_eep.c
 
 INCLUDES = -I$(SRC_PATH)
 
@@ -100,7 +101,7 @@ INCLUDES += -I$(SDK_PATH)/components/driver/voice
 INCLUDES += -I$(SDK_PATH)/components/driver/watchdog
 INCLUDES += -I$(SDK_PATH)/components/libraries/crc16
 INCLUDES += -I$(SDK_PATH)/components/libraries/cliface
-INCLUDES += -I$(SDK_PATH)/components/libraries/fs
+#INCLUDES += -I$(SDK_PATH)/components/libraries/fs
 INCLUDES += -I$(SDK_PATH)/components/driver/watchdog
 
 
@@ -189,6 +190,7 @@ STARTUP_OBJ =
 ##############################################################################
 
 DEFINES = -D__GCC
+DEFINES += $(POJECT_DEF)
 DEFINES += -DDEBUG_INFO=0
 DEFINES += -DMTU_SIZE=247
 DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
@@ -265,6 +267,9 @@ flash:
 
 erase_and_flash:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -e -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex
+
+reset:
+	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -r i
 
 directory:
 	@mkdir -p $(OBJ_DIR)

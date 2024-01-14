@@ -39,13 +39,13 @@
 /**
     GATT Services
 */
-// Generic Access Profile Service UUID
+// Generic Access Profile Service UUID 0x1800
 CONST uint8 gapServiceUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GAP_SERVICE_UUID ), HI_UINT16( GAP_SERVICE_UUID )
 };
 
-// Generic Attribute Profile Service UUID
+// Generic Attribute Profile Service UUID 0x1801
 CONST uint8 gattServiceUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_SERVICE_UUID ), HI_UINT16( GATT_SERVICE_UUID )
@@ -54,25 +54,25 @@ CONST uint8 gattServiceUUID[ATT_BT_UUID_SIZE] =
 /**
     GATT Declarations
 */
-// Primary Service UUID
+// Primary Service UUID 0x2801
 CONST uint8 primaryServiceUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_PRIMARY_SERVICE_UUID ), HI_UINT16( GATT_PRIMARY_SERVICE_UUID )
 };
 
-// Secondary Service UUID
+// Secondary Service UUID 0x2801
 CONST uint8 secondaryServiceUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_SECONDARY_SERVICE_UUID ), HI_UINT16( GATT_SECONDARY_SERVICE_UUID )
 };
 
-// Include UUID
+// Include UUID 0x2802
 CONST uint8 includeUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_INCLUDE_UUID ), HI_UINT16( GATT_INCLUDE_UUID )
 };
 
-// Characteristic UUID
+// Characteristic UUID 0x2803
 CONST uint8 characterUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_CHARACTER_UUID ), HI_UINT16( GATT_CHARACTER_UUID )
@@ -81,37 +81,37 @@ CONST uint8 characterUUID[ATT_BT_UUID_SIZE] =
 /**
     GATT Descriptors
 */
-// Characteristic Extended Properties UUID
+// Characteristic Extended Properties UUID 0x2900
 CONST uint8 charExtPropsUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_CHAR_EXT_PROPS_UUID ), HI_UINT16( GATT_CHAR_EXT_PROPS_UUID )
 };
 
-// Characteristic User Description UUID
+// Characteristic User Description UUID 0x2901
 CONST uint8 charUserDescUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_CHAR_USER_DESC_UUID ), HI_UINT16( GATT_CHAR_USER_DESC_UUID )
 };
 
-// Client Characteristic Configuration UUID
+// Client Characteristic Configuration UUID 0x2902
 CONST uint8 clientCharCfgUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_CLIENT_CHAR_CFG_UUID ), HI_UINT16( GATT_CLIENT_CHAR_CFG_UUID )
 };
 
-// Server Characteristic Configuration UUID
+// Server Characteristic Configuration UUID 0x2903
 CONST uint8 servCharCfgUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_SERV_CHAR_CFG_UUID ), HI_UINT16( GATT_SERV_CHAR_CFG_UUID )
 };
 
-// Characteristic Presentation Format UUID
+// Characteristic Presentation Format UUID 0x2904
 CONST uint8 charFormatUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_CHAR_FORMAT_UUID ), HI_UINT16( GATT_CHAR_FORMAT_UUID )
 };
 
-// Characteristic Aggregate Format UUID
+// Characteristic Aggregate Format UUID 0x2905
 CONST uint8 charAggFormatUUID[ATT_BT_UUID_SIZE] =
 {
     LO_UINT16( GATT_CHAR_AGG_FORMAT_UUID ), HI_UINT16( GATT_CHAR_AGG_FORMAT_UUID )

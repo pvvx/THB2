@@ -41,9 +41,11 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 	if (g_system_clk != SYS_CLK_DBL_32M) {
 		AP_PCRM->CLKHF_CTL1 &= ~BIT(13);
 	}
-	hal_gpio_cfg_analog_io(ADC_PIN, Bit_DISABLE);
-	hal_gpio_pin_init(ADC_PIN, GPIO_INPUT);    // ie=0, oen=1 set to imput
-	hal_gpio_pull_set(ADC_PIN, GPIO_FLOATING);
+	AP_IOMUX->Analog_IO_en &= ~BIT(ADC_PIN - P11); // hal_gpio_cfg_analog_io(ADC_PIN, Bit_DISABLE);
+#if !ADC_PIN_USE_OUT
+//	hal_gpio_pin_init(ADC_PIN, GPIO_INPUT);    // ie=0, oen=1 set to imput
+//	hal_gpio_pull_set(ADC_PIN, GPIO_FLOATING);
+#endif
 	AP_PCRM->ANA_CTL &= ~BIT(0); 						// Power down analog LDO
 	hal_clk_reset(MOD_ADCC);
 	hal_clk_gate_disable(MOD_ADCC);
@@ -115,7 +117,11 @@ static void init_adc_batt(void) {
 	AP_PCRM->ADC_CTL2 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ADC_CTL3 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ANA_CTL &= ~BIT(23); //disable micbias
-	hal_gpio_pull_set(ADC_PIN, GPIO_FLOATING);
-	hal_gpio_ds_control(ADC_PIN, Bit_ENABLE);
-	hal_gpio_cfg_analog_io(ADC_PIN, Bit_ENABLE);
+#if ADC_PIN_USE_OUT
+	hal_gpio_pin_init(ADC_PIN, GPIO_OUTPUT);
+	hal_gpio_write(ADC_PIN, 1);
+	AP_IOMUX->pad_ps0 |= BIT(ADC_PIN); // hal_gpio_ds_control(ADC_PIN, Bit_ENABLE);
+#else
+	AP_IOMUX->Analog_IO_en |= BIT(ADC_PIN - P11); //	hal_gpio_cfg_analog_io(ADC_PIN, Bit_ENABLE);
+#endif
 }

@@ -53,10 +53,11 @@
 //    #define __BUILD_PATCH_CFG__             __BUILD_RF_LIB_MST__
 //#endif
 
+#ifndef USE_CODED_PHY
+#define USE_CODED_PHY	1
+#endif
 
 #define DBG_BUILD_LL_TIMING             0               //0x01 for enable LL timing debug 
-
-
 
 
 // ======================
@@ -3787,10 +3788,10 @@ uint8 llProcessMasterControlProcedures1( llConnState_t* connPtr )
         // Note: Unreachable statement generates compiler warning!
         //break;
         default:
-            #ifdef DEBUG
+#ifdef DEBUG
             // fatal error - a unknown control procedure value was used
             LL_ASSERT( FALSE );
-            #endif // DEBUG
+#endif // DEBUG
             break;
         }
     }
@@ -6195,9 +6196,9 @@ llStatus_t LL_SetAdvControl1( uint8 advMode )
         return( LL_STATUS_ERROR_BAD_PARAMETER );
     }
 
-    #ifdef DEBUG_LL
+#ifdef DEBUG_LL
     LOG("llState = %d\n", llState);
-    #endif
+#endif
 
     // check if we should begin advertising
     switch( advMode )
@@ -6348,7 +6349,7 @@ llStatus_t LL_SetAdvControl1( uint8 advMode )
 }
 
 
-#if 0
+#if USE_CODED_PHY
 //2020.10.22,Jie,fix phyupdate issue
 llStatus_t LL_PhyUpdate1( uint16 connId )
 {
@@ -6747,7 +6748,7 @@ uint16 ll_generateTxBuffer1(int txFifo_vacancy, uint16* pSave_ptr)
 }
 
 
-#if 0
+#if USE_CODED_PHY
 //2020.10.23 Jie,fix setphymode issue
 llStatus_t LL_SetPhyMode1( uint16 connId,uint8 allPhy,uint8 txPhy, uint8 rxPhy,uint16 phyOptions)
 {
@@ -6910,7 +6911,7 @@ llStatus_t LL_CreateConn1( uint16 scanInterval,
                           maxLength );
 }
 
-#if 0
+#if USE_CODED_PHY
 //2020.11.12, add case LL_REJECT_IND_EXT
 void llProcessMasterControlPacket1( llConnState_t* connPtr,
                                     uint8*         pBuf )
@@ -7890,9 +7891,13 @@ void init_config(void)
     extern void l2capPocessFragmentTxData(uint16 connHandle);
     JUMP_FUNCTION(L2CAP_PROCESS_FREGMENT_TX_DATA)   =   (uint32_t)&l2capPocessFragmentTxData;
     //BQB bug fix,2020.11.17
-    //JUMP_FUNCTION(LL_PHY_MODE_UPDATE)               =   (uint32_t)&LL_PhyUpdate1;
+#if USE_CODED_PHY
+    JUMP_FUNCTION(LL_PHY_MODE_UPDATE)               =   (uint32_t)&LL_PhyUpdate1;
+#endif
     JUMP_FUNCTION(LL_SET_DATA_LENGTH)               =   (uint32_t)&LL_SetDataLengh1;
-    //JUMP_FUNCTION(LL_SET_PHY_MODE)                  =   (uint32_t)&LL_SetPhyMode1;
+#if USE_CODED_PHY
+    JUMP_FUNCTION(LL_SET_PHY_MODE)                  =   (uint32_t)&LL_SetPhyMode1;
+#endif
     JUMP_FUNCTION(LL_PROCESS_TX_DATA)               =   (uint32_t)&llProcessTxData1;
     JUMP_FUNCTION(LL_GENERATE_TX_BUFFER)            =   (uint32_t)&ll_generateTxBuffer1;
     JUMP_FUNCTION(LL_ADP_ADJ_NEXT_TIME)            =   (uint32_t)&ll_adptive_adj_next_time1;
@@ -7923,7 +7928,9 @@ void ll_patch_master(void)
     JUMP_FUNCTION(LL_MASTER_EVT_ENDOK)              = (uint32_t)&llMasterEvt_TaskEndOk1;
     JUMP_FUNCTION(LL_SET_SCAN_PARAM)                = (uint32_t)&LL_SetScanParam1;
     JUMP_FUNCTION(LL_SET_SCAN_CTRL)                 = (uint32_t)&LL_SetScanControl1;
-    //JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PKT)     = (uint32_t)&llProcessMasterControlPacket1;
+#if USE_CODED_PHY
+    JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PKT)     = (uint32_t)&llProcessMasterControlPacket1;
+#endif
     JUMP_FUNCTION(LL_CREATE_CONN)                   =   (uint32_t)&LL_CreateConn1;
     JUMP_FUNCTION(LL_START_ENCRYPT)                 =   (uint32_t)&LL_StartEncrypt1;
     JUMP_FUNCTION(LL_ENC_DECRYPT)                   =   (uint32_t)&LL_ENC_Decrypt1;

@@ -3912,7 +3912,7 @@ void llSetupConn( void )
     uint16        winOffset;
     uint16        adjustment;
     uint32        initST = initInfo.llTask->t2e1.coarse;
-    #if defined(LL_MANUAL_WINOFFSET)
+#if defined(LL_MANUAL_WINOFFSET)
     // Note: Normally, the window offset is managed dynamically so that precise
     //       connection start times can be achieved (necessary for multiple
     //       connnections). However, sometimes it is useful to force the window
@@ -3942,9 +3942,9 @@ void llSetupConn( void )
     // interval and an offset associated with the connection, less the adjustment
     // Note: connST can never be less than or equal to initTask start time.
     connST = (initST + connCI - adjustment + (initInfo.connId * NUM_SLOTS_PER_MASTER)) & 0x00FFFFFF;
-    #ifdef DEBUG
+#ifdef DEBUG
     LL_ASSERT( connST > initST );
-    #endif // DEBUG
+#endif // DEBUG
     // calc the window offset for the new connection
     // Note: Subtract the 1.25ms the Slave will add on per the spec, plus
     //       additional time to ensure the Slave starts before the Masters
@@ -3979,7 +3979,7 @@ void llSetupConn( void )
     //newWinOffset_debug = winOffset;
     //initST_debug       = initST;
     return;
-    #endif
+#endif
 }
 
 /*******************************************************************************
@@ -4363,7 +4363,7 @@ uint8 llLtTwoChangesInLastSixBits( uint32 accessAddr )
 uint8 llEqAlreadyValidAddr( uint32 accessAddr )
 {
 	(void) accessAddr;
-    #if 0
+#if 0
     uint8 i;
 
     // check any already existing connections don't have the same access address
@@ -4375,7 +4375,7 @@ uint8 llEqAlreadyValidAddr( uint32 accessAddr )
         }
     }
 
-    #endif
+#endif
     return( FALSE );
 }
 
