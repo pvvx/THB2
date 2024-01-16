@@ -3,9 +3,10 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2) and [BTH01](https:/
 
 * Проект в начальной стадии разработки, до появления функционального OTA.
 
-В плане проекта предусматривается дальнейшая поддержка [BTH01 с датчиком AHT30](https://github.com/pvvx/THB2/issues/1#issuecomment-1892557983) [TH-05](https://pvvx.github.io/TH-05).
+В плане проекта предусматривается дальнейшая поддержка [BTH01 с датчиком AHT30](https://github.com/pvvx/THB2/issues/1#issuecomment-1892557983), [TH-05](https://pvvx.github.io/TH-05).
 
 Прошивка V0.5 для THB2 (файл THB2_v05.hex). 
+
 Прошивка V0.5 для BTH01 с датчиком CHT8305 (файл BTH01_v05.hex). 
 
 ## Основные характеристики:
