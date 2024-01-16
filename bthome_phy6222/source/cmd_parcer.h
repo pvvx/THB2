@@ -68,7 +68,7 @@ enum CMD_ID_KEYS {
 
 // CMD_ID_DEV_ID
 typedef struct _dev_id_t{
-	uint8_t pid;			// packet identifier = CMD_ID_DEV_ID
+	uint8_t pid;			// packet identifier = CMD_ID_DEVID
 	uint8_t revision;		// protocol version/revision
 	uint16_t hw_version;	// hardware version
 	uint16_t sw_version;	// software version (BCD)

@@ -109,6 +109,20 @@ struct __attribute__((packed)) _cht8305_config_t{
 
 #define CHT8305_ID	0x5959
 
+
+/*
+---------------------------------------
+ Датчик влажности AHT25
+---------------------------------------
+*/
+#define AHT30_I2C_ADDR	0x38
+
+#define AHT30_CMD_INI	0x0E1  // Initialization Command
+#define AHT30_CMD_TMS	0x0AC  // Trigger Measurement Command
+#define AHT30_DATA_TMS	0x3300  // Trigger Measurement data
+#define AHT30_CMD_RST	0x0BA  // Soft Reset Command
+
+
 typedef struct _measured_data_t {
 	uint16_t	count;
 	int16_t		temp; // x 0.01 C
@@ -125,6 +139,9 @@ typedef struct _thsensor_coef_t {
 } thsensor_coef_t;
 
 extern const thsensor_coef_t def_thcoef;
+#if DEVICE == DEVICE_BTH01
+extern const thsensor_coef_t def_thcoef_aht30;
+#endif
 
 typedef struct _thsensor_cfg_t {
 	thsensor_coef_t coef;
@@ -132,7 +149,7 @@ typedef struct _thsensor_cfg_t {
 		uint32_t id;
 		uint16_t _id[2];
 	};
-	uint8_t 	i2c_addr;
+	uint8_t i2c_addr;
 } thsensor_cfg_t;
 
 extern measured_data_t measured_data;

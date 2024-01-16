@@ -75,12 +75,12 @@ void test_config(void) {
 void load_eep_config(void) {
 	if(!flash_supported_eep_ver(0, APP_VERSION)) {
 		osal_memcpy(&cfg, &def_cfg, sizeof(cfg));
-		osal_memcpy(&thsensor_cfg.coef, &def_thcoef, sizeof(thsensor_cfg.coef));
 	} else {
 		if (flash_read_cfg(&cfg, EEP_ID_CFG, sizeof(cfg)) != sizeof(cfg))
 			osal_memcpy(&cfg, &def_cfg, sizeof(cfg));
-		if (flash_read_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef)) != sizeof(thsensor_cfg.coef))
-			osal_memcpy(&thsensor_cfg.coef, &def_thcoef, sizeof(thsensor_cfg.coef));
+		if(flash_read_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef)) != sizeof(thsensor_cfg.coef)) {
+			osal_memset(&thsensor_cfg.coef, 0, sizeof(thsensor_cfg.coef));
+		}
 	}
 	test_config();
 }

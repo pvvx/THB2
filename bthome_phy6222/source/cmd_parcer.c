@@ -34,8 +34,9 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		obuf[1] = 0; // no err
 		if (cmd == CMD_ID_DEVID) { // Get DEV_ID
 			pdev_id_t p = (pdev_id_t) obuf;
-			//p->revision = 0; // already = 0
-			p->hw_version = 0x01;
+			// p->pid = CMD_ID_DEV_ID;
+			// p->revision = 0; // уже = 0
+			p->hw_version = DEVICE;
 			p->sw_version = APP_VERSION;
 			p->dev_spec_data = 0;
 			p->services = 0;
