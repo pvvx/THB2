@@ -349,7 +349,7 @@ static void thNotifyCB( linkDBItem_t* pLinkItem )
 /*********************************************************************
 	@fn		 thNotifyLevelState
 
-	@brief	 Send a notification of the battery level state
+	@brief	 Send a notification of the th state
 			characteristic if a connection is established.
 
 	@return	 None.

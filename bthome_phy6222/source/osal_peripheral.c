@@ -92,11 +92,11 @@ void osalInitTasks( void )
 	LL_Init( taskID++ );
 	/* HCI Task */
 	HCI_Init( taskID++ );
-	#if defined ( OSAL_CBTIMER_NUM_TASKS )
+#if defined ( OSAL_CBTIMER_NUM_TASKS )
 	/* Callback Timer Tasks */
 	osal_CbTimerInit( taskID );
 	taskID += OSAL_CBTIMER_NUM_TASKS;
-	#endif
+#endif
 	/* L2CAP Task */
 	L2CAP_Init( taskID++ );
 	/* SM Task */

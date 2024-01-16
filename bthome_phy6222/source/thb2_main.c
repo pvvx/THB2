@@ -21,7 +21,6 @@
 #include "gapgattserver.h"
 #include "gattservapp.h"
 #include "devinfoservice.h"
-#include "sbp_profile_ota.h"
 #include "ota_app_service.h"
 #include "thb2_peripheral.h"
 #include "gapbondmgr.h"
@@ -41,6 +40,7 @@
 #include "bthome_beacon.h"
 #include "sensor.h"
 #include "battery.h"
+#include "sbp_profile.h"
 /*********************************************************************
  * MACROS
  */
@@ -71,9 +71,6 @@
  */
 perStatsByChan_t g_perStatsByChanTest;
 
-uint8 adv_count;
-uint8 adv_con_count;
-
 /*********************************************************************
  * EXTERNAL VARIABLES
  */
@@ -88,6 +85,9 @@ uint8 adv_con_count;
 /*********************************************************************
  * LOCAL VARIABLES
  */
+
+adv_work_t adv_wrk;
+
 uint8	simpleBLEPeripheral_TaskID;	  // Task ID for internal task/event processing
 
 static	gaprole_States_t	gapProfileState	=	GAPROLE_INIT;
@@ -197,20 +197,20 @@ static void set_adv_interval(uint16 advInt)
 
 static void adv_measure(void) {
 	if(gapRole_AdvEnabled) {
-		if(++adv_count & 1) {
+		if(++adv_wrk.adv_count >= cfg.measure_interval) {
+			adv_wrk.adv_count = 0;
 			read_sensor();
+			if(++adv_wrk.adv_batt_count >= cfg.batt_interval) { // = 60
+				adv_wrk.adv_batt_count = 0;
+				batt_start_measure();
+			}
 			bthome_data_beacon((padv_bthome_ns1_t) gapRole_AdvertData);
 			LL_SetAdvData(sizeof(adv_bthome_ns1_t), gapRole_AdvertData);
-			if(adv_con_count) {
-				if(--adv_con_count == 0) {
-					set_new_adv_interval(DEF_ADV_INERVAL);
-				}
-			}
 		}
-		else if(adv_count >= BATT_TIMER_MEASURE_INTERVAL/DEF_ADV_INERVAL_MS) // = 60
-		{
-			adv_count = 0;
-			batt_start_measure();
+		if(adv_wrk.adv_con_count) {
+			if(--adv_wrk.adv_con_count == 0) {
+				set_new_adv_interval(cfg.advertising_interval * 100);
+			}
 		}
 	}
 }
@@ -223,7 +223,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	(void) pin;
 	if(type == POSEDGE)
 	{
-		adv_con_count = 30000/DEF_CON_ADV_INERVAL_MS; // 60 sec
+		adv_wrk.adv_con_count = 30000/DEF_CON_ADV_INERVAL_MS; // 60 sec
 		LOG("int or wakeup(pos):gpio:%d type:%d\n", pin, type);
 		hal_gpio_write(GPIO_LED, LED_OFF);
 		if(gapRole_AdvEnabled) {
@@ -294,7 +294,6 @@ void gatrole_advert_enable(bool enable) {
 /*********************************************************************
  * PROFILE CALLBACKS
  */
-
 // GAP Role Callbacks
 static gapRolesCBs_t simpleBLEPeripheral_PeripheralCBs =
 {
@@ -307,14 +306,6 @@ static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs =
 {
 	NULL,					  // Passcode callback (not used by application)
 	NULL					  // Pairing / Bonding state Callback (not used by application)
-};
-#endif
-// Simple GATT Profile Callbacks
-//static
-#if 0
-simpleProfileCBs_t simpleBLEPeripheral_SimpleProfileCBs =
-{
-	simpleProfileChangeCB	 // Charactersitic value change callback
 };
 #endif
 /*********************************************************************
@@ -401,17 +392,17 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	GGS_AddService( GATT_ALL_SERVICES );				//	GAP
 	GATTServApp_AddService( GATT_ALL_SERVICES );		//	GATT attributes
 	DevInfo_AddService();								//	Device Information Service
-	//SimpleProfile_AddService( GATT_ALL_SERVICES );	//	Simple GATT Profile
 	Batt_AddService();
-	//Batt_Register(NULL);
 	TH_AddService();
+	//Batt_Register(NULL);
+	SimpleProfile_AddService( GATT_ALL_SERVICES );		//	Simple GATT Profile
 
 	//uint8	OTA_Passward_AscII[8]	=	{'1','2','3','4','5','6','7','8'};
 	//ota_app_AddService_UseKey(8, OTA_Passward_AscII);
 	// ota_app_AddService();
 
 #if (1)
-#if 1 // CODED PHY not work?
+#if 0 // CODED PHY not work?
 	deviceFeatureSet.featureSet[1] |= (uint8)(
 			LL_FEATURE_2M_PHY
 			| LL_FEATURE_CODED_PHY
@@ -426,7 +417,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	llInitFeatureSet2MPHY(FALSE);
 	llInitFeatureSetDLE(FALSE);
 #endif
-    HCI_LE_SetDefaultPhyMode(0,0x03,0x01,0x01);
+//    HCI_LE_SetDefaultPhyMode(0,0xff,0x01,0x01);
 
 #ifdef MTU_SIZE
 	ATT_SetMTUSizeMax(MTU_SIZE);
@@ -486,8 +477,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 	if ( events & SBP_RESET_ADV_EVT )
 	{
 		LOG("SBP_RESET_ADV_EVT\n");
-		adv_count = 0;
-		//adv_con_count = 1;
+		adv_wrk.adv_count = 0;
 		// set_new_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
 		gatrole_advert_enable(TRUE);
 		return ( events ^ SBP_RESET_ADV_EVT );
@@ -498,8 +488,8 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		read_sensor();
 		// TH Notify
 		TH_NotifyLevel();
-		if(++adv_count >= 6) { // 60 sec
-			adv_count = 0;
+		if(++adv_wrk.adv_batt_count >= cfg.batt_interval) { // 60 sec
+			adv_wrk.adv_batt_count = 0;
 			batt_start_measure();
 		}
 		// return unprocessed events
@@ -531,6 +521,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 	if(events & SBP_DEALDATA)
 	{
 		LOG("\ndeal app datas in events!\n");
+		new_cmd();
 		// return unprocessed events
 		return(events ^ SBP_DEALDATA);
 	}
@@ -600,7 +591,6 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 	{
 		case GAPROLE_STARTED:
 		{
-			// set_mac();
 			LOG("Gaprole_start\n");
 			osal_set_event(simpleBLEPeripheral_TaskID, SBP_RESET_ADV_EVT);
 		}
@@ -610,16 +600,14 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 		{
 			LOG("Gaprole_adversting\n");
 			osal_stop_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT);
-			adv_count = 0;
-			//bthome_data_beacon((padv_bthome_ns1_t) gapRole_AdvertData);
-			//LL_SetAdvData(sizeof(adv_bthome_ns1_t), gapRole_AdvertData);
+			adv_wrk.adv_count = 0;
 		}
 		break;
 
 		case GAPROLE_CONNECTED:
-			adv_con_count = 0;
-			//osal_start_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, 1000000);
-			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, 10000); // 2*DEF_ADV_INERVAL_MS); // 5000 ms
+			adv_wrk.adv_count = 0;
+			adv_wrk.adv_con_count = 0;
+			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, adv_wrk.measure_interval_ms); // 10000 ms
 			HCI_PPLUS_ConnEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, NULL);
 			LOG("Gaprole_Connected\n");
 		break;
@@ -630,8 +618,9 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 
 		case GAPROLE_WAITING:
 			LOG("Gaprole_Disconnection\n");
-			adv_con_count = 1;
+			adv_wrk.adv_con_count = 1;
 			osal_stop_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT);
+			adv_wrk.adv_count = 0;
 		break;
 
 		case GAPROLE_WAITING_AFTER_TIMEOUT:
@@ -650,30 +639,4 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 
 	VOID gapProfileState;
 }
-
-#if 0
-/*********************************************************************
- * @fn		simpleProfileChangeCB
- *
- * @brief	Callback from SimpleBLEProfile indicating a value change
- *
- * @param	paramID - parameter ID of the value that was changed.
- *
- * @return	none
- */
-static void simpleProfileChangeCB( uint8 paramID )
-{
-
-	switch( paramID )
-	{
-		case SIMPLEPROFILE_CHAR1:
-
-		break;
-
-		default:
-			// not process other attribute change
-		break;
-	}
-}
-#endif
 

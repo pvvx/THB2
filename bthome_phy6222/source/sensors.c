@@ -16,6 +16,18 @@
 measured_data_t measured_data;
 thsensor_cfg_t thsensor_cfg;
 
+const thsensor_coef_t def_thcoef = {
+#if DEVICE == DEVICE_THB2
+		.temp_k = 25606,
+		.humi_k = 20000,
+#elif DEVICE == DEVICE_BTH01
+		.temp_k = 16500,
+		.humi_k = 10000,
+#endif
+		.temp_z = 0,
+		.humi_z = 0
+};
+
 void init_i2c(void) {
 	hal_gpio_fmux_set(I2C_SCL, FMUX_IIC0_SCL);
 	hal_gpio_fmux_set(I2C_SDA, FMUX_IIC0_SDA);
@@ -186,15 +198,15 @@ int send_i2c_wreg(uint8 addr, uint8 reg, uint16 data) {
 __ATTR_SECTION_XIP__ void init_sensor(void) {
 	init_i2c();
 #if DEVICE == DEVICE_THB2
-
 	send_i2c_byte(0, 0x06); // Reset command using the general call address
 	WaitMs(SENSOR_RESET_TIMEOUT_ms);
 	thsensor_cfg.i2c_addr = CHT8310_I2C_ADDR0;
 	read_i2c_bytes(thsensor_cfg.i2c_addr, CHT8310_REG_MID, (uint8 *)&thsensor_cfg._id[0], 2); // 0x5959
-	read_i2c_bytes(thsensor_cfg.i2c_addr, CHT8310_REG_VID, (uint8 *)&thsensor_cfg._id[1], 2);
+	read_i2c_bytes(thsensor_cfg.i2c_addr, CHT8310_REG_VID, (uint8 *)&thsensor_cfg._id[1], 2); // 0x8215
 	//WaitMs(1);
-	send_i2c_wreg(CHT8310_I2C_ADDR0, CHT8310_REG_CRT, 0x0300); // Set conversion ratio 5 sec
-
+	if(adv_wrk.measure_interval_ms >= 5000) // > 5 sec
+		send_i2c_wreg(CHT8310_I2C_ADDR0, CHT8310_REG_CRT, 0x0300); // Set conversion ratio 5 sec
+	// else 1 sec
 #elif DEVICE == DEVICE_BTH01
 #define USE_DEFAULT_SETS_SENSOR	0 // for CHT8305
 #if USE_DEFAULT_SETS_SENSOR
@@ -237,9 +249,9 @@ int read_sensor(void) {
 	deinit_i2c();
 	if (!_r32) {
 		_r16 = (reg_data[0] << 8) | reg_data[1];
-		measured_data.temp = ((int32)(_r16 * 25606 + 0x7fff) >> 16)  + thsensor_cfg.temp_offset;; // x 0.01 C
+		measured_data.temp = ((int32)(_r16 * thsensor_cfg.coef.temp_k + 0x7fff) >> 16)  + thsensor_cfg.coef.temp_z;; // x 0.01 C
 		_r32 = ((reg_data[2] << 8) | reg_data[3]) & 0x7fff;
-		measured_data.humi = ((uint32)(_r32 * 20000 + 0x7fff) >> 16) +  + thsensor_cfg.humi_offset; // x 0.01 %
+		measured_data.humi = ((uint32)(_r32 * thsensor_cfg.coef.humi_k + 0x7fff) >> 16) +  + thsensor_cfg.coef.humi_z; // x 0.01 %
 		if (measured_data.humi < 0)
 			measured_data.humi = 0;
 		else if (measured_data.humi > 9999)
@@ -251,9 +263,9 @@ int read_sensor(void) {
 	uint16_t _temp;
 	if (!read_noreg_i2c_bytes(thsensor_cfg.i2c_addr, reg_data, 4)) {
 		_temp = (reg_data[0] << 8) | reg_data[1];
-		measured_data.temp = ((uint32_t)(_temp * 16500) >> 16) - 4000 + thsensor_cfg.temp_offset; // x 0.01 C
+		measured_data.temp = ((uint32_t)(_temp * thsensor_cfg.coef.temp_k) >> 16) - 4000 + thsensor_cfg.coef.temp_z; // x 0.01 C
 		_temp = (reg_data[2] << 8) | reg_data[3];
-		measured_data.humi = ((uint32_t)(_temp * 10000) >> 16) + thsensor_cfg.humi_offset; // x 0.01 %
+		measured_data.humi = ((uint32_t)(_temp * thsensor_cfg.coef.humi_k) >> 16) + thsensor_cfg.coef.humi_z; // x 0.01 %
 		if (measured_data.humi < 0)
 			measured_data.humi = 0;
 		else if (measured_data.humi > 9999)

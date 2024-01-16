@@ -8,6 +8,8 @@
 #ifndef SOURCE_CONFIG_H_
 #define SOURCE_CONFIG_H_
 
+#include "types.h"
+
 #ifndef APP_VERSION
 #define APP_VERSION	0x05	// BCD
 #endif
@@ -71,5 +73,35 @@
 #define DEFAULT_DESIRED_SLAVE_LATENCY			29 // (29+1)*30 = 900 ms
 // Supervision timeout value (units of 10ms, 1000=10s) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_CONN_TIMEOUT			400 // 4s
+
+typedef struct /*__attribute__((packed))*/ _cfg_t {
+	uint32_t flg;
+
+	uint8_t rf_tx_power; //
+	uint8_t advertising_interval; // multiply by 62.5 for value in ms (1..160,  62.5 ms .. 10 sec)
+	uint8_t connect_latency; // +1 x 0.03 sec ( = connection interval), Tmin = 1*30 = 30 ms, Tmax = 256 * 30 = 7680 ms
+	uint8_t reserved1;
+
+	uint8_t measure_interval; // measure_interval
+	uint8_t batt_interval; // * measure_interval
+	uint8_t averaging_measurements; // * measure_interval, 0 - off, 1..255 * measure_interval
+	uint8_t reserved2;
+
+}cfg_t;
+
+extern cfg_t cfg;
+extern const cfg_t def_cfg;
+
+typedef struct _adv_work_t {
+	uint32_t	measure_interval_ms;
+	uint8_t		adv_count;
+	uint8_t		adv_batt_count;
+	uint8_t 	adv_con_count;
+} adv_work_t;
+
+extern adv_work_t adv_wrk;
+
+void test_config(void);
+void load_eep_config(void);
 
 #endif /* SOURCE_CONFIG_H_ */

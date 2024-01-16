@@ -117,13 +117,21 @@ typedef struct _measured_data_t {
 	uint8_t		battery; // 0..100 % 
 } measured_data_t;
 
+typedef struct _thsensor_coef_t {
+	uint32_t temp_k;
+	uint32_t humi_k;
+	int16_t temp_z;
+	int16_t humi_z;
+} thsensor_coef_t;
+
+extern const thsensor_coef_t def_thcoef;
+
 typedef struct _thsensor_cfg_t {
+	thsensor_coef_t coef;
 	union {
 		uint32_t id;
 		uint16_t _id[2];
 	};
-	int16_t temp_offset;
-	int16_t humi_offset;
 	uint8_t 	i2c_addr;
 } thsensor_cfg_t;
 

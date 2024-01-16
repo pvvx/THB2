@@ -19,7 +19,6 @@
 #include "gatt_profile_uuid.h"
 #include "gattservapp.h"
 
-
 #include "devinfoservice.h"
 
 /*********************************************************************
@@ -157,7 +156,7 @@ const uint8 devInfoModelNumber[]		=	DEF_MODEL_NUMBER_STR;
 #if	SERIAL_NUMBER_STR_ENABLE
 // Serial Number String characteristic
 static uint8 devInfoSerialNumberProps	=	GATT_PROP_READ;
-uint8 devInfoSerialNumber[19]; // = "000000-00000000-0000"; // FLASH_ID-SENSOR_ID-EFUSE
+uint8 devInfoSerialNumber[21]; // = "000000-00000000-0000"; // FLASH_ID-SENSOR_ID-EFUSE
 #endif
 
 #if FIRMWARE_REVISION_ENABLE
@@ -346,11 +345,11 @@ bStatus_t DevInfo_SetParameter( uint8 param, uint8 len, void* value )
 
 	switch ( param )
 	{
-	#if	SYSTEM_ID_ENABLE
+#if	SYSTEM_ID_ENABLE
 		case DEVINFO_SYSTEM_ID:
 		osal_memcpy(devInfoSystemId, value, len);
 		break;
-	#endif
+#endif
 
 		default:
 		ret = INVALIDPARAMETER;
@@ -599,6 +598,3 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 	return ( status );
 }
 
-
-/*********************************************************************
-*********************************************************************/

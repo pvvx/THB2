@@ -330,6 +330,7 @@ extern uint16 gapRole_MinConnInterval;
 extern uint16 gapRole_MaxConnInterval;
 extern uint16 gapRole_SlaveLatency;
 extern uint16 gapRole_TimeoutMultiplier;
+extern uint16 gapRole_ConnectionHandle;
 
 
 #ifdef __cplusplus
