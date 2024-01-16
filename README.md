@@ -3,11 +3,11 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2) and [BTH01](https:/
 
 * Проект в начальной стадии разработки, до появления функционального OTA.
 
-В плане проекта предусматривается дальнейшая поддержка [BTH01 с датчиком AHT30](https://github.com/pvvx/THB2/issues/1#issuecomment-1892557983), [TH-05](https://pvvx.github.io/TH-05).
+В плане проекта предусматривается дальнейшая поддержка [TH-05](https://pvvx.github.io/TH-05).
 
-Прошивка V0.5 для THB2 (файл THB2_v05.hex). 
+Прошивка для THB2 (файл THB2_v06.hex). 
 
-Прошивка V0.5 для BTH01 с датчиком CHT8305 (файл BTH01_v05.hex). 
+Прошивка для BTH01 (файл BTH01_v06.hex). 
 
 ## Основные характеристики:
 
@@ -58,7 +58,7 @@ python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 
 ## Сборка прошивки.
 
-Для сборки прошивки используется GNU Arm Embedded Toolchain или Keil.
+Для сборки прошивки используется GNU Arm Embedded Toolchain.
 
 Для работы в Eclipce используете импорт проекта и установите toolchain.path.
 

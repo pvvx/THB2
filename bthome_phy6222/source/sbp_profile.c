@@ -418,6 +418,7 @@ void new_cmd(void) {
 	attHandleValueNoti_t noti;
 	noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
 	noti.len = cmd_parser(noti.value, cmd_in_buffer, cmd_in_len);
-	if(noti.len)
+	if(noti.len) {
 		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
+	}
 }

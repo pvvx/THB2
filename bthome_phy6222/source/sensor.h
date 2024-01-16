@@ -145,10 +145,8 @@ extern const thsensor_coef_t def_thcoef_aht30;
 
 typedef struct _thsensor_cfg_t {
 	thsensor_coef_t coef;
-	union {
-		uint32_t id;
-		uint16_t _id[2];
-	};
+	uint16_t mid;
+	uint16_t vid;
 	uint8_t i2c_addr;
 } thsensor_cfg_t;
 

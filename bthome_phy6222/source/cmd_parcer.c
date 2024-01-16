@@ -24,7 +24,7 @@
 #include "cmd_parcer.h"
 
 /*********************************************************************/
-#define SEND_DATA_SIZE	18
+#define SEND_DATA_SIZE	16
 
 int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 	int olen = 0;
@@ -64,13 +64,13 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				osal_memcpy(&thsensor_cfg.coef, &ibuf[1], len);
 				flash_write_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef));
 			}
-			osal_memcpy(&obuf[1], &thsensor_cfg.coef, sizeof(thsensor_cfg.coef));
-			olen = sizeof(thsensor_cfg.coef) + 1;
+			osal_memcpy(&obuf[1], &thsensor_cfg, sizeof(thsensor_cfg)-3);
+			olen = sizeof(thsensor_cfg)-3 + 1;
 		} else if (cmd == CMD_ID_CFS_DEF) {	// Get/Set default sensor config
-			osal_memcpy(&thsensor_cfg.coef, &def_thcoef, sizeof(thsensor_cfg.coef));
-			flash_write_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef));
-			osal_memcpy(&obuf[1], &thsensor_cfg.coef, sizeof(thsensor_cfg.coef));
-			olen = sizeof(thsensor_cfg.coef) + 1;
+			osal_memset(&thsensor_cfg, 0, sizeof(thsensor_cfg));
+			init_sensor();
+			osal_memcpy(&obuf[1], &thsensor_cfg, sizeof(thsensor_cfg)-3);
+			olen = sizeof(thsensor_cfg)-3 + 1;
 
 	//---------- Debug commands (unsupported in different versions!):
 
@@ -88,17 +88,19 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			} else
 				olen = i + 3;
 		} else if (cmd == CMD_ID_MEM_RW && len > 4) { // Read/Write memory
-			uint8_t *p = (uint8_t *)(ibuf[1] | (ibuf[2]<<8) | (ibuf[3]<<16) | (ibuf[4]<<24));
+			uint8_t *p = (uint8_t *)
+				((uint32_t)(ibuf[1] | (ibuf[2]<<8) | (ibuf[3]<<16) | (ibuf[4]<<24)));
 			if(len > 5) {
 				len -= 5;
 				osal_memcpy(p, &ibuf[5], len);
 			} else
 				len = SEND_DATA_SIZE;
-			osal_memcpy(&obuf, &ibuf, 5);
+			osal_memcpy(obuf, ibuf, 5);
 			osal_memcpy(&obuf[5], p, len);
 			olen = len + 1 + 4;
 		} else if (cmd == CMD_ID_REG_RW && len > 4) { // Read/Write register
-			volatile uint32_t *p = (volatile uint32_t *)(ibuf[1] | (ibuf[2]<<8) | (ibuf[3]<<16) | (ibuf[4]<<24));
+			volatile uint32_t *p = (volatile uint32_t *)
+					((uint32_t)(ibuf[1] | (ibuf[2]<<8) | (ibuf[3]<<16) | (ibuf[4]<<24)));
 			uint32_t tmp;
 			if(len > 8) {
 				tmp = ibuf[5] | (ibuf[6]<<8) | (ibuf[7]<<16) | (ibuf[8]<<24);
@@ -108,7 +110,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				olen = 2;
 			}
 			tmp = *p;
-			osal_memcpy(&obuf, &ibuf, 5);
+			osal_memcpy(obuf, ibuf, 5);
 			osal_memcpy(&obuf[5], &tmp, 4);
 			olen = 1 + 4 + 4;
 		} else {

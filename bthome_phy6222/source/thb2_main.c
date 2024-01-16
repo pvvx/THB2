@@ -161,7 +161,7 @@ static void set_serial_number(void)
 	efuse_read(EFUSE_BLOCK_0, temp_rd);
 	uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
 	*p++ = '-';
-	p = str_bin2hex(p, (uint8_t *)&thsensor_cfg.id, 4);
+	p = str_bin2hex(p, (uint8_t *)&thsensor_cfg.mid, 4);
 	*p++ = '-';
 	p = str_bin2hex(p, (uint8_t *)&temp_rd[0], 2);
 }
@@ -411,7 +411,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	pGlobal_config[LL_SWITCH] |= CONN_CSA2_ALLOW;
 	llInitFeatureSetCodedPHY(TRUE);
 #endif
-	llInitFeatureSet2MPHY(TRUE);
+//	llInitFeatureSet2MPHY(TRUE);
 	llInitFeatureSetDLE(TRUE);
 #else
 	llInitFeatureSet2MPHY(FALSE);

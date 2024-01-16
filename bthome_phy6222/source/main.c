@@ -202,7 +202,7 @@ const ioinit_cfg_t ioInit[] = {
 #if DEBUG_INFO || SDK_VER_RELEASE_ID != 0x03010102
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
 #else
-		hal_pwrmgr_RAM_retention(RET_SRAM0); // RET_SRAM0|RET_SRAM1|RET_SRAM2
+		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
 #endif
 
 #endif

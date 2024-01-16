@@ -1,1 +1,1 @@
-python3 C:\Python310\Scripts\hexinfo.py .\build\bthome_phy6222.hex
+python3 C:\Python310\Scripts\hexinfo.py .\bin\THB2_v06.hex
