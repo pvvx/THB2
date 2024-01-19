@@ -11,14 +11,14 @@
 #define	FLASH_SIZE			0x80000 	// 512k (512*1024)
 #define	FLASH_MAX_SIZE		0x200000 	// 2M (2048*1024)
 #define	FLASH_SECTOR_SIZE	0x01000 	// 4k (4*1024)
-#define	FADD_START_ADDR		0x11000000
-#define	FADD_BOOT_ROM_INFO	(FADD_START_ADDR + 0x02000)		// 4k
-#define	FADD_BOOT_OTA		(FADD_START_ADDR + 0x03000)		// 4k
-#define	FADD_APP_INFO		(FADD_START_ADDR + 0x04000)		// 4k
-#define	FADD_OTA_SEC		(FADD_START_ADDR + 0x05000)		// 44k
-#define	FADD_APP_SEC		(FADD_START_ADDR + 0x10000)		// 236k (2x118k)
-#define	FADD_DATA_SEC		(FADD_START_ADDR + 0x40000)		// 248k
-#define	FADD_EEP_SEC		(FADD_START_ADDR + (FLASH_SIZE - 2*FLASH_SECTOR_SIZE))
+#define	FADDR_START_ADDR	0x11000000
+#define	FADDR_BOOT_ROM_INFO	(FADDR_START_ADDR + 0x02000)		// 4k
+#define	FADDR_BOOT_OTA		(FADDR_START_ADDR + 0x03000)		// 4k
+#define	FADDR_APP_INFO		(FADDR_START_ADDR + 0x04000)		// 4k
+#define	FADDR_OTA_SEC		(FADDR_START_ADDR + 0x05000)		// 44k
+#define	FADDR_APP_SEC		(FADDR_START_ADDR + 0x10000)		// 236k (2x118k)
+#define	FADDR_DATA_SEC		(FADDR_START_ADDR + 0x40000)		// 248k
+#define	FADDR_EEP_SEC		(FADDR_START_ADDR + (FLASH_SIZE - 2*FLASH_SECTOR_SIZE))
 
 #define	START_UP_FLAG		0x12345678
 
@@ -45,7 +45,6 @@ enum {
 	OTA_END = 0xff
 };
 
-extern int otaWrite(void *p);
-extern int otaRead(void *p);
+int ota_parse(unsigned char *pmsg, unsigned int msg_size);
 
 #endif /* BLE_OTA_H_ */

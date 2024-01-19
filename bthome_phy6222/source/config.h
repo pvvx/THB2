@@ -37,7 +37,7 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE DEVICE_THB2
+#define DEVICE DEVICE_BTH01
 #endif
 
 #define DEF_SOFTWARE_REVISION	{'V', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
