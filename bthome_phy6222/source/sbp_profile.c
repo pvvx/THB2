@@ -82,8 +82,9 @@ static CONST gattAttrType_t simpleProfileService = { ATT_BT_UUID_SIZE, simplePro
 
 #if OTA_TYPE
 // Simple Profile Characteristic 1 Properties
-static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE | GATT_PROP_WRITE_NO_RSP;
+static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE | GATT_PROP_WRITE_NO_RSP  | GATT_PROP_NOTIFY;
 //static CONST uint8_t simpleProfileChar1UserDesp[]		=	"OTA\0";	// Simple Profile Characteristic 1 User Description
+static gattCharCfg_t simpleProfileChar1Config[GATT_MAX_NUM_CONN];		//
 
 static uint8_t ota_in_buffer[20];			// Characteristic 1 Value
 static uint8_t ota_in_len;
@@ -102,9 +103,9 @@ static uint8_t cmd_in_len;							// Characteristic 2 Value
  * Profile Attributes - Table
  */
 #if OTA_TYPE
-#define SERVAPP_NUM_ATTR_SUPPORTED		  6
+#define SERVAPP_NUM_ATTR_SUPPORTED		  7
 #define OTA_DATA_ATTR_IDX				  2 // Position of OTA in attribute array
-#define CDM_DATA_ATTR_IDX				  4 // Position of CMD in attribute array
+#define CDM_DATA_ATTR_IDX				  5 // Position of CMD in attribute array
 #else
 #define SERVAPP_NUM_ATTR_SUPPORTED		  4
 #define CDM_DATA_ATTR_IDX				  2 // Position of CMD in attribute array
@@ -133,6 +134,13 @@ static gattAttribute_t simpleProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] =
 			GATT_PERMIT_READ | GATT_PERMIT_WRITE,
 			0,
 			(uint8_t *)&ota_in_buffer[0]
+	},
+	// Characteristic 1 configuration
+	{
+			{ ATT_BT_UUID_SIZE, clientCharCfgUUID },
+			GATT_PERMIT_READ | GATT_PERMIT_WRITE,
+			0,
+			(uint8_t *)simpleProfileChar1Config
 	},
 #if 0
 	// Characteristic 1 User Description
@@ -367,7 +375,8 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 	            	ota_in_len = len;
 					LOG("OTA receive data = 0x ");
 					LOG_DUMP_BYTE(pAttr->pValue, len);
-	            	osal_set_event(simpleBLEPeripheral_TaskID, SBP_OTADATA);
+					if(len >= 2)
+						osal_set_event(simpleBLEPeripheral_TaskID, SBP_OTADATA);
 	            }
 				break;
 #endif // OTA_TYPE
@@ -442,7 +451,7 @@ void new_cmd_data(void) {
 void new_ota_data(void) {
 	attHandleValueNoti_t noti;
 	noti.handle = simpleProfileAttrTbl[OTA_DATA_ATTR_IDX].handle;
-	noti.len = ota_parser(noti.value, cmd_in_buffer, cmd_in_len);
+	noti.len = ota_parser(noti.value, ota_in_buffer, ota_in_len);
 	if(noti.len) {
 		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
 	}

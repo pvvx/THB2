@@ -37,7 +37,7 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE DEVICE_THB2
+#define DEVICE DEVICE_BTH01
 #endif
 
 #define OTA_TYPE_NONE	0
@@ -83,6 +83,25 @@
 #define LED_OFF		0
 
 #define DEF_MODEL_NUMBER_STR		"BTH01"
+#define DEF_HARDWARE_REVISION		"0001"
+#define DEF_MANUFACTURE_NAME_STR	"Tuya"
+
+#elif DEVICE == DEVICE_TH05
+/* Model: TH05 */
+
+#define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
+#define ADC_PIN 	GPIO_P11
+#define ADC_CHL 	ADC_CH1N_P11
+
+#define I2C_SDA 	GPIO_P33 // CHT8305_SDA
+#define I2C_SCL 	GPIO_P34 // CHT8305_SCL
+#define GPIO_SPWR	GPIO_P00 // питание сенсора CHT8305_VDD
+#define GPIO_KEY	GPIO_P14
+#define GPIO_LED	GPIO_P15
+#define LED_ON		1
+#define LED_OFF		0
+
+#define DEF_MODEL_NUMBER_STR		"TH05"
 #define DEF_HARDWARE_REVISION		"0001"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 

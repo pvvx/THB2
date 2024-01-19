@@ -6,9 +6,10 @@
 #include "config.h"
 #if OTA_TYPE
 #include "OSAL.h"
-#include "sbp_profile.h"
 #include "flash.h"
 #include "ble_ota.h"
+#include "sbp_profile.h"
+#include "thb2_peripheral.h"
 
 /*******************************************************************************
 * CONSTANTS */
@@ -91,19 +92,13 @@ uint32_t get_crc32_16bytes(unsigned int crc_init, unsigned char *data) {
 }
 
 
-void ota_timer(void) {
-
-}
-
-
 int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) {
 	uint32_t tmp;
 	uint16_t crc;
 	uint16_t ota_adr = pmsg[0] | (pmsg[1] << 8);
 	uint8_t flash_check[16];
-	uint8_t err_flg = OTA_SUCCESS;
-	if(msg_size > 2) {
-		//	ota_reload_imer();
+	int err_flg = OTA_SUCCESS;
+	if(msg_size >= 2) {
 		if (ota_adr >= CMD_OTA_START) {
 			if (ota_adr == CMD_OTA_START) {
 				if(msg_size == 2 + 4) {
@@ -139,10 +134,9 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 				} else
 					err_flg = OTA_PKT_SIZE_ERR; // size error
 			} else if (ota_adr == CMD_OTA_END) {
-				//@TODO go to reboot or start app
-				//ota_timer()
-				//terminateConnection(0x13);
-				//timer(reboot)
+				//go to reboot or start app
+				GAPRole_TerminateConnection();
+				hal_system_soft_reset();
 			} else
 				err_flg = OTA_UNKNOWN_CMD; // unknown commad
 		} else if(ota.err_flag) {
@@ -215,7 +209,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 			err_flg = OTA_NO_PARAM;
 	} else
 		err_flg = OTA_PKT_SIZE_ERR; // size error
-	if (err_flg) {
+	if (err_flg != OTA_SUCCESS) {
 		ota.err_flag = err_flg;
 		//send/Notify?
 		osal_memcpy(pout, &ota, 20);
