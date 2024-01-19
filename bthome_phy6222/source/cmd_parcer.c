@@ -35,7 +35,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		if (cmd == CMD_ID_DEVID) { // Get DEV_ID
 			pdev_id_t p = (pdev_id_t) obuf;
 			// p->pid = CMD_ID_DEV_ID;
-			// p->revision = 0; // уже = 0
+			p->revision = 1;
 			p->hw_version = DEVICE;
 			p->sw_version = APP_VERSION;
 			p->dev_spec_data = 0;
@@ -64,13 +64,13 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				osal_memcpy(&thsensor_cfg.coef, &ibuf[1], len);
 				flash_write_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef));
 			}
-			osal_memcpy(&obuf[1], &thsensor_cfg, sizeof(thsensor_cfg)-3);
-			olen = sizeof(thsensor_cfg)-3 + 1;
+			osal_memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_size);
+			olen = thsensor_cfg_size + 1;
 		} else if (cmd == CMD_ID_CFS_DEF) {	// Get/Set default sensor config
-			osal_memset(&thsensor_cfg, 0, sizeof(thsensor_cfg));
+			osal_memset(&thsensor_cfg, 0, thsensor_cfg_size);
 			init_sensor();
-			osal_memcpy(&obuf[1], &thsensor_cfg, sizeof(thsensor_cfg)-3);
-			olen = sizeof(thsensor_cfg)-3 + 1;
+			osal_memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_size);
+			olen = thsensor_cfg_size + 1;
 
 	//---------- Debug commands (unsupported in different versions!):
 

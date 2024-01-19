@@ -131,6 +131,8 @@ typedef struct _measured_data_t {
 	uint8_t		battery; // 0..100 % 
 } measured_data_t;
 
+extern measured_data_t measured_data;
+
 typedef struct _thsensor_coef_t {
 	uint32_t temp_k;
 	uint32_t humi_k;
@@ -149,9 +151,8 @@ typedef struct _thsensor_cfg_t {
 	uint16_t vid;
 	uint8_t i2c_addr;
 } thsensor_cfg_t;
-
-extern measured_data_t measured_data;
 extern thsensor_cfg_t thsensor_cfg;
+#define thsensor_cfg_size	(sizeof(thsensor_cfg)-3)
 
 void init_sensor(void);
 int read_sensor(void);

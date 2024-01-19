@@ -128,8 +128,6 @@ static void set_mac(void)
 {
 	extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
 	if (read_chip_mAddr(ownPublicAddr) != CHIP_ID_VALID) {
-		//uint16 len;
-		//if(hal_fs_item_read(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN, &len) != PPlus_SUCCESS) {
 		if(flash_read_cfg(ownPublicAddr, EEP_ID_MAC, LL_DEVICE_ADDR_LEN) != LL_DEVICE_ADDR_LEN) {
 			LL_Rand(ownPublicAddr,3);
 			// Tuya mac[0:3]
@@ -137,7 +135,6 @@ static void set_mac(void)
 			ownPublicAddr[4] = 0x1f;
 			ownPublicAddr[5] = 0x38;
 			flash_write_cfg(ownPublicAddr, EEP_ID_MAC, LL_DEVICE_ADDR_LEN);
-			//hal_fs_item_write(FS_ID_MAC, ownPublicAddr, LL_DEVICE_ADDR_LEN);
 		}
 	}
 	set_def_name(ownPublicAddr);
@@ -453,7 +450,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 	if ( events & ADV_BROADCAST_EVT)
 	{
 		adv_measure();
-		LOG("advN%u\n", adv_count);
+		LOG("advN%u\n", adv_wrk.adv_count);
 		// return unprocessed events
 		return (events ^ ADV_BROADCAST_EVT);
 	}

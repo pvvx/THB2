@@ -369,7 +369,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 					osal_memcpy(pAttr->pValue, pValue, len );
 					cmd_in_len = len;
 					LOG("receive data = 0x ");
-					LOG_DUMP_BYTE(pCurValue, len);
+					LOG_DUMP_BYTE(pAttr->pValue, len);
 					osal_set_event(simpleBLEPeripheral_TaskID, SBP_DEALDATA);
 				}
 				break;
