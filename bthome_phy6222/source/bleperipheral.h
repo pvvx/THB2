@@ -45,10 +45,11 @@ extern "C"
 // Simple BLE Peripheral Task Events
 #define SBP_START_DEVICE_EVT		0x0001  // start
 #define SBP_RESET_ADV_EVT			0x0002  // enable adv (from gaprole_start)
-#define	SBP_DEALDATA				0x0004  // receive command data
+#define	SBP_CMDDATA					0x0004  // receive command data
 #define TIMER_BATT_EVT				0x0008  // for battery detect
 #define BATT_VALUE_EVT				0x0010  // Event for battery voltage value update
 #define ADV_BROADCAST_EVT			0x0020  // Advent. Event Done Notice
+#define	SBP_OTADATA					0x0040  // receive OTA data
 
 /*********************************************************************
  * MACROS

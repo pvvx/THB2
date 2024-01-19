@@ -54,7 +54,7 @@
 //#endif
 
 #ifndef USE_CODED_PHY
-#define USE_CODED_PHY	1
+#define USE_CODED_PHY	0
 #endif
 
 #define DBG_BUILD_LL_TIMING             0               //0x01 for enable LL timing debug 

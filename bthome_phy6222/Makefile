@@ -5,9 +5,7 @@ PROJECT_NAME ?= bthome_phy6222
 COM_PORT = COM11
 ##############################################################################
 # Source
-
 SRC_PATH = ./source
-
 SRC_PRJ = main.c
 SRC_PRJ += battery.c
 SRC_PRJ += battservice.c
@@ -23,18 +21,47 @@ SRC_PRJ += thb2_main.c
 SRC_PRJ += thb2_peripheral.c
 SRC_PRJ += thservice.c
 SRC_PRJ += flash_eep.c
+SRC_PRJ += ble_ota.c
 
 INCLUDES = -I$(SRC_PATH)
 
 SRCS = $(addprefix $(SRC_PATH)/, $(SRC_PRJ))
-
+##############################################################################
+DEFINES = -D__GCC
+DEFINES += $(POJECT_DEF)
+DEFINES += -DDEBUG_INFO=0
+DEFINES += -DMTU_SIZE=247
+DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
+DEFINES += -DADV_NCONN_CFG=0x01
+DEFINES += -DADV_CONN_CFG=0x02
+DEFINES += -DSCAN_CFG=0x04
+DEFINES += -DINIT_CFG=0x08
+DEFINES += -DBROADCASTER_CFG=0x01
+DEFINES += -DOBSERVER_CFG=0x02
+DEFINES += -DPERIPHERAL_CFG=0x04
+DEFINES += -DCENTRAL_CFG=0x08
+DEFINES += -DHOST_CONFIG=0x4
+DEFINES += -DARMCM0
+DEFINES += -D_RTE_
+DEFINES += -DCFG_CP
+DEFINES += -DOSAL_CBTIMER_NUM_TASKS=1
+DEFINES += -DHCI_TL_NONE=1
+DEFINES += -DENABLE_LOG_ROM_=0
+DEFINES += -D_OBJ_DIR_FOR_DTM_=0
+DEFINES += -DDBG_ROM_MAIN=0
+DEFINES += -DAPP_CFG=0
+DEFINES += -DOSALMEM_METRICS=0
+DEFINES += -DPHY_MCU_TYPE=MCU_BUMBEE_M0
+DEFINES += -DDEF_GAPBOND_MGR_ENABLE=0
+DEFINES += -DUSE_FS=0
+DEFINES += -DMAX_NUM_LL_CONN=1
+#DEFINES += -DXFLASH_HIGH_SPEED=1
 ##############################################################################
 BIN_DIR = ./bin
 OBJ_DIR = ./build
 SDK_PATH = ./SDK
-GCC_PATH = 
 PYTHON = python3
-
+GCC_PATH = 
 CC = $(GCC_PATH)arm-none-eabi-gcc
 OBJCOPY = $(GCC_PATH)arm-none-eabi-objcopy
 OBJDUMP = $(GCC_PATH)arm-none-eabi-objdump
@@ -46,17 +73,19 @@ OPT_CFLAGS ?= -Os
 DEB_CFLAGS ?= -g3 -ggdb
 ##############################################################################
 ASFLAGS	   := $(ARCH_FLAGS) $(OPT_CFLAGS) $(DEB_CFLAGS)
-
 CFLAGS     := $(ARCH_FLAGS) $(OPT_CFLAGS) $(DEB_CFLAGS)
 CFLAGS     += -W -Wall --std=gnu99
 CFLAGS     += -fno-diagnostics-show-caret
 CFLAGS     += -fdata-sections -ffunction-sections
 CFLAGS     += -funsigned-char -funsigned-bitfields
+#CFLAGS     += -fpack-struct
+CFLAGS     += -fms-extensions
 CFLAGS     += -specs=nosys.specs
 CFLAGS     += -Wl,--gc-sections
 #CFLAGS     +=  -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
 
-LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
+#LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
+LDSCRIPT   ?= $(SDK_PATH)/misc/ota_phy62x2.ld
 LDFLAGS    := $(ARCH_FLAGS)
 LDFLAGS    += --static -nostartfiles -nostdlib
 LDFLAGS    += -Wl,--gc-sections
@@ -65,8 +94,8 @@ LDFLAGS    += -Wl,--script=$(LDSCRIPT)
 LDFLAGS    += -Wl,--just-symbols=$(SDK_PATH)/misc/bb_rom_sym_m0.gcc
 LDFLAGS    += -Wl,-Map=$(OBJ_DIR)/$(PROJECT_NAME).map 
 LIBS       += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
-##############################################################################
 
+##############################################################################
 INCLUDES += -I$(SDK_PATH)/misc
 INCLUDES += -I$(SDK_PATH)/misc/CMSIS/include
 INCLUDES += -I$(SDK_PATH)/components/arch/cm0
@@ -105,7 +134,6 @@ INCLUDES += -I$(SDK_PATH)/components/libraries/crc16
 INCLUDES += -I$(SDK_PATH)/components/libraries/cliface
 #INCLUDES += -I$(SDK_PATH)/components/libraries/fs
 INCLUDES += -I$(SDK_PATH)/components/driver/watchdog
-
 
 ###########################################
 # LIBs
@@ -187,39 +215,7 @@ STARTUP_ASM = $(SDK_PATH)/misc/CMSIS/device/phyplus/phy6222_start.s
 SRCS += $(SDK_PATH)/misc/CMSIS/device/phyplus/phy6222_cstart.c
 SRCS += $(SDK_PATH)/misc/CMSIS/device/phyplus/phy6222_vectors.c
 
-STARTUP_OBJ = 
-
 ##############################################################################
-
-DEFINES = -D__GCC
-DEFINES += $(POJECT_DEF)
-DEFINES += -DDEBUG_INFO=0
-DEFINES += -DMTU_SIZE=247
-DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
-DEFINES += -DADV_NCONN_CFG=0x01
-DEFINES += -DADV_CONN_CFG=0x02
-DEFINES += -DSCAN_CFG=0x04
-DEFINES += -DINIT_CFG=0x08
-DEFINES += -DBROADCASTER_CFG=0x01
-DEFINES += -DOBSERVER_CFG=0x02
-DEFINES += -DPERIPHERAL_CFG=0x04
-DEFINES += -DCENTRAL_CFG=0x08
-DEFINES += -DHOST_CONFIG=0x4
-DEFINES += -DARMCM0
-DEFINES += -D_RTE_
-DEFINES += -DCFG_CP
-DEFINES += -DOSAL_CBTIMER_NUM_TASKS=1
-DEFINES += -DHCI_TL_NONE=1
-DEFINES += -DENABLE_LOG_ROM_=0
-DEFINES += -D_OBJ_DIR_FOR_DTM_=0
-DEFINES += -DDBG_ROM_MAIN=0
-DEFINES += -DAPP_CFG=0
-DEFINES += -DOSALMEM_METRICS=0
-DEFINES += -DPHY_MCU_TYPE=MCU_BUMBEE_M0
-DEFINES += -DDEF_GAPBOND_MGR_ENABLE=0
-DEFINES += -DUSE_FS=0
-DEFINES += -DMAX_NUM_LL_CONN=1
-#DEFINES += -DXFLASH_HIGH_SPEED=1
 
 CFLAGS  += $(DEFINES) $(INCLUDES) 
 
@@ -250,7 +246,6 @@ all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME
 %.asm: %.elf
 	@echo OBJDUMP: $@
 	@$(OBJDUMP) -s -S $^ >$@ 
-
 
 %.o : %.c
 	@echo CC: $<

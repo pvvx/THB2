@@ -23,6 +23,7 @@
 #include "bleperipheral.h"
 #include "sbp_profile.h"
 #include "cmd_parcer.h"
+#include "ble_ota.h"
 
 /*********************************************************************
  * MACROS
@@ -44,12 +45,13 @@ CONST uint8_t simpleProfileServUUID[ATT_BT_UUID_SIZE] =
 	LO_UINT16(SIMPLEPROFILE_SERV_UUID), HI_UINT16(SIMPLEPROFILE_SERV_UUID)
 };
 
+#if OTA_TYPE
 // Characteristic 1 UUID: 0xFFF3
 CONST uint8_t simpleProfilechar1UUID[ATT_BT_UUID_SIZE] =
 {
 	LO_UINT16(SIMPLEPROFILE_CHAR1_UUID), HI_UINT16(SIMPLEPROFILE_CHAR1_UUID)
 };
-
+#endif
 // Characteristic 2 UUID: 0xFFF4
 CONST uint8_t simpleProfilechar2UUID[ATT_BT_UUID_SIZE] =
 {
@@ -78,13 +80,15 @@ static simpleProfileCBs_t *simpleProfile_AppCBs = NULL;
 // Simple Profile Service attribute 0xFFF0
 static CONST gattAttrType_t simpleProfileService = { ATT_BT_UUID_SIZE, simpleProfileServUUID };
 
-
+#if OTA_TYPE
 // Simple Profile Characteristic 1 Properties
 static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE | GATT_PROP_WRITE_NO_RSP;
 //static CONST uint8_t simpleProfileChar1UserDesp[]		=	"OTA\0";	// Simple Profile Characteristic 1 User Description
 
 static uint8_t ota_in_buffer[20];			// Characteristic 1 Value
 static uint8_t ota_in_len;
+
+#endif
 
 // Simple Profile Characteristic 2 Properties
 static CONST uint8_t simpleProfileChar2Props			=	GATT_PROP_READ | GATT_PROP_WRITE | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY;
@@ -97,10 +101,14 @@ static uint8_t cmd_in_len;							// Characteristic 2 Value
 /*********************************************************************
  * Profile Attributes - Table
  */
-
+#if OTA_TYPE
 #define SERVAPP_NUM_ATTR_SUPPORTED		  6
 #define OTA_DATA_ATTR_IDX				  2 // Position of OTA in attribute array
 #define CDM_DATA_ATTR_IDX				  4 // Position of CMD in attribute array
+#else
+#define SERVAPP_NUM_ATTR_SUPPORTED		  4
+#define CDM_DATA_ATTR_IDX				  2 // Position of CMD in attribute array
+#endif
 
 static gattAttribute_t simpleProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] =
 {
@@ -111,7 +119,7 @@ static gattAttribute_t simpleProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] =
 			0,											/* handle */
 			(uint8_t *)&simpleProfileService			/* pValue */
 	},
-
+#if OTA_TYPE
 	// Characteristic 1 Declaration
 	{
 			{ ATT_BT_UUID_SIZE, characterUUID },
@@ -135,6 +143,7 @@ static gattAttribute_t simpleProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] =
 			(uint8_t *)simpleProfileChar1UserDesp
 	},
 #endif
+#endif // OTA_TYPE
 	// Characteristic 2 Declaration
 	{
 			{ ATT_BT_UUID_SIZE, characterUUID },
@@ -285,11 +294,13 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 		{
 			// No need for "GATT_SERVICE_UUID" or "GATT_CLIENT_CHAR_CFG_UUID" cases;
 			// gattserverapp handles those reads
+#if OTA_TYPE
 			case SIMPLEPROFILE_CHAR1_UUID:
-				*pLen = sizeof(ota_in_buffer);
-				osal_memcpy( pValue, pAttr->pValue, *pLen );
+				*pLen = 20;
+				osal_memcpy( pValue, &ota, *pLen );
 				LOG("Read_UUID1:\n");
 				break;
+#endif
 			case SIMPLEPROFILE_CHAR2_UUID:
 				*pLen = sizeof(cfg);
 				osal_memcpy( pValue, &cfg, *pLen );
@@ -340,6 +351,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 		uint16_t uuid = BUILD_UINT16( pAttr->type.uuid[0], pAttr->type.uuid[1]);
 		switch ( uuid )
 		{
+#if OTA_TYPE
 			case SIMPLEPROFILE_CHAR1_UUID:
 	            //Validate the value
 	            // Make sure it's not a blob oper
@@ -353,9 +365,12 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 	            if ( status == SUCCESS) {
 	            	osal_memcpy( pAttr->pValue, pValue, len );
 	            	ota_in_len = len;
+					LOG("OTA receive data = 0x ");
+					LOG_DUMP_BYTE(pAttr->pValue, len);
+	            	osal_set_event(simpleBLEPeripheral_TaskID, SBP_OTADATA);
 	            }
 				break;
-
+#endif // OTA_TYPE
 			case SIMPLEPROFILE_CHAR2_UUID:
 				// Validate the value
 				// Make sure it's not a blob oper
@@ -368,9 +383,9 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 				if ( status == SUCCESS ) {
 					osal_memcpy(pAttr->pValue, pValue, len );
 					cmd_in_len = len;
-					LOG("receive data = 0x ");
+					LOG("CMD receive data = 0x ");
 					LOG_DUMP_BYTE(pAttr->pValue, len);
-					osal_set_event(simpleBLEPeripheral_TaskID, SBP_DEALDATA);
+					osal_set_event(simpleBLEPeripheral_TaskID, SBP_CMDDATA);
 				}
 				break;
 
@@ -414,7 +429,7 @@ static void simpleProfile_HandleConnStatusCB( uint16_t connHandle, uint8_t chang
 }
 
 
-void new_cmd(void) {
+void new_cmd_data(void) {
 	attHandleValueNoti_t noti;
 	noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
 	noti.len = cmd_parser(noti.value, cmd_in_buffer, cmd_in_len);
@@ -422,3 +437,14 @@ void new_cmd(void) {
 		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
 	}
 }
+
+#if OTA_TYPE
+void new_ota_data(void) {
+	attHandleValueNoti_t noti;
+	noti.handle = simpleProfileAttrTbl[OTA_DATA_ATTR_IDX].handle;
+	noti.len = ota_parser(noti.value, cmd_in_buffer, cmd_in_len);
+	if(noti.len) {
+		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
+	}
+}
+#endif

@@ -515,13 +515,22 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		// return unprocessed events
 		return ( events ^ SBP_START_DEVICE_EVT );
 	}
-	if(events & SBP_DEALDATA)
+	if(events & SBP_CMDDATA)
 	{
-		LOG("\ndeal app datas in events!\n");
-		new_cmd();
+		LOG("CMD data events\n");
+		new_cmd_data();
 		// return unprocessed events
-		return(events ^ SBP_DEALDATA);
+		return(events ^ SBP_CMDDATA);
 	}
+#if OTA_TYPE
+	if(events & SBP_OTADATA)
+	{
+		LOG("OTA data events\n");
+		new_ota_data();
+		// return unprocessed events
+		return(events ^ SBP_OTADATA);
+	}
+#endif
 	// Discard unknown events
 	return 0;
 }

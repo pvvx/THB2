@@ -37,7 +37,15 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE DEVICE_BTH01
+#define DEVICE DEVICE_THB2
+#endif
+
+#define OTA_TYPE_NONE	0
+#define OTA_TYPE_BOOT	1
+#define OTA_TYPE_APP	2
+
+#ifndef OTA_TYPE
+#define OTA_TYPE	OTA_TYPE_BOOT
 #endif
 
 #define DEF_SOFTWARE_REVISION	{'V', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
@@ -82,6 +90,7 @@
 #error "DEVICE Not released!"
 #endif
 
+#define OTA_MODE_SELECT_REG 0x4000f034 // == 0x55 -> OTA
 
 // Minimum connection interval (units of 1.25ms, 80=100ms) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_MIN_CONN_INTERVAL		24 // 12 -> 15 ms

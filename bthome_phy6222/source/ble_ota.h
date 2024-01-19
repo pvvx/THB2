@@ -6,22 +6,24 @@
 #ifndef BLE_OTA_H_
 #define BLE_OTA_H_
 
+#if OTA_TYPE
 /* FLASH */
 
+#ifndef FLASH_SIZE
 #define	FLASH_SIZE			0x80000 	// 512k (512*1024)
+#endif
 #define	FLASH_MAX_SIZE		0x200000 	// 2M (2048*1024)
+#ifndef FLASH_SECTOR_SIZE
 #define	FLASH_SECTOR_SIZE	0x01000 	// 4k (4*1024)
+#endif
 #define	FADDR_START_ADDR	0x11000000
 #define	FADDR_BOOT_ROM_INFO	(FADDR_START_ADDR + 0x02000)		// 4k
-#define	FADDR_BOOT_OTA		(FADDR_START_ADDR + 0x03000)		// 4k
-#define	FADDR_APP_INFO		(FADDR_START_ADDR + 0x04000)		// 4k
-#define	FADDR_OTA_SEC		(FADDR_START_ADDR + 0x05000)		// 44k
-#define	FADDR_APP_SEC		(FADDR_START_ADDR + 0x10000)		// 236k (2x118k)
-#define	FADDR_DATA_SEC		(FADDR_START_ADDR + 0x40000)		// 248k
-#define	FADDR_EEP_SEC		(FADDR_START_ADDR + (FLASH_SIZE - 2*FLASH_SECTOR_SIZE))
+#define	FADDR_OTA_SEC		(FADDR_START_ADDR + 0x03000)		// 60k
+#define	FADDR_APP_SEC		(FADDR_START_ADDR + 0x12000)		//
+//#define	FADDR_DATA_SEC		(FADDR_START_ADDR + 0x40000)
+#define	FADDR_EEP_SEC		(FADDR_START_ADDR + (FLASH_SIZE - 4*FLASH_SECTOR_SIZE))
 
-#define	START_UP_FLAG		0x12345678
-
+#define	START_UP_FLAG		0x36594850	// "PHY6"
 
 #define CMD_OTA_START		0xff00
 #define CMD_OTA_SET			0xff01
@@ -45,6 +47,27 @@ enum {
 	OTA_END = 0xff
 };
 
-int ota_parse(unsigned char *pmsg, unsigned int msg_size);
+typedef struct _ota_par_t {
+	uint8_t  err_flag;
+	uint8_t  version;
+	uint8_t  start_flag;
+	uint8_t  reboot_flag;
+	uint32_t program_offset;
+	uint16_t pkt_index;
+	uint16_t pkt_total;
+	uint32_t fw_value;
+	uint32_t crc32;
+	uint32_t erase_addr;
+} ota_par_t;
+
+extern ota_par_t ota;
+
+int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size);
+
+#if OTA_TYPE == OTA_TYPE_BOOT
+void startup_ota(void);
+#endif
+
+#endif // OTA_TYPE
 
 #endif /* BLE_OTA_H_ */

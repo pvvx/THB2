@@ -76,7 +76,8 @@ extern bStatus_t SimpleProfile_AddService( uint32_t services );
 
 //extern bStatus_t simpleProfile_Notify( uint8_t param, uint8_t len, void *value );
 
-void new_cmd(void);
+void new_cmd_data(void);
+void new_ota_data(void);
 
 #ifdef __cplusplus
 }
