@@ -8,9 +8,11 @@
 const FLASH_SIZE = 0x80000;
 var bluetoothDevice, gattServer, otaCharacteristic, myCharacteristic;
 //Firmware values
-var firmwareArray = "",
+var firmwareArray = null,
     startTime = 0,
     flgRdFF = false,
+    fwmaxsize = 196608,
+    fwname = "",
     blockCount = 0;
 //Connection values
 var connectTrys = 0;
@@ -23,9 +25,7 @@ function resetVariables() {
     Theservice = null;
     otaCharacteristic = null;
     myCharacteristic = null;
-    $('butReadFF').disabled = true;
     $('butReadAddr').disabled = true;
-    $('butSave').disabled = true;
     $('butStartDFU').disabled = true;
     $('butWriteData').disabled = true;
     $('butCmdData').disabled = true;
@@ -89,24 +89,30 @@ function doConnect() {
     }).then(characteristic => {
         addClog("Найдена OTA характеристика");
         otaCharacteristic = characteristic;
+		return otaCharacteristic.addEventListener('characteristicvaluechanged', event => OtaBlkParse(event.target.value));
+	}).then(_ => {
+        return otaCharacteristic.readValue();
+    }).then(value => {
+		if(value.byteLength >= 20)
+			addLog("OTA: "+dump8(value, value.byteLength));
         return Theservice.getCharacteristic(0xfff4);
     }).then(characteristic => {
         addClog("Найдена CMD характеристика");
         myCharacteristic = characteristic;
-        myCharacteristic.readValue().then(value => {
-	if(value.byteLength >= 10)
-		addLog("DevCfg: "+dump8(value, value.byteLength));
-	//flash_buf = new Uint8Array(FLASH_SIZE);
-	myCharacteristic.addEventListener('characteristicvaluechanged', event => CustomBlkParse(event.target.value));
-	myCharacteristic.startNotifications().then(_ => {
-        let s = "Устройство подключено.";
-		addAlog(s);
-    $('butCmdData').disabled = false;
-	$('butReadFF').disabled = false;
-	$('butReadAddr').disabled = false;
-	$('butWriteData').disabled = false;
-	$('butStartDFU').disabled = false; })
-        })
+        return myCharacteristic.readValue();
+    }).then(value => {
+		if(value.byteLength >= 10)
+			addLog("DevCfg: "+dump8(value, value.byteLength));
+		return myCharacteristic.addEventListener('characteristicvaluechanged', event => CustomBlkParse(event.target.value));
+	}).then(_ => {
+		myCharacteristic.startNotifications().then(_ => {
+        	let s = "Устройство подключено.";
+			addAlog(s);
+		    $('butCmdData').disabled = false;
+			$('butReadAddr').disabled = false;
+			$('butWriteData').disabled = false;	
+			if (firmwareArray != null) $('butStartDFU').disabled = false;
+			})
     }).catch(handleError);
 }
 
@@ -119,7 +125,7 @@ function reConnect() {
 }
 
 function startDFU() {
-    addLog("Start DFU");
+    addLog("Старт программирования...");
     updateBegin();
 }
 
@@ -149,7 +155,7 @@ function setStatus(status) {
 }
 
 function updateFail(err) {
-    let s = "Update error: " + err;
+    let s = "OTA error: " + err;
     addAlog(s);
 }
 
@@ -241,35 +247,130 @@ function hex2ascii(hexx) {
     return str;
 }
 
+var crc32 = (function() {
+	let table = new Uint32Array(256);
+	for(var i=256; i--;) {
+		let tmp = i;
+		for(let k=8; k--;) {
+			tmp = tmp & 1 ? 0xEDB88320 ^ tmp >>> 1 : tmp >>> 1;
+		}
+		table[i] = tmp;
+	}
+	return function( data ) {
+		let crc = -1;
+		let l = data.length;
+		for(let i=0; i<l; i++) {
+			crc = crc >>> 8 ^ table[ crc & 255 ^ data[i] ];
+		}
+		return (crc >>> 0);
+	};
+})();
+
+function testOTAFirmware(data) {
+	let fsize = data.byteLength;
+	addClog("File size = 0x"+ fsize.toString(16));
+	if (fsize < 272)
+		return "Неправильный размер двоичной прошивки PHY6 OTA!";
+	if(fsize > 192*1024) // 208kB for BLE
+		return "Размер прошивки более 192 кбайт!";
+	let head = new DataView(data, 0, 272);
+	let h = {};
+	h.id = head.getUint32(0, true);
+	h.segs = head.getUint32(4, true);
+	h.start = head.getUint32(8, true);
+	h.size = head.getUint32(12, true);
+	addAlog("PHY6 OTA ID: "+hex(h.id, 4)+ ", Сегментов: " + h.segs + ", Старт: 0x"+hex(h.start, 8)+ ", Размер: " + h.size + " байт");
+	if(h.id != 0x36594850) // "PHY6"
+		return "Неверное id в заголовке PHY6 OTA!";
+	if(h.segs > 16)
+		return "Неверное количество сегментов в заголовке PHY6 OTA!";
+	if(h.size != fsize-4)
+		return "Неверный размер в заголовке PHY6 OTA!";
+	let fcrc = new Uint32Array(2);
+	fcrc[0] = crc32(new Uint8Array(data.slice(0, h.size)));
+	let x = new DataView(data, h.size, 4);
+	fcrc[1] = x.getUint32(0, true);
+	addClog("Файл CRC = 0x" + fcrc[1].toString(16) + ", Расчет CRC = 0x" + fcrc[0].toString(16));
+	if(fcrc[0] != fcrc[1]) {
+		return "Неправильный CRC в файле OTA!";
+	}
+	return "ok";
+}
+
+function getFirmwareArray(data, filename) {
+	addAlog("Файл: " + filename);
+	addClog("Файл: " + filename);
+	let s = testOTAFirmware(data);
+	if(s != "ok") {
+		addAlog(s);
+		blockCount = 0;
+		firmwareArray = null;
+		fwname = "";
+		//$("ldfrmw").innerHTML=s;
+		alert(s);
+		return;
+	}
+	firmwareArray = bytesToHex(data);
+	addAlog("Размер файла: " + (firmwareArray.length/2).toString(10) + " байт");
+	if (firmwareArray.length % 32 !== 0) { // pad last block to 16bytes
+		var padHex = "ffffffffffffffffffffffffffffffff";
+		firmwareArray += padHex.substr(0, 32 - firmwareArray.length % 32);
+	}
+	blockCount = firmwareArray.length / 32;
+	addAlog("Счетчик: " + blockCount + " блоков");
+	fwname = filename;
+	$('butStartDFU').disabled = false;
+}
+
 window.onload = function() {
     document.querySelector("#file").addEventListener("change", function() {
-        var reader = new FileReader();
-        reader.onload = function() {
-            firmwareArray = bytesToHex(this.result);
-			if(firmwareArray.substring(0,4)!="1234"){
-				alert("Выбранный файл не для PHY62x2 OTA!");
-				addLog("Выбранный файл не для PHY62x2 OTA!");
-				blockCount = 0;
-				firmwareArray = "";
-				return;
-			}
-            addLog("File was selected, size: " + firmwareArray.length / 2 + " bytes");
-			
+    	let reader = new FileReader();
+		reader.fname = "";
+		reader.onload = function() {getFirmwareArray(this.result, this.fname);};
+    	if (this.files[0] != null)
+        	reader.readAsArrayBuffer(this.files[0]);
+	    else
+    	    addLog("Файл не выбран"); }, false);
+}
 
-            if (firmwareArray.length % 32 !== 0) { // pad last block to 16bytes
-                var padHex = "ffffffffffffffffffffffffffffffff";
-                firmwareArray += padHex.substr(0, 32 - firmwareArray.length % 32);
-            }
-            blockCount = firmwareArray.length / 32;
-            addLog("Count: " + blockCount);
-        }
-        if (this.files[0] != null)
-            reader.readAsArrayBuffer(this.files[0]);
-        else
-            addLog("Файл не выбран");
-    }, false);
+var ota_errors = [
+'ok',
+'Неверная команда',
+'Не задан старт',
+'Не заданы параметры',
+'Неверные параметры',
+'Неправильный размер пакета',
+'Ошибка CRC16 пакета',
+'Потеря пакетов',
+'Ошибка записи в Flash',
+'Ошибка в номере пакета',
+'Ошибка идентификатора в файле программы',
+'Ошибка CRC32 переданной программы'];
 
-    $("butSave").onclick =  function() {download(flash_buf, 'ff.bin', 'application/octet-stream;charset=utf-8');};
+function get_msg_ota_err(err) {
+	if(err == 0)
+		return "ok";
+ 	if(err == 255)
+		return "OTA end";
+	if(err <= 11)
+		return ota_errors[err];
+	return "Неизвестная ошибка";
+}
+
+function OtaBlkParse(value) {
+	if(value.byteLength < 20) return;
+	var ota = {};
+	ota.err_flag = value.getUint8(0);
+	ota.version = value.getUint8(1);
+	ota.start_flag = value.getUint8(2);
+	ota.debug_flag = value.getUint8(3);
+	ota.program_offset = value.getUint32(4,true);
+	ota.pkt_index = value.getUint16(8,true);
+	ota.pkt_total = value.getUint16(10,true);
+	ota.fw_value = value.getUint32(12,true);
+	ota.crc32 = value.getUint32(16,true);
+	//addClog('otablk: '+dump8(value, value.byteLength));
+	addClog('OTA read: ver: '+hex(ota.version,2)+', err: '+ota.err_flag+' - '+get_msg_ota_err(ota.err_flag)+', dbg: '+ota.debug_flag+', start: '+ota.start_flag+', offs: 0x'+hex(ota.program_offset,8)+', idx: 0x'+hex(ota.pkt_index,4)+', total: 0x'+hex(ota.pkt_total,4)+', crc: 0x'+hex(ota.crc32,8));
 }
 
 function updateBegin() {
@@ -277,21 +378,40 @@ function updateBegin() {
         addLog("Не выбран файл!");
         return;
     }
-
     setTimeout(function() {
-        otaCharSend("00ff").then(function(character) {
-            otaCharSend("01ff").then(function(character) {
-                setTimeout(function() {
-                    startTime = new Date().getTime();
-                    sendOTAblock(0);
-                }, 300);
-            }).catch(function(err) {
-                updateFail(err);
-            });
-        }).catch(function(err) {
-            updateFail(err);
-        });
-    }, 500);
+        otaCharSend("00ff")
+        .then(_ => { otaCharacteristic.readValue().then(value => {
+//        otaCharSend("01ff"+firmwareArray.substring(16,24)+firmwareArray.substring(0,8)+hex((blockCount >> 8) | ((blockCount & 0xff) << 8),4))
+		otaCharSend("01ff")
+        .then(_ => { otaCharacteristic.readValue().then(value => {
+			if(value.byteLength >= 2 && value.getUint8(0) == 0) {
+	        	setTimeout(function() {
+    	        	startTime = new Date().getTime();
+        	        sendOTAblock(0);
+            	}, 100);
+            } else
+            	addAlog("Ошибка N"+value.getUint8(0)+" OTA!");
+        }).catch(function(err) {updateFail(err); });
+        }).catch(function(err) {updateFail(err); });
+        }).catch(function(err) {updateFail(err); });
+        }).catch(function(err) {updateFail(err); });
+    }, 100);
+}
+
+function sendLastOTA() {
+	otaCharacteristic.readValue().then(value => {
+		if(value.byteLength >= 1 && value.getUint8(0) == 0xff)
+		  	addAlog("Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды");
+		else
+			addAlog("Ошибка ("+value.getUint8(0)+") OTA: " + get_msg_ota_err(value.getUint8(0)));
+     }).catch(function(err) { updateFail(err); });
+/*  Сброс - отключен для теста
+    var data = "02ff";
+    otaCharSend(data).then(_ => {
+    	addAlog("Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды");
+    }).catch(function(err) {
+        updateFail(err);
+    }); */
 }
 
 function sendOTAblock(blockNr) {
@@ -299,22 +419,28 @@ function sendOTAblock(blockNr) {
         sendLastOTA();
         return;
     }
-    setStatus("Передан блок N: " + blockNr + " из " + blockCount + ", " + Math.floor(blockNr / (blockCount * 1.0) * 100) + "% успеха, время от старта " + (new Date().getTime() - startTime) / 1000.0 + "сек");
+    setStatus("Передан блок N: " + blockNr + " из " + blockCount + ", " + Math.floor(blockNr / (blockCount * 1.0) * 100) + "% успеха, время от старта " + (new Date().getTime() - startTime) / 1000.0 + " сек");
     var blockNrString = getHexBLockCount(blockNr);
     var blockString = blockNrString + firmwareArray.substring(blockNr * 32, blockNr * 32 + 32);
     var blockCRC = getHexCRC(blockString);
-    otaCharSend(blockString + blockCRC).then(function(character) {
+    otaCharSend(blockString + blockCRC).then(_ => {
+	    if (blockNr >= blockCount - 1) {
+    	    sendLastOTA();
+        	return;
+	    }
         setTimeout(function() {
             if ((blockNr + 1) % 8 == 0) {
-                otaCharacteristic.readValue().then(function(result) {
-                    addClog('Чтение OTA');
-                    sendOTAblock(blockNr + 1);
-                }).catch(function(err) {
-                    updateFail(err);
-                });
-            } else {
-                sendOTAblock(blockNr + 1);
-            }
+                otaCharacteristic.readValue().then(value => {
+					if(value.byteLength >= 1 && value.getUint8(0) == 0)
+	                    sendOTAblock(blockNr + 1);
+		            else {
+		            	let s = get_msg_ota_err(value.getUint8(0));
+		            	if(s != "ok")
+			            	addAlog("Ошибка ("+value.getUint8(0)+") на передаче блока "+blockNr+" OTA: "+s);
+		            }
+				}).catch(function(err) { updateFail(err); });
+			} else
+                  sendOTAblock(blockNr + 1);
         }, 0);
     }).catch(function(err) {
         updateFail(err);
@@ -327,22 +453,13 @@ function getHexBLockCount(count) {
 }
 
 
-function sendLastOTA() {
-    var data = "02ff" + getHexBLockCount(blockCount - 1) + getHexBLockCount(~(blockCount - 1) & 0xffff);
-    otaCharSend(data).then(function(character) {
-    	addAlog("Прошивка завершена за " + (new Date().getTime() - startTime) / 1000 + " секунд");
-    }).catch(function(err) {
-        updateFail(err);
-    });
-}
-
 var otaCharSend = function(data) {
     return new Promise(function(resolve, reject) {
-        //addClog("OTA: " + data);
+        //addClog("OTA send: " + data);
         otaCharacteristic.writeValue(hexToBytes(data)).then(function(character) {
             resolve("ok");
         }).catch(function(err) {
-            reject("some error while sending char data");
+            reject("Ошибка при отправке данных");
         });
     });
 }
@@ -353,7 +470,7 @@ var mainCharSend = function(data, characteristic) {
         characteristic.writeValue(hexToBytes(data)).then(function(character) {
             resolve("ok");
         }).catch(function(err) {
-            reject("some error while sending char data");
+            reject("Ошибка при отправке данных");
         });
     });
 }
@@ -472,8 +589,6 @@ function download(data, filename, type) {
 <div id="percent">Состояние: Ожидание соединения с устройством</div>
 <button type="button"id="butStartDFU" disabled="true" onclick="startDFU();">Старт программирования</button>
 <br><hr>
-<input type="button" id="butReadFF" onclick="StartReadFF()" disabled="true" value="Прочитать всю Flash">
-<input type="button" id="butSave" disabled="true" value="Сохранить в файл"><br><hr>
 Чтение и запись памяти:<br>
 Адрес (hex): <input size="8" type="text" id="inputAddr" value="11000000" maxlength="8">
 <input type="button" id="butReadAddr" onclick="InfoReadAddr()" disabled="true" value="Читать">

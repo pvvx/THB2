@@ -295,9 +295,9 @@ int main(void) {
     		&&  hal_gpio_read(GPIO_KEY) ) {
     	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
     	AP_PCR->CACHE_BYPASS = 1; // just bypass cache
-    	startup_ota();
-	}
-	write_reg(OTA_MODE_SELECT_REG, 0);
+    	startup_app();
+	} else
+		write_reg(OTA_MODE_SELECT_REG, 0);
 #endif
 
 	watchdog_config(WDG_2S);

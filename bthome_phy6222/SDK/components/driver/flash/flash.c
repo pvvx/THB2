@@ -67,7 +67,8 @@ __ATTR_SECTION_SRAM__ static inline void spif_unlock(uint32_t vic_iser) {
 	HAL_EXIT_CRITICAL_SECTION();
 }
 
-static void hal_cache_tag_flush(void) {
+//static
+void hal_cache_tag_flush(void) {
 	HAL_ENTER_CRITICAL_SECTION();
 	uint32_t cb = AP_PCR->CACHE_BYPASS;
 	volatile int dly = 8;

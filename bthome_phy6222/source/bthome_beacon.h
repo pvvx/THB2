@@ -142,8 +142,6 @@ typedef struct _adv_buf_t {
 	adv_bthome_ns1_t data;
 } adv_buf_t;
 
-//extern adv_buf_t adv_buf;
-
 //void bls_set_advertise_prepare(void *p);
 //int app_advertise_prepare_handler(rf_packet_adv_t * p);
 void bthome_data_beacon(padv_bthome_ns1_t p);

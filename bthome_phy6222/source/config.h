@@ -40,9 +40,9 @@
 #define DEVICE DEVICE_BTH01
 #endif
 
-#define OTA_TYPE_NONE	0
-#define OTA_TYPE_BOOT	1
-#define OTA_TYPE_APP	2
+#define OTA_TYPE_NONE	0	// нет OTA
+#define OTA_TYPE_BOOT	1	// вариант для прошивки boot + OTA
+#define OTA_TYPE_APP	2	// переключение из APP на OTA + boot прошивку, пока не реализовано
 
 #ifndef OTA_TYPE
 #define OTA_TYPE	OTA_TYPE_BOOT

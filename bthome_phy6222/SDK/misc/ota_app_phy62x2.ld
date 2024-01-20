@@ -1,11 +1,23 @@
-
+/* SRAM + XIP linker script */
+/* https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fds/index.html */
+PHDRS 
+{
+  romdata PT_LOAD FLAGS(6);
+  text    PT_LOAD FLAGS(5);
+  data    PT_LOAD FLAGS(6);
+  xip     PT_LOAD FLAGS(5);
+  rodata  PT_LOAD FLAGS(4);
+}
 
 MEMORY
 {
-  jumptbl (rwx) : ORIGIN = 0x1fff0000, LENGTH = 0x00400
+  jumptbl (rw)  : ORIGIN = 0x1fff0000, LENGTH = 0x00400
   gcfgtbl (rw)  : ORIGIN = 0x1fff0400, LENGTH = 0x00400
-  flash (rx)    : ORIGIN = 0x11005000, LENGTH = 0x0B000
-  sram (rwx)  	: ORIGIN = 0x1fff1838, LENGTH = 0x0E7C8
+  sram    (rwx) : ORIGIN = 0x1fff1838, LENGTH = 0x0E7C8
+  flash   (rx)  : ORIGIN = 0x11020000, LENGTH = 0x20000
+  sram2   (rwx) : ORIGIN = 0x20000000, LENGTH = 0x10000
+  sram3   (rwx) : ORIGIN = 0x20010000, LENGTH = 0x02000
+  sram4   (rwx) : ORIGIN = 0x20012000, LENGTH = 0x00800
 }
 
 OUTPUT_ARCH(arm)
@@ -15,44 +27,21 @@ ENTRY(__start)
 SECTIONS
 {
     .jumptbl : {
-       KEEP(*(jump_table_mem_area))
-    } > jumptbl  
+        *(jump_table_mem_area)
+    } > jumptbl : romdata
 
-
-    .gcfgtbl : {
-      *(global_config_area)
+    .gcfgtbl (NOLOAD) : {
+        *(global_config_area)
     } > gcfgtbl
 
     .textentry : {
         *(*.isr_vector)
-    } > sram
+    } > sram : text
 
-
-    .init_section : {
-        _sinit = ABSOLUTE(.);
-        *(.init_array .init_array.*)
-        _einit = ABSOLUTE(.);
-    } > flash
-
-    .ARM.extab : {
-        *(.ARM.extab*)
-    } > flash
-
-    __exidx_start = ABSOLUTE(.);
-    .ARM.exidx : {
-        *(.ARM.exidx*)
-    } > flash
-    __exidx_end = ABSOLUTE(.);
-
- 
-    ._sjtblsstore : {
-       _sjtblss = ABSOLUTE(.);
-    } > flash   
-
-
-    .data : {
-        _sdata = ABSOLUTE(.);
+    _sdata = ABSOLUTE(.);
+    .text : {
         _stextram = ABSOLUTE(.);
+
         *phy6222_start.o(.text)
         *.o(_section_standby_code_)
         *.o(_section_sram_code_)
@@ -69,22 +58,18 @@ SECTIONS
 
         *phy_sec_ext.o(.text .text.*)
 
-        *libc.a:lib_a-memset.o(.text.*)
-        *libc.a:lib_a-memcpy-stub.o(.text.*)
-        *libgcc.a:_udivsi3.o(.text)
-        *libgcc.a:_divsi3.o(.text)
-        *libgcc.a:_dvmd_tls.o(.text)
-/*        *libgcc.a:_thumb1_case_sqi.o(.text)
-        *libgcc.a:_thumb1_case_uqi.o(.text) */
+        *libgcc.a:*.o(.text .text.*)
    
         _etextram = ABSOLUTE(.);
+    } > sram : text
 
+    .data : {
         *(.data .data.*)
         *(.gnu.linkonce.d.*)
         CONSTRUCTORS
-        . = ALIGN(4);
-        _edata = ABSOLUTE(.);
-    } > sram 
+    } > sram  : data
+    . = ALIGN(4);
+    _edata = ABSOLUTE(.);
 
     .bss : {
         _sbss = ABSOLUTE(.);
@@ -94,21 +79,24 @@ SECTIONS
         . = ALIGN(4);
         _ebss = ABSOLUTE(.);
     } > sram
- 
- /*   
-    .int_stack : {
-        . = ALIGN(4);
-        *(int_stack)
-        . = ALIGN(4);
-        _stack_top = ABSOLUTE(.);
-    } > sram
-*/
-    /* stack 32 kbytes */
-    g_top_irqstack = ORIGIN(sram) + LENGTH(sram);
 
-   .common_text : {
+    .irq_stack : {
+        *(g_irqstack_base)
+    } > sram
+	   
+    g_stack = ORIGIN(sram) + LENGTH(sram);
+
+    .xip : {
         _stext = ABSOLUTE(.);   
-       *(.text .text.*)
+
+        *.o(_func_xip_code_)
+        *.o(_section_xip_code_)
+        *(.text .text.*)
+
+        _etext = ABSOLUTE(.);
+    } > flash : xip
+
+    .rodata : {
        *(.rodata .rodata.*)
        *(.fixup)
         *(.gnu.warning)
@@ -119,8 +107,27 @@ SECTIONS
         *(.got)
         *(.gcc_except_table)
         *(.gnu.linkonce.r.*)
-        _etext = ABSOLUTE(.);
-   } > flash   
+    } > flash : rodata
+
+    .init_section : {
+        _sinit = ABSOLUTE(.);
+        *(.init_array .init_array.*)
+        _einit = ABSOLUTE(.);
+    } > flash : rodata
+
+    .ARM.extab : {
+        *(.ARM.extab*)
+    } > flash : rodata
+
+    .ARM.exidx : {
+        __exidx_start = ABSOLUTE(.);
+        *(.ARM.exidx*)
+        __exidx_end = ABSOLUTE(.);
+    } > flash : rodata
+ 
+    ._sjtblsstore : {
+       _sjtblss = ABSOLUTE(.);
+    } > flash : rodata
  
     /* Stabs debugging sections. */
     .stab 0 : { *(.stab) }
@@ -137,4 +144,3 @@ SECTIONS
     .debug_aranges 0 : { *(.debug_aranges) }
     
 }
-
