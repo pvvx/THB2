@@ -13,6 +13,7 @@
 #ifndef APP_VERSION
 #define APP_VERSION	0x06	// BCD
 #endif
+
 /*
 #define BOARD_LYWSD03MMC_B14		0 // number used for BLE firmware
 #define BOARD_MHO_C401				1
@@ -40,9 +41,23 @@
 #define DEVICE DEVICE_BTH01
 #endif
 
+// supported services by the device (bits)
+#define SERVICE_OTA		0x0001
+#define SERVICE_OTA_EXT	0x0002
+#define SERVICE_PINCODE 0x0004	// пока нет
+#define SERVICE_BINDKEY 0x0008	// пока нет
+#define SERVICE_HISTORY 0x0010	// пока нет
+#define SERVICE_SCREEN	0x0020	// пока нет
+#define SERVICE_LE_LR	0x0040	// пока нет
+#define SERVICE_THS		0x0080
+#define SERVICE_RDS		0x0100	// пока нет
+#define SERVICE_KEY		0x0200
+#define SERVICE_OUTS	0x0400	// пока нет
+#define SERVICE_INS		0x0800	// пока нет
+
 #define OTA_TYPE_NONE	0	// нет OTA
-#define OTA_TYPE_BOOT	1	// вариант для прошивки boot + OTA
-#define OTA_TYPE_APP	2	// переключение из APP на OTA + boot прошивку, пока не реализовано
+#define OTA_TYPE_BOOT	(SERVICE_OTA | SERVICE_OTA_EXT)		// вариант для прошивки boot + OTA
+#define OTA_TYPE_APP	SERVICE_OTA_EXT	// переключение из APP на OTA + boot прошивку, пока не реализовано
 
 #ifndef OTA_TYPE
 #define OTA_TYPE	OTA_TYPE_BOOT
@@ -52,6 +67,12 @@
 
 #if DEVICE == DEVICE_THB2
 /* Model: THB2 */
+
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+)
+
 #define ADC_PIN_USE_OUT		0
 #define ADC_PIN 	GPIO_P11
 #define ADC_CHL 	ADC_CH1N_P11
@@ -69,6 +90,10 @@
 
 #elif DEVICE == DEVICE_BTH01
 /* Model: BTH01 */
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+)
 
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
 #define ADC_PIN 	GPIO_P11
@@ -89,9 +114,19 @@
 #elif DEVICE == DEVICE_TH05
 /* Model: TH05 */
 
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+		| SERVICE_SCREEN \
+)
+
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
 #define ADC_PIN 	GPIO_P11
 #define ADC_CHL 	ADC_CH1N_P11
+
+#define USE_TH_SENSOR	1
+#define USE_RS_SENSOR	0
+#define USE_SECREEN		1
 
 #define I2C_SDA 	GPIO_P33 // CHT8305_SDA
 #define I2C_SCL 	GPIO_P34 // CHT8305_SCL
@@ -108,8 +143,6 @@
 #else
 #error "DEVICE Not released!"
 #endif
-
-#define OTA_MODE_SELECT_REG 0x4000f034 // == 0x55 -> OTA
 
 // Minimum connection interval (units of 1.25ms, 80=100ms) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_MIN_CONN_INTERVAL		24 // 12 -> 15 ms

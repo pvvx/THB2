@@ -17,14 +17,26 @@
 #include "gatt_uuid.h"
 #include "gattservapp.h"
 #include "gapbondmgr.h"
+#include "flash.h"
 #include "flash_eep.h"
 #include "bleperipheral.h"
 #include "sbp_profile.h"
 #include "sensor.h"
 #include "cmd_parcer.h"
-
+#include "devinfoservice.h"
+#include "ble_ota.h"
+#include "thb2_peripheral.h"
 /*********************************************************************/
 #define SEND_DATA_SIZE	16
+
+const dev_id_t dev_id = {
+		.pid = CMD_ID_DEVID,
+		.revision = 1,
+		.hw_version = DEVICE,
+		.sw_version = APP_VERSION,
+		.dev_spec_data = 0,
+		.services = DEV_SERVICES
+};
 
 int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 	int olen = 0;
@@ -33,14 +45,8 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		obuf[0] = cmd;
 		obuf[1] = 0; // no err
 		if (cmd == CMD_ID_DEVID) { // Get DEV_ID
-			pdev_id_t p = (pdev_id_t) obuf;
-			// p->pid = CMD_ID_DEV_ID;
-			p->revision = 1;
-			p->hw_version = DEVICE;
-			p->sw_version = APP_VERSION;
-			p->dev_spec_data = 0;
-			p->services = 0;
-			olen = sizeof(dev_id_t);
+			osal_memcpy(obuf, &dev_id, sizeof(dev_id));
+			olen = sizeof(dev_id);
 		} else if (cmd == CMD_ID_CFG) {		// Get/Set device config
 			if (--len > sizeof(cfg))
 				len = sizeof(cfg);
@@ -71,6 +77,29 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			init_sensor();
 			osal_memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_size);
 			olen = thsensor_cfg_size + 1;
+		} else if (cmd == CMD_ID_SERIAL) {
+			osal_memcpy(&obuf[1], devInfoSerialNumber, sizeof(devInfoSerialNumber)-1);
+			olen = 1 + sizeof(devInfoSerialNumber)-1;
+		} else if (cmd == CMD_ID_FLASH_ID) {
+			osal_memcpy(&obuf[1], (uint8_t *)&phy_flash.IdentificationID, 8);
+			olen = 1 + 8;
+		} else if (cmd == CMD_ID_SEN_ID) {
+			osal_memcpy(&obuf[1], (uint8_t *)&thsensor_cfg.mid, 5);
+			olen = 1 + 5;
+//		} else if (cmd == CMD_ID_DNAME) {
+//		} else if (cmd == CMD_ID_DEV_MAC) {
+		} else if (cmd == CMD_ID_MTU) {
+			if (ibuf[1] >= MTU_SIZE)
+				ATT_UpdateMtuSize(gapRole_ConnectionHandle, ibuf[1]);
+			else
+				obuf[1] = 0xff;
+			olen = 2;
+		} else if (cmd == CMD_ID_REBOOT) {
+			GAPRole_TerminateConnection();
+			if(len >= 2) {
+				write_reg(OTA_MODE_SELECT_REG, ibuf[1]);
+			}
+			hal_system_soft_reset();
 
 	//---------- Debug commands (unsupported in different versions!):
 

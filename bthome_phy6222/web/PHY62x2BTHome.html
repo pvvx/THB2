@@ -10,6 +10,7 @@ const FLASH_SIZE = 0x80000;
 var bluetoothDevice, gattServer, otaCharacteristic, cmdCharacteristic, infoService;
 
 var devinfo = {};
+var devsrs = {};
 
 var startTime = 0,
     connected = false;
@@ -57,8 +58,8 @@ function handleError(text) {
 
 function connect() {
 	var deviceOptions = {
-		optionalServices: [0x1800, 0x180a, 0x180f, 0x181a, 0xfff0, 0x2a26],
-		services: [0x1800, 0x180a, 0x180f, 0x181a, 0xfff0, 0x2a26],
+		optionalServices: [0x1800, 0x180a, 0x180f, 0x181a, 0xfcd2],
+		services: [0x1800, 0x180a, 0x180f, 0x181a, 0xfcd2],
 		acceptAllDevices: true };
 	const namePrefix = $('inpNamePrefix').value;
 	if (namePrefix) {
@@ -154,7 +155,7 @@ function linkOta() {
 	}).then(_ => {
         return otaCharacteristic.readValue();
     }).then(value => {
-		if(value.byteLength >= 20)
+		if(value.byteLength > 1)
 			addLog("OTA ver: "+ hex(value.getUint8(1),2));
 		return resolve(null);});
 	}).catch(error => { console.log(error); return resolve(null);});
@@ -172,7 +173,7 @@ function phyConnect(info_flg) {
 			addLog("Hardware: "+devinfo.hrstr);
 		if(devinfo.vrstr != null)
 			addLog("Software: "+devinfo.vrstr);
-	 	return gattServer.getPrimaryService(0xfff0);
+	 	return gattServer.getPrimaryService(0xfcd2);
 	}).then(service => {
         console.log("Найден Main Service");
         mainService = service;
@@ -187,7 +188,8 @@ function phyConnect(info_flg) {
         return cmdCharacteristic.readValue();
     }).then(value => {
 		if(value.byteLength >= 10)
-			addLog("DevCfg: 55"+dump8(value, value.byteLength));
+			if(value.getUint8(0) == 0)
+				addLog("Device id: "+hex(value.getUint16(2, true)),4);				
 		otaCharacteristic = null;
 		return linkOta();
     }).then(_ => {
@@ -216,7 +218,7 @@ function doConnect() {
 				console.log("Services: " + services[i].uuid);
 				if (services[i].uuid == "0000180a-0000-1000-8000-00805f9b34fb") 
 					info = true;
-				else if (services[i].uuid == "0000fff0-0000-1000-8000-00805f9b34fb") 
+				else if (services[i].uuid == "0000fcd2-0000-1000-8000-00805f9b34fb") 
 					phy = true;
 			}
 			if(phy)
@@ -351,9 +353,7 @@ function crc16_modbus(buffer) {
         for (var j = 0; j < 8; j++) {
             odd = crc & 0x0001;
             crc = crc >> 1;
-            if (odd) {
-                crc = crc ^ 0xA001;
-            }
+            if (odd) crc = crc ^ 0xA001;
         }
     }
     return crc;

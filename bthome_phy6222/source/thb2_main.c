@@ -140,27 +140,15 @@ static void set_mac(void)
 	set_def_name(ownPublicAddr);
 }
 
-typedef enum
-{
-    EFUSE_BLOCK_0 = 0,
-    EFUSE_BLOCK_1 = 1,
-    EFUSE_BLOCK_2 = 2,
-    EFUSE_BLOCK_3 = 3,
-
-} EFUSE_block_t;
-
-extern int efuse_read(EFUSE_block_t block,uint32_t* buf);
-
 static void set_serial_number(void)
 {
 	hal_get_flash_info();
-	uint32_t temp_rd[2] = {0, 0};
-	efuse_read(EFUSE_BLOCK_0, temp_rd);
 	uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
 	*p++ = '-';
 	p = str_bin2hex(p, (uint8_t *)&thsensor_cfg.mid, 4);
 	*p++ = '-';
-	p = str_bin2hex(p, (uint8_t *)&temp_rd[0], 2);
+	*p++ = '0';
+	*p = '0';
 }
 
 extern gapPeriConnectParams_t periConnParameters;

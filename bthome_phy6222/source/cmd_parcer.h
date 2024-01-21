@@ -26,6 +26,7 @@ enum CMD_ID_KEYS {
 	CMD_ID_I2C_UTR	= 0x04, // Universal I2C/SMBUS read-write
 	CMD_ID_SEN_ID	= 0x05,	// Get sensor ID
 	CMD_ID_FLASH_ID	= 0x06,	// Get Flash JEDEC ID
+	CMD_ID_SERIAL	= 0x07, // Get serial string
 	CMD_ID_DEV_MAC	= 0x10, // Get/Set MAC [+RandMAC], [size][mac[6][randmac[2]]]
 	CMD_ID_BKEY		= 0x18, // Get/Set beacon bindkey in EEP
 	CMD_ID_COMFORT  = 0x20, // Get/Set comfort parameters
@@ -50,6 +51,7 @@ enum CMD_ID_KEYS {
 	CMD_ID_REBOOT	= 0x72, // Set Reboot on disconnect
 	CMD_ID_SET_OTA	= 0x73, // Extension BigOTA: Get/set address and size OTA, erase sectors
 
+
 	// Debug commands (unsupported in different versions!):
 
 	CMD_ID_OTAC		= 0xD1,	// OTA clear
@@ -65,6 +67,23 @@ enum CMD_ID_KEYS {
 
 };
 
+// supported services by the device
+typedef struct _dev_services_t{
+	uint32_t ota: 			1;	//0 OTA
+	uint32_t ota_ext:		1;	//1 OTA extension
+	uint32_t pincode:		1;	//2 pin-code
+	uint32_t bindkey: 		1;	//3 bindkey
+	uint32_t history: 		1;	//4 history
+	uint32_t screen: 		1;	//5 screen
+	uint32_t long_range:	1;	//6 LE Long Range
+	uint32_t ths:			1;	//7 T & H sensor
+	uint32_t rds:			1;	//8 Reed switch sensor
+	uint32_t key:			1;	//9 key
+	uint32_t out_pins:		1;	//10 Output pins
+	uint32_t inp_pins:		1;	//11 Input pins
+	uint32_t reserved:		20;
+} dev_services_t;
+
 
 // CMD_ID_DEV_ID
 typedef struct _dev_id_t{
@@ -75,6 +94,8 @@ typedef struct _dev_id_t{
 	uint16_t dev_spec_data;	// device-specific data
 	uint32_t services;		// supported services by the device
 } dev_id_t, * pdev_id_t;
+
+extern const dev_id_t dev_id;
 
 int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len);
 

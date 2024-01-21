@@ -35,27 +35,29 @@
 /*********************************************************************
  * TYPEDEFS
  */
-
+#define SERVICE_BTHOME_UUID16		0xFCD2	// 16-bit UUID Service 0xFCD2 BTHOME
+#define CHARACTERISTIC_OTA_UUID16	0xFFF3
+#define CHARACTERISTIC_CMD_UUID16	0xFFF4
 /*********************************************************************
  * GLOBAL VARIABLES
  */
-// Simple GATT Profile Service UUID: 0xFFF0
+// Simple GATT Profile Service UUID: 0xFCD2
 CONST uint8_t simpleProfileServUUID[ATT_BT_UUID_SIZE] =
 {
-	LO_UINT16(SIMPLEPROFILE_SERV_UUID), HI_UINT16(SIMPLEPROFILE_SERV_UUID)
+	LO_UINT16(SERVICE_BTHOME_UUID16), HI_UINT16(SERVICE_BTHOME_UUID16)
 };
 
 #if OTA_TYPE
-// Characteristic 1 UUID: 0xFFF3
+// Characteristic 1 UUID: 0x0001
 CONST uint8_t simpleProfilechar1UUID[ATT_BT_UUID_SIZE] =
 {
-	LO_UINT16(SIMPLEPROFILE_CHAR1_UUID), HI_UINT16(SIMPLEPROFILE_CHAR1_UUID)
+	LO_UINT16(CHARACTERISTIC_OTA_UUID16), HI_UINT16(CHARACTERISTIC_OTA_UUID16)
 };
 #endif
-// Characteristic 2 UUID: 0xFFF4
+// Characteristic 2 UUID: 0x0002
 CONST uint8_t simpleProfilechar2UUID[ATT_BT_UUID_SIZE] =
 {
-	LO_UINT16(SIMPLEPROFILE_CHAR2_UUID), HI_UINT16(SIMPLEPROFILE_CHAR2_UUID)
+	LO_UINT16(CHARACTERISTIC_CMD_UUID16), HI_UINT16(CHARACTERISTIC_CMD_UUID16)
 };
 
 /*********************************************************************
@@ -310,8 +312,8 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 				break;
 #endif
 			case SIMPLEPROFILE_CHAR2_UUID:
-				*pLen = sizeof(cfg);
-				osal_memcpy( pValue, &cfg, *pLen );
+				*pLen = sizeof(dev_id);
+				osal_memcpy( pValue, &dev_id, *pLen);
 				LOG("Read_UUID2:\n");
 				break;
 			default:
