@@ -11,16 +11,18 @@ var bluetoothDevice, gattServer, otaCharacteristic, cmdCharacteristic, infoServi
 
 var devinfo = {};
 var devsrs = {};
+var devcfg = {};
+var devcfs = {};
 
 var startTime = 0,
-    connected = false;
-    
-var ota = { 
-	fwArray: null, 
-	fwname: "", 
+	connected = false;
+
+var ota = {
+	fwArray: null,
+	fwname: "",
 	fwsize: 0,
-	fwmaxsize: 196608, 
-	ext_flg: false, 
+	fwmaxsize: 196608,
+	ext_flg: false,
 	blockCount: 0,
 	program_offset: 0x11010000
 };
@@ -31,29 +33,29 @@ var connectTrys = 0;
 var $ = function(id) { return document.getElementById(id);}
 
 function resetVariables() {
-    gattServer = null;
-    mainService = null;
-    otaCharacteristic = null;
-    cmdCharacteristic = null;
-    $('btnDisconnect').disabled = true;
-    $('btnReadAddr').disabled = true;
-    $('btnStartDFU').disabled = true;
-    $('btnSendData').disabled = true;
-    $('btnSendCommand').disabled = true;
+	gattServer = null;
+	mainService = null;
+	otaCharacteristic = null;
+	cmdCharacteristic = null;
+	$('btnDisconnect').disabled = true;
+	$('btnReadAddr').disabled = true;
+	$('btnStartDFU').disabled = true;
+	$('btnSendData').disabled = true;
+	$('btnSendCommand').disabled = true;
 }
 
 function handleError(text) {
-    showError(text);
-    resetVariables();
-    if (connectTrys < 5) {
-        connectTrys++;
-        addLog("Переподключение " + connectTrys + " из " + 5);
-        doConnect();
-    } else {
-        addLog("Подключиться не удалось!");
-        connectTrys = 0;
-        disconnect();
-    }
+	showError(text);
+	resetVariables();
+	if (connectTrys < 5) {
+		connectTrys++;
+		addLog("Переподключение " + connectTrys + " из " + 5);
+		doConnect();
+	} else {
+		addLog("Подключиться не удалось!");
+		connectTrys = 0;
+		disconnect();
+	}
 }
 
 function connect() {
@@ -72,35 +74,35 @@ function connect() {
 			.split("")
 			.map((x) => ({ namePrefix: x }));
 	}
-    if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
-    resetVariables();
+	if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
+	resetVariables();
 	$('btnReconnect').disabled = true;
 
-    showState("Поиск устройств");
-    connectTrys = 0;
-    navigator.bluetooth.requestDevice(deviceOptions).then(device => {
-        bluetoothDevice = device;
-        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-        //addLog("Connecting to: " + bluetoothDevice.name);
-        doConnect();
-    }).catch(handleError);
+	showState("Поиск устройств");
+	connectTrys = 0;
+	navigator.bluetooth.requestDevice(deviceOptions).then(device => {
+		bluetoothDevice = device;
+		bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+		//addLog("Connecting to: " + bluetoothDevice.name);
+		doConnect();
+	}).catch(handleError);
 }
 
 function disconnect() {
-    addLog("Отключение");
-    connected = false;
-    if (bluetoothDevice != null) 
-    	bluetoothDevice.gatt.disconnect();
+	addLog("Отключение");
+	connected = false;
+	if (bluetoothDevice != null)
+		bluetoothDevice.gatt.disconnect();
 }
 
 function reconnect() {
-    addLog("Переподключение");
-    if (bluetoothDevice != null) {
+	addLog("Переподключение");
+	if (bluetoothDevice != null) {
 	    connected = false;
-    	bluetoothDevice.gatt.disconnect();
-    }
-    connectTrys = 0;
-    doConnect();
+		bluetoothDevice.gatt.disconnect();
+	}
+	connectTrys = 0;
+	doConnect();
 }
 
 
@@ -147,14 +149,14 @@ function getDevInfo(devInfEnabled) {
 
 function linkOta() {
 	return new Promise((resolve, reject) => {
-    mainService.getCharacteristic(0xfff3).catch(error => { console.log(error); return resolve(null);})
-    .then(characteristic => {
-        console.log("Найдена OTA Characteristic");
-        otaCharacteristic = characteristic;
+	mainService.getCharacteristic(0xfff3).catch(error => { console.log(error); return resolve(null);})
+	.then(characteristic => {
+		console.log("Найдена OTA Characteristic");
+		otaCharacteristic = characteristic;
 		return otaCharacteristic.addEventListener('characteristicvaluechanged', event => OtaBlkParse(event.target.value));
 	}).then(_ => {
-        return otaCharacteristic.readValue();
-    }).then(value => {
+		return otaCharacteristic.readValue();
+	}).then(value => {
 		if(value.byteLength > 1)
 			addLog("OTA ver: "+ hex(value.getUint8(1),2));
 		return resolve(null);});
@@ -175,137 +177,137 @@ function phyConnect(info_flg) {
 			addLog("Software: "+devinfo.vrstr);
 	 	return gattServer.getPrimaryService(0xfcd2);
 	}).then(service => {
-        console.log("Найден Main Service");
-        mainService = service;
-        return mainService.getCharacteristic(0xfff4);
-    }).then(characteristic => {
-        console.log("Найдена CMD Characteristic");
-        cmdCharacteristic = characteristic;
+		console.log("Найден Main Service");
+		mainService = service;
+		return mainService.getCharacteristic(0xfff4);
+	}).then(characteristic => {
+		console.log("Найдена CMD Characteristic");
+		cmdCharacteristic = characteristic;
 		return cmdCharacteristic.addEventListener('characteristicvaluechanged', event => customBlkParse(event.target.value));
 	}).then(_ => {
 		return cmdCharacteristic.startNotifications();
 	}).then(_ => {
-        return cmdCharacteristic.readValue();
-    }).then(value => {
+		return cmdCharacteristic.readValue();
+	}).then(value => {
 		if(value.byteLength >= 10)
-			if(value.getUint8(0) == 0)
-				addLog("Device id: "+hex(value.getUint16(2, true)),4);				
+			if(value.getUint8(0) != 0)
+				addLog("Странный ответ устройства!");
 		otaCharacteristic = null;
 		return linkOta();
-    }).then(_ => {
+	}).then(_ => {
 		showState("Устройство подключено.");
 		connected = true;
-        $('btnDisconnect').disabled = false;
-   	    $('btnReconnect').disabled = false;
-        $('btnSendCommand').disabled = false;
+		$('btnDisconnect').disabled = false;
+		$('btnReconnect').disabled = false;
+		$('btnSendCommand').disabled = false;
 		$('btnReadAddr').disabled = false;
 		$('btnSendData').disabled = false;
-		if (otaCharacteristic != null && ota.fwArray != null) 
+		if (otaCharacteristic != null && ota.fwArray != null)
 			$('btnStartDFU').disabled = false;
-    }).catch(handleError);
+	}).catch(handleError);
 }
 
 function doConnect() {
-    connected = false;
-    showState("Ожидание соединения с " + bluetoothDevice.name)
-    return bluetoothDevice.gatt.connect().then(server => {
-        console.log("Найден GATT сервер");
-        gattServer = server;
+	connected = false;
+	showState("Ожидание соединения с " + bluetoothDevice.name)
+	return bluetoothDevice.gatt.connect().then(server => {
+		console.log("Найден GATT сервер");
+		gattServer = server;
 		gattServer.getPrimaryServices().then(services => {
 			let phy = false;
 			let info  = false;
 			for (var i = 0; i < services.length; i++) {
 				console.log("Services: " + services[i].uuid);
-				if (services[i].uuid == "0000180a-0000-1000-8000-00805f9b34fb") 
+				if (services[i].uuid == "0000180a-0000-1000-8000-00805f9b34fb")
 					info = true;
-				else if (services[i].uuid == "0000fcd2-0000-1000-8000-00805f9b34fb") 
+				else if (services[i].uuid == "0000fcd2-0000-1000-8000-00805f9b34fb")
 					phy = true;
 			}
 			if(phy)
 				return phyConnect(true);
-    	    addLog("Выбрано не то устройтво!");
-    	    bluetoothDevice.gatt.disconnect();
-        	connectTrys = 10;
-   		    return null;
-    	}).catch(handleError);
-    }).catch(handleError);
+		    addLog("Выбрано не то устройтво!");
+		    bluetoothDevice.gatt.disconnect();
+			connectTrys = 10;
+		    return null;
+		}).catch(handleError);
+	}).catch(handleError);
 }
 
 function onDisconnected() {
-    connected = false;
-    resetVariables();
-    showState('Устройство отключено.');
+	connected = false;
+	resetVariables();
+	showState('Устройство отключено.');
 }
 
 function startDFU() {
-    addLog("Старт программирования...");
-    updateBegin();
+	addLog("Старт программирования...");
+	updateBegin();
 }
 
 function addLog(logTXT) {
-    console.log(logTXT)
-    var time = new Date().toLocaleTimeString();
-    var logString = time + ": " + logTXT;
-    $("log").innerHTML += logString + "<br>";
+	console.log(logTXT)
+	var time = new Date().toLocaleTimeString();
+	var logString = time + ": " + logTXT;
+	$("log").innerHTML += logString + "<br>";
 }
 
 function showState(text) {
 	let s = "Состояние: " + text;
 	document.getElementById("lblStatus").className = "shadowbox";
-    $("lblStatus").innerHTML = s;
-    addLog(text);
+	$("lblStatus").innerHTML = s;
+	addLog(text);
 }
 
 function showProgress(text) {
 	document.getElementById("lblStatus").className = "shadowprogress";
-    $("lblStatus").innerHTML = text;
+	$("lblStatus").innerHTML = text;
 }
 
 function clearLog() {
-    $("log").innerHTML = "";
+	$("log").innerHTML = "";
 }
 
 function showError(text) {
 //    console.log("Status: " + status);
 	let s = "Ошибка: " + text;
 	document.getElementById("lblStatus").className = "shadowerror";
-    $("lblStatus").innerHTML = s;
-    addLog(text);
+	$("lblStatus").innerHTML = s;
+	addLog(text);
 }
 
 function updateFail(err) {
-    let s = "OTA: " + err;
-    showError(s);
+	let s = "OTA: " + err;
+	showError(s);
 }
 
 function decimalToHex(d, padding) {
-    var hex = Number(d).toString(16);
-    while (hex.length < 4) {
-        hex = "0" + hex;
-    }
-    return hex;
+	var hex = Number(d).toString(16);
+	while (hex.length < 4) {
+		hex = "0" + hex;
+	}
+	return hex;
 }
 
 function hexToBytes(hex) {
-    for (var bytes = [], c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substr(c, 2), 16));
-    return new Uint8Array(bytes);
+	for (var bytes = [], c = 0; c < hex.length; c += 2)
+		bytes.push(parseInt(hex.substr(c, 2), 16));
+	return new Uint8Array(bytes);
 }
 
 function bytesToHex(data) {
-    return new Uint8Array(data).reduce(function(memo, i) {
-        return memo + ("0" + i.toString(16)).slice(-2);
-    }, "");
+	return new Uint8Array(data).reduce(function(memo, i) {
+		return memo + ("0" + i.toString(16)).slice(-2);
+	}, "");
 }
 
 function makeRandomID(length) {
-    var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return bytesToHex(new TextEncoder("utf-8").encode(result));
+	var result = '';
+	var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	var charactersLength = characters.length;
+	for (var i = 0; i < length; i++) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	}
+	return bytesToHex(new TextEncoder("utf-8").encode(result));
 }
 
 function hex(number, len) {
@@ -337,31 +339,31 @@ function dump8(ar, len) {
 }
 
 function hex2ascii(hexx) {
-    var hex = hexx.toString();
-    var str = '';
-    for (var i = 0;
-        (i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
-        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    return str;
+	var hex = hexx.toString();
+	var str = '';
+	for (var i = 0;
+		(i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
+		str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+	return str;
 }
 
 function crc16_modbus(buffer) {
-    var crc = 0xFFFF;
-    var odd;
-    for (var i = 0; i < buffer.length; i++) {
-        crc = crc ^ buffer[i];
-        for (var j = 0; j < 8; j++) {
-            odd = crc & 0x0001;
-            crc = crc >> 1;
-            if (odd) crc = crc ^ 0xA001;
-        }
-    }
-    return crc;
+	var crc = 0xFFFF;
+	var odd;
+	for (var i = 0; i < buffer.length; i++) {
+		crc = crc ^ buffer[i];
+		for (var j = 0; j < 8; j++) {
+			odd = crc & 0x0001;
+			crc = crc >> 1;
+			if (odd) crc = crc ^ 0xA001;
+		}
+	}
+	return crc;
 };
 
 function getHexCRC(data) {
-    var tempCRC = decimalToHex(crc16_modbus(hexToBytes(data)));
-    return tempCRC.substring(2, 4) + tempCRC.substring(0, 2);
+	var tempCRC = decimalToHex(crc16_modbus(hexToBytes(data)));
+	return tempCRC.substring(2, 4) + tempCRC.substring(0, 2);
 }
 
 var crc32 = (function() {
@@ -388,7 +390,7 @@ function testOTAFirmware(data) {
 	console.log("File size = 0x"+ fsize.toString(16));
 	if (fsize < 20)
 		return "Неправильный размер двоичной прошивки PHY6 OTA!";
-	if(fsize > ota.fwmaxsize) 
+	if(fsize > ota.fwmaxsize)
 		return "Размер прошивки более " + (fwmaxsize/1024).toFixed(1) + " кбайт!";
 	if(fsize != (fsize & 0x1ffff0) + 4)
 		return "Неверный формат размера файла для прошивки PHY6 OTA!";
@@ -404,7 +406,7 @@ function testOTAFirmware(data) {
 		ota.h.size = fsize - 4;
 		ota.h.start = ota.program_offset;
 		addLog("Файл id:"+hex(ota.h.id, 4)+" , специальная прошивка.");
-		// return "Неверное id в заголовке PHY6 OTA!";
+		return "Расширенный формат OTA пока не поддерживается!";
 	} else {
 		ota.ext_flg = false;
 		addLog("Файл id:PHY6, Сегментов: " + ota.h.segs + ", Старт: 0x"+hex(ota.h.start, 8)+ ", Размер: " + ota.h.size + " байт");
@@ -465,7 +467,7 @@ var ota_errors = [
 function get_msg_ota_err(err) {
 	if(err == 0)
 		return "ok";
- 	if(err == 255)
+	if(err == 255)
 		return "OTA end";
 	if(err <= 11)
 		return ota_errors[err];
@@ -489,11 +491,11 @@ function OtaBlkParse(value) {
 }
 
 function updateBegin() {
-    if (ota.blockCount <= 0) {
-        showError("Не выбран файл!");
-        return;
-    }
-    setTimeout(function() {
+	if (ota.blockCount <= 0) {
+		showError("Не выбран файл!");
+		return;
+	}
+	setTimeout(function() {
 		otaCharSend("00ff")
 		.then(_ => { otaCharacteristic.readValue().then(value => {
 		let cmd = "01ff";
@@ -508,19 +510,19 @@ function updateBegin() {
 //			cmd += hex((ota.blockCount >> 8) | ((ota.blockCount & 0xff) << 8),4); // pkt_total
 		}
 		otaCharSend(cmd)
-        .then(_ => { otaCharacteristic.readValue().then(value => {
+		.then(_ => { otaCharacteristic.readValue().then(value => {
 			if(value.byteLength >= 2 && value.getUint8(0) == 0) {
 	        	setTimeout(function() {
-    	        	startTime = new Date().getTime();
-        	        sendOTAblock(0);
-            	}, 100);
-            } else
-            	showError("Ошибка N"+value.getUint8(0)+" OTA!");
-        }).catch(function(err) {updateFail(err); });
-        }).catch(function(err) {updateFail(err); });
-        }).catch(function(err) {updateFail(err); });
-        }).catch(function(err) {updateFail(err); });
-    }, 100);
+		        	startTime = new Date().getTime();
+			        sendOTAblock(0);
+				}, 100);
+			} else
+				showError("Ошибка N"+value.getUint8(0)+" OTA!");
+		}).catch(function(err) {updateFail(err); });
+		}).catch(function(err) {updateFail(err); });
+		}).catch(function(err) {updateFail(err); });
+		}).catch(function(err) {updateFail(err); });
+	}, 100);
 }
 
 function sendLastOTA() {
@@ -531,33 +533,33 @@ function sendLastOTA() {
 		  	addLog(s);
 		} else
 			showError("Ошибка ("+value.getUint8(0)+") OTA: " + get_msg_ota_err(value.getUint8(0)));
-     }).catch(function(err) { updateFail(err); });
+	 }).catch(function(err) { updateFail(err); });
 /*  Сброс - отключен для теста
-    var data = "02ff";
-    otaCharSend(data).then(_ => {
-    	addLog("Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды");
-    }).catch(function(err) {
-        updateFail(err);
-    }); */
+	var data = "02ff";
+	otaCharSend(data).then(_ => {
+		addLog("Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды");
+	}).catch(function(err) {
+		updateFail(err);
+	}); */
 }
 
 function sendOTAblock(blockNr) {
-    if (blockNr >= ota.blockCount) {
-        sendLastOTA();
-        return;
-    }
-    showProgress("Передан блок N: " + blockNr + " из " + ota.blockCount + ", " + Math.floor(blockNr / (ota.blockCount * 1.0) * 100) + "% успеха, время от старта " + (new Date().getTime() - startTime) / 1000.0 + " сек");
-    var blockNrString = getHexBLockCount(blockNr);
-    var blockString = blockNrString + ota.fwArray.substring(blockNr * 32, blockNr * 32 + 32);
-    var blockCRC = getHexCRC(blockString);
-    otaCharSend(blockString + blockCRC).then(_ => {
+	if (blockNr >= ota.blockCount) {
+		sendLastOTA();
+		return;
+	}
+	showProgress("Передан блок N: " + blockNr + " из " + ota.blockCount + ", " + Math.floor(blockNr / (ota.blockCount * 1.0) * 100) + "% успеха, время от старта " + (new Date().getTime() - startTime) / 1000.0 + " сек");
+	var blockNrString = getHexBLockCount(blockNr);
+	var blockString = blockNrString + ota.fwArray.substring(blockNr * 32, blockNr * 32 + 32);
+	var blockCRC = getHexCRC(blockString);
+	otaCharSend(blockString + blockCRC).then(_ => {
 	    if (blockNr >= ota.blockCount - 1) {
-    	    sendLastOTA();
-        	return;
+		    sendLastOTA();
+			return;
 	    }
-        setTimeout(function() {
-            if ((blockNr + 1) % 8 == 0) {
-                otaCharacteristic.readValue().then(value => {
+		setTimeout(function() {
+			if ((blockNr + 1) % 8 == 0) {
+				otaCharacteristic.readValue().then(value => {
 					if(value.byteLength >= 1 && value.getUint8(0) == 0)
 	                    sendOTAblock(blockNr + 1);
 		            else {
@@ -567,39 +569,39 @@ function sendOTAblock(blockNr) {
 		            }
 				}).catch(function(err) { updateFail(err); });
 			} else
-                  sendOTAblock(blockNr + 1);
-        }, 0);
-    }).catch(function(err) {
-        updateFail(err);
-    });
+				  sendOTAblock(blockNr + 1);
+		}, 0);
+	}).catch(function(err) {
+		updateFail(err);
+	});
 }
 
 function getHexBLockCount(count) {
-    var tempHEX = decimalToHex(count);
-    return tempHEX.substring(2, 4) + tempHEX.substring(0, 2);
+	var tempHEX = decimalToHex(count);
+	return tempHEX.substring(2, 4) + tempHEX.substring(0, 2);
 }
 
 
 var otaCharSend = function(data) {
-    return new Promise(function(resolve, reject) {
-        //console.log("OTA send: " + data);
-        otaCharacteristic.writeValue(hexToBytes(data)).then(function(character) {
-            resolve("ok");
-        }).catch(function(err) {
-            reject("Ошибка при отправке данных");
-        });
-    });
+	return new Promise(function(resolve, reject) {
+		//console.log("OTA send: " + data);
+		otaCharacteristic.writeValue(hexToBytes(data)).then(function(character) {
+			resolve("ok");
+		}).catch(function(err) {
+			reject("Ошибка при отправке данных");
+		});
+	});
 }
 
 var mainCharSend = function(data, characteristic) {
-    return new Promise(function(resolve, reject) {
-        console.log("Send: " + data);
-        characteristic.writeValue(hexToBytes(data)).then(function(character) {
-            resolve("ok");
-        }).catch(function(err) {
-            reject("Ошибка при отправке данных");
-        });
-    });
+	return new Promise(function(resolve, reject) {
+		console.log("Send: " + data);
+		characteristic.writeValue(hexToBytes(data)).then(function(character) {
+			resolve("ok");
+		}).catch(function(err) {
+			reject("Ошибка при отправке данных");
+		});
+	});
 }
 
 function readAddr(addr) {
@@ -668,19 +670,57 @@ function sendCommand() {
 function customBlkParse(value) {
 	let len = value.byteLength;
 	if(len == 0) return;
-	len--;	// size from cmd
 	let blkId = value.getUint8(0);
-	s = 'Ответ на команду Id: ' + hex(blkId,2) + ' data: ' + bytesToHex(value.buffer.slice(1));
-	addLog(s);
-	if((blkId == 0xdb) && (value.byteLength > 4)) {
+	if((blkId == 0) && (len > 11)) {
+	// CMD_ID_DEVID Get dev id, version, services
+		devsrs.revision = value.getUint8(1);
+		devsrs.hw_version = value.getUint16(2, true);
+		devsrs.sw_version = value.getUint16(4, true);
+		devsrs.dev_spec_data = value.getUint16(6, true);
+		devsrs.services = value.getUint32(8, true);
+		addLog("Dev info # hw: "+hex(devsrs.hw_version,4)+", sw: "+hex(devsrs.sw_version,4)+", services: "+hex(devsrs.services,8)+", sd: "+hex(devsrs.dev_spec_data, 4));
+	} else if((blkId == 0x25 || blkId == 0x26) && (len > 12)) {
+	// CMD_ID_CFS Get/Set sensor config
+	    devcfs.temp_k = value.getUint32(1, true);
+	    devcfs.humi_k = value.getUint32(5, true);
+	    devcfs.temp_z = value.getInt16(9, true);
+	    devcfs.humi_z = value.getInt16(11, true);
+		addLog("Dev sensor # tk: "+devcfs.temp_k+", hk: "+devcfs.humi_k+", tz: "+devcfs.temp_z+", hz: "+devcfs.humi_z);
+		if (len > 17) {
+			devcfs.mid = value.getUint16(13, false);
+			devcfs.vid = value.getUint16(15, false);
+			devcfs.i2c_addr = value.getUint8(17);
+			addLog("Dev sensor # id: "+hex(devcfs.mid,4)+"-"+hex(devcfs.vid,4)+", i2c_addr: 0x"+hex(devcfs.i2c_addr,2));
+		}
+	} else if((blkId == 0x55 || blkId == 0x56) && (len > 7)) {
+	//	CMD_ID_CFG Get/Set device config
+	    devcfg.flg = value.getUint32(1, true);
+	    devcfg.rf_tx_power = value.getUint8(2);
+	    devcfg.advertising_interval = value.getUint8(3);
+	    devcfg.connect_latency = value.getUint8(4);
+		devcfg.measure_interval = value.getUint8(5);
+		devcfg.batt_interval = value.getUint8(6);
+		devcfg.averaging_measurements = value.getUint8(7);
+		addLog("Dev config # flg: "+hex(devcfg.flg,8)+", tx: "+devcfg.rf_tx_power+", adi: "+devcfg.advertising_interval+", cly: "+devcfg.connect_latency+", msi: "+devcfg.measure_interval+", bti: "+devcfg.batt_interval+", avi: "+devcfg.averaging_measurements);
+	} else if((blkId == 0xdb || blkId == 0xda) && (len > 4)) {
+	// CMD_ID_MEM_RW Read/Write memory
 		len -= 4;
 		let addr = value.getUint32(1,true);
 		let s = bytesToHex(value.buffer.slice(5), len);
 		$('inputData').value = s;
 		addLog(hex(addr,8) + ':' + s);
-		showProgress("Считано: " + len + " байт из 0x" + hex(addr,8)); 
-	} else 
+		showProgress("Считано: " + len + " байт из 0x" + hex(addr,8));
+	} else if((blkId == 0x07) && (len > 1)) {
+	//	CMD_ID_SERIAL Get serial string
+		let s = new TextDecoder("utf-8").decode(value.buffer.slice(1));
+		addLog("Dev serial # "+s)
+	} else if((blkId == 0x06) && (len > 3)) {
+	//	CMD_ID_FLASH_ID	Get Flash JEDEC ID
+		addLog("Dev flash # id: " + bytesToHex(value.buffer.slice(1,4)));
+	} else {
 		console.log('blk: ' + dump8(value, value.byteLength));
+		addLog('Ответ на команду (' + hex(blkId,2) + '): ' + bytesToHex(value.buffer.slice(1)));
+	}
 }
 
 var url;
@@ -701,37 +741,37 @@ function download(data, filename, type) {
 }
 
 const selectFile = function() {
-	
+
 	let regex = /[^\\]+$/
-	
+
 	this.choose,
 	this.selected
-	
+
 	this.msg = str => {
 		let prefix = '[selectFile]\n\nError: '
 		return alert(prefix+str)
 	}
-		
+
 	this.check = () => {
 		if (this.choose && this.selected != null) {
 			let choose = document.getElementById(this.choose),
 				selected = document.getElementById(this.selected)
 			choose.addEventListener('change',() => {
-				if (choose.value != '') { 
+				if (choose.value != '') {
 					selected.innerHTML = choose.value.match(regex);
-                    readFile(choose.files[0]);
+					readFile(choose.files[0]);
 				}
 			})
 		} else {
 			this.msg('Targets not set.')
 		}
 	}
-	
+
 	selectFile.prototype.targets = (trigger, filetext) => {
 		this.choose = trigger
 		this.selected = filetext
 	}
-	
+
 	selectFile.prototype.simulate = () => {
 		if (this.choose != null) {
 			let choose = document.getElementById(this.choose)
@@ -744,24 +784,24 @@ const selectFile = function() {
 		} else {
 			this.msg('Targets not set.')
 		}
-	}	
-	
+	}
+
 };
 
 function readFile(file) {
 
-    var reader = new FileReader();
+	var reader = new FileReader();
 
-    if (file != null) {
+	if (file != null) {
 		reader.fname = file.name;
-        reader.readAsArrayBuffer(file);
-    } else {
-        showError("Файл не загружен");
+		reader.readAsArrayBuffer(file);
+	} else {
+		showError("Файл не загружен");
 	}
 
-    reader.onload = function() {
+	reader.onload = function() {
 		getFwArray(this.result, this.fname);
-    }
+	}
 
 	reader.onerror = function() {
 		console.log(this.error);
@@ -772,27 +812,27 @@ var getFile = new selectFile;
 getFile.targets('inpFile','lblFile');
 
 function openTab(evt, tabName) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
-    console.log(evt.currentTarget.className);
+	var i, tabcontent, tablinks;
+	tabcontent = document.getElementsByClassName("tabcontent");
+	for (i = 0; i < tabcontent.length; i++) {
+		tabcontent[i].style.display = "none";
+	}
+	tablinks = document.getElementsByClassName("tablinks");
+	for (i = 0; i < tablinks.length; i++) {
+		tablinks[i].className = tablinks[i].className.replace(" active", "");
+	}
+	document.getElementById(tabName).style.display = "block";
+	evt.currentTarget.className += " active";
+	console.log(evt.currentTarget.className);
 }
 
 window.onload = (event) => {
-    showState("Нет подключения" )
+	showState("Нет подключения" )
 
-   	openTab(event, 'tabOTA');
-    // Selected Tab header style
-    tablinks = document.getElementsByClassName("tablinks");
-    tablinks[0].className += " active";
+	openTab(event, 'tabOTA');
+	// Selected Tab header style
+	tablinks = document.getElementsByClassName("tablinks");
+	tablinks[0].className += " active";
 };
 
 </script>
