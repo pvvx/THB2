@@ -85,7 +85,7 @@ CFLAGS     += -Wl,--gc-sections
 #CFLAGS     +=  -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
 
 #LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
-LDSCRIPT   ?= $(SDK_PATH)/misc/ota_phy62x2.ld
+LDSCRIPT   ?= $(SDK_PATH)/misc/boot_ota_phy62x2.ld
 LDFLAGS    := $(ARCH_FLAGS)
 LDFLAGS    += --static -nostartfiles -nostdlib
 LDFLAGS    += -Wl,--gc-sections

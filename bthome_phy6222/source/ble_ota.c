@@ -21,7 +21,7 @@
 typedef struct _app_info_t {
 	uint32_t flag;			// id = START_UP_FLAG
 	uint32_t seg_count; 	// кол-во сегментов
-	uint32_t start_addr;	// стартовый/run  адрес
+	uint32_t start_addr;	// стартовый/run  адрес (if = -1 -> берестя из первого значения != -1 у сегмента)
 	uint32_t app_size;		// размер OTA без 4-х байт CRC32
 } app_info_t;
 
@@ -29,7 +29,7 @@ typedef struct _app_info_t {
 typedef struct _app_info_seg_t {
 	uint32_t faddr;	// адрес записи в Flash
 	uint32_t size;	// размер сегмента
-	uint32_t saddr;	// рабочий адрес
+	uint32_t waddr;	// рабочий адрес
 	uint32_t chk;	// не используется
 } app_info_seg_t;
 
@@ -126,7 +126,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 							| (pmsg[4] << 16)
 							| (pmsg[5] << 24));
 				} else
-					ota.erase_addr = FADDR_APP_SEC-1;
+					ota.erase_addr = FADDR_START_ADDR;
 				ota.err_flag = OTA_SUCCESS;
 				ota.start_flag = 0;
 				ota.debug_flag = 0;
@@ -163,7 +163,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 			} else if (ota_adr == CMD_OTA_END) {
 				//go to reboot or start app
 				GAPRole_TerminateConnection();
-				if(msg_size == 2 + 4) {
+				if(msg_size >= 2 + 4) {
 					tmp = ((pmsg[2])
 						| (pmsg[3] << 8)
 						| (pmsg[4] << 16)
@@ -177,7 +177,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 			// stop - old error
 		} else if(ota.start_flag) {
 			if (ota_adr == (uint16_t)(ota.pkt_index + 1)) {   // correct OTA data index
-				if(msg_size >= 6) {
+				if(msg_size >= 20) {
 					crc = (pmsg[19] << 8) | pmsg[18];
 					if (crc == crc16(pmsg, 18)) {
 						if (ota_adr == 0) {
@@ -187,11 +187,17 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 								| (pmsg[5] << 24));
 							if (tmp != ota.fw_value) // id != ?
 								err_flg = OTA_FW_CHECK_ERR;
-							else if(ota.pkt_total == 0) {
-								tmp = (pmsg[14]
-									| (pmsg[15] << 8)
-									| (pmsg[16] << 16));
-								ota.pkt_total = (tmp >> 4) + 1;
+							else {
+								pmsg[2] = 0xff;
+								pmsg[3] = 0xff;
+								pmsg[4] = 0xff;
+								pmsg[5] = 0xff;
+								if(ota.pkt_total == 0) {
+									tmp = (pmsg[14]
+										| (pmsg[15] << 8)
+										| (pmsg[16] << 16));
+									ota.pkt_total = (tmp >> 4) + 1;
+								}
 							}
 						} else if (ota_adr == (uint16_t)(ota.pkt_total - 1)) {
 							tmp = ((pmsg[2])
@@ -200,30 +206,25 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 									| (pmsg[5] << 24));
 							ota.crc32 = ota_test_crc();
 							if(ota.crc32 == tmp) {
+								// write ID
 								hal_flash_write(ota.program_offset,
 										(uint8_t*) &ota.fw_value, 4);
 								hal_flash_read(ota.program_offset,
 										(uint8_t*) &tmp,  4);
-								if (ota.fw_value == tmp) {  // OK
+								if (ota.fw_value == tmp)  // Write OK
 									err_flg = OTA_END;
-								} else
+								else
 									err_flg = OTA_WRITE_FLASH_ERR; // flash write err
 							} else
 								err_flg = OTA_FW_CRC32_ERR;
 						}
-						if (ota_adr < ota.pkt_total) {
+						if (err_flg == OTA_SUCCESS && ota_adr < ota.pkt_total) {
 							tmp = (ota.program_offset + (ota_adr << 4))
 									& (~(FLASH_SECTOR_SIZE-1));
 							if (tmp > ota.erase_addr) {
 								ota.erase_addr = tmp;
 								hal_flash_erase_sector(tmp);
 								ota.debug_flag++;
-							}
-							if (ota_adr == 0) {
-								pmsg[2] = 0xff;
-								pmsg[3] = 0xff;
-								pmsg[4] = 0xff;
-								pmsg[5] = 0xff;
 							}
 							hal_flash_write(ota.program_offset + (ota_adr << 4), pmsg + 2, 16);
 							ota.pkt_index = ota_adr;
@@ -266,12 +267,13 @@ static uint32_t start_app(void) {
 				info_seg_faddr +=  sizeof(info_app);
 				spif_read(info_seg_faddr, (uint8_t*)&info_seg, sizeof(info_seg));
 				if(info_app.start_addr == 0xffffffff) // если не назначен
-					info_app.start_addr = info_seg.saddr; // берется первый сегмент
+					// берется значение из первого сегмента отличного от -1
+					info_app.start_addr = info_seg.waddr;
 				info_seg.faddr += FADDR_START_ADDR;
 				info_seg.size &= 0x000fffff;
-				if (info_seg.saddr != info_seg.faddr // не XIP
+				if (info_seg.waddr != info_seg.faddr // не XIP
 						&& info_seg.size < (128*1024)) { // < 128k
-					osal_memcpy((void *)info_seg.saddr, (void *)info_seg.faddr, info_seg.size);
+					osal_memcpy((void *)info_seg.waddr, (void *)info_seg.faddr, info_seg.size);
 				}
 				info_app.seg_count--;
 			}
@@ -285,13 +287,13 @@ static uint32_t start_app(void) {
 }
 
 #if   defined ( __CC_ARM )
-#define __APP_RUN_ADDR__ (0x1FFF1838)
+//#define __APP_RUN_ADDR__ (0x1FFF1838)
 __asm void __attribute__((section("ota_app_loader_area"))) jump2app(uint32_t entry)
 {
-    LDR R0, = __APP_RUN_ADDR__
-              LDR R1, [R0, #4]
-              BX R1
-              ALIGN
+	LDR R0, = %0
+    LDR R1, [R0, #4]
+    BX R1
+    ALIGN
 }
 #elif defined ( __GNUC__ )
 __ATTR_SECTION_XIP__
