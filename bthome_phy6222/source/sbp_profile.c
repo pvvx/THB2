@@ -28,7 +28,9 @@
 /*********************************************************************
  * MACROS
  */
-
+#ifndef OTA_TYPE
+#error "Define OTA_TYPE!"
+#endif
 /*********************************************************************
  * CONSTANTS
  */
@@ -84,7 +86,7 @@ static CONST gattAttrType_t simpleProfileService = { ATT_BT_UUID_SIZE, simplePro
 
 #if OTA_TYPE
 // Simple Profile Characteristic 1 Properties
-static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE | GATT_PROP_WRITE_NO_RSP  | GATT_PROP_NOTIFY;
+static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY; //  GATT_PROP_WRITE
 //static CONST uint8_t simpleProfileChar1UserDesp[]		=	"OTA\0";	// Simple Profile Characteristic 1 User Description
 static gattCharCfg_t simpleProfileChar1Config[GATT_MAX_NUM_CONN];		//
 
@@ -94,7 +96,7 @@ static uint8_t ota_in_len;
 #endif
 
 // Simple Profile Characteristic 2 Properties
-static CONST uint8_t simpleProfileChar2Props			=	GATT_PROP_READ | GATT_PROP_WRITE | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY;
+static CONST uint8_t simpleProfileChar2Props			=	GATT_PROP_READ | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY; // GATT_PROP_WRITE
 //static CONST uint8_t simpleProfileChar2UserDesp[]		=	"CMD\0";	// Simple Profile Characteristic 2 User Description
 static gattCharCfg_t simpleProfileChar2Config[GATT_MAX_NUM_CONN];		//
 
@@ -377,7 +379,8 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 					LOG("OTA receive data = 0x ");
 					LOG_DUMP_BYTE(pAttr->pValue, len);
 					if(len >= 2)
-						osal_set_event(simpleBLEPeripheral_TaskID, SBP_OTADATA);
+						new_ota_data();
+//						osal_set_event(simpleBLEPeripheral_TaskID, SBP_OTADATA);
 	            }
 				break;
 #endif // OTA_TYPE
@@ -395,6 +398,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 					cmd_in_len = len;
 					LOG("CMD receive data = 0x ");
 					LOG_DUMP_BYTE(pAttr->pValue, len);
+					//new_cmd_data();
 					osal_set_event(simpleBLEPeripheral_TaskID, SBP_CMDDATA);
 				}
 				break;

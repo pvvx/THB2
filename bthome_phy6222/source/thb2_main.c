@@ -396,7 +396,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	pGlobal_config[LL_SWITCH] |= CONN_CSA2_ALLOW;
 	llInitFeatureSetCodedPHY(TRUE);
 #endif
-	llInitFeatureSet2MPHY(TRUE);
+	//llInitFeatureSet2MPHY(TRUE);
 	llInitFeatureSetDLE(TRUE);
 #else
 	llInitFeatureSet2MPHY(FALSE);
@@ -510,7 +510,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		// return unprocessed events
 		return(events ^ SBP_CMDDATA);
 	}
-#if OTA_TYPE
+#if 0 // OTA_TYPE
 	if(events & SBP_OTADATA)
 	{
 		LOG("OTA data events\n");

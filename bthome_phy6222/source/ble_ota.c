@@ -111,7 +111,7 @@ static uint32_t ota_test_crc(void) {
 /*********************************************************************
 * GLOBAL FUNCTION */
 
-/* Speed: ~157 bytes/s */
+/* Speed: ~1 kbytes/s */
 int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) {
 	uint32_t tmp;
 	uint16_t crc;
@@ -202,6 +202,8 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 									ota.pkt_total = (tmp >> 4) + 1;
 								}
 							}
+							if(ota.pkt_total == 0)
+								err_flg = OTA_ERR_PARAM; // invalid offset
 						} else if (ota_adr == (uint16_t)(ota.pkt_total - 1)) {
 							tmp = ((pmsg[2])
 									| (pmsg[3] << 8)
@@ -239,7 +241,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 						err_flg = OTA_PKT_CRC_ERR; // crc error
 				} else
 					err_flg = OTA_PKT_SIZE_ERR; // size error
-			} else if (ota_adr <= ota.pkt_index) {
+			} else if (ota_adr < (uint16_t)(ota.pkt_index + 1)) {
 				// maybe repeated OTA data, we neglect it, do not consider it ERR
 			} else
 				err_flg = OTA_PACKET_LOSS; // addr index err, missing at least one OTA data

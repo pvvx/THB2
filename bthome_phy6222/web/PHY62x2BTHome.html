@@ -496,33 +496,27 @@ function updateBegin() {
 		return;
 	}
 	setTimeout(function() {
-		otaCharSend("00ff")
-		.then(_ => { otaCharacteristic.readValue().then(value => {
-		let cmd = "01ff";
-		if(ota.ext_flg) {
-			let blk = new DataView(10);
-			blk.setUint32(0, ota.program_offset, true);
-			blk.setUint32(4, ota.h.id, true);
-			blk.setUint16(8, ota.blockCount, true);
-			cmd += bytesToHex(blk);
-//			cmd += ota.fwArray.substring(16,24); // program_offset
-//			cmd += ota.fwArray.substring(0,8); // fw_id
-//			cmd += hex((ota.blockCount >> 8) | ((ota.blockCount & 0xff) << 8),4); // pkt_total
-		}
-		otaCharSend(cmd)
-		.then(_ => { otaCharacteristic.readValue().then(value => {
-			if(value.byteLength >= 2 && value.getUint8(0) == 0) {
-	        	setTimeout(function() {
-		        	startTime = new Date().getTime();
-			        sendOTAblock(0);
-				}, 100);
-			} else
-				showError("Ошибка N"+value.getUint8(0)+" OTA!");
+		otaCharSend("00ff").then(_ => { otaCharacteristic.readValue().then(value => {
+			let cmd = "01ff";
+// TODO
+//			if(ota.ext_flg) {
+//				cmd += ota.fwArray.substring(16,24); // program_offset
+//				cmd += ota.fwArray.substring(0,8); // fw_id
+//				cmd += hex((ota.blockCount >> 8) | ((ota.blockCount & 0xff) << 8),4); // pkt_total
+//			}
+			otaCharSend(cmd).then(_ => { otaCharacteristic.readValue().then(value => {
+				if(value.byteLength >= 2 && value.getUint8(0) == 0) {
+	        		setTimeout(function() {
+		        		startTime = new Date().getTime();
+				        sendOTAblock(0);
+					}, 50);
+				} else
+					showError("Ошибка N"+value.getUint8(0)+" OTA!");
+		})//.catch(function(err) {updateFail(err); });
+		})//.catch(function(err) {updateFail(err); });
+		})//.catch(function(err) {updateFail(err); });
 		}).catch(function(err) {updateFail(err); });
-		}).catch(function(err) {updateFail(err); });
-		}).catch(function(err) {updateFail(err); });
-		}).catch(function(err) {updateFail(err); });
-	}, 100);
+	}, 50);
 }
 
 function sendLastOTA() {
@@ -540,28 +534,26 @@ function sendLastOTA() {
 			}); 
 */
 		} else
-			showError("Ошибка ("+value.getUint8(0)+") OTA: " + get_msg_ota_err(value.getUint8(0)));
+           	showError("Ошибка ("+value.getUint8(0)+") на передаче блока "+blockNr+" OTA: "+s);
 	 }).catch(function(err) { updateFail(err); });
 }
 
 function sendOTAblock(blockNr) {
 	if (blockNr >= ota.blockCount) {
-		sendLastOTA();
-		return;
+		return sendLastOTA();
 	}
-	showProgress("Передан блок N: " + blockNr + " из " + ota.blockCount + ", " + Math.floor(blockNr / (ota.blockCount * 1.0) * 100) + "% успеха, время от старта " + (new Date().getTime() - startTime) / 1000.0 + " сек");
+	showProgress("Передан блок " + blockNr + " из " + ota.blockCount + ", " + Math.floor(blockNr / (ota.blockCount * 1.0) * 100) + "% успеха, время от старта " + (new Date().getTime() - startTime) / 1000.0 + " сек");
 	var blockNrString = getHexBLockCount(blockNr);
 	var blockString = blockNrString + ota.fwArray.substring(blockNr * 32, blockNr * 32 + 32);
 	var blockCRC = getHexCRC(blockString);
 	otaCharSend(blockString + blockCRC).then(_ => {
 	    if (blockNr >= ota.blockCount - 1) {
-		    sendLastOTA();
-			return;
+		    return sendLastOTA();
 	    }
 		setTimeout(function() {
-			if ((blockNr + 1) % 8 == 0) {
+			if ((blockNr + 1) % 16 == 0) {
 				otaCharacteristic.readValue().then(value => {
-					if(value.byteLength >= 1 && value.getUint8(0) == 0)
+					if(value.byteLength >= 20 && value.getUint8(0) == 0)
 	                    sendOTAblock(blockNr + 1);
 		            else {
 		            	let s = get_msg_ota_err(value.getUint8(0));
