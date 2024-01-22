@@ -89,7 +89,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 //		} else if (cmd == CMD_ID_DNAME) {
 //		} else if (cmd == CMD_ID_DEV_MAC) {
 		} else if (cmd == CMD_ID_MTU) {
-			if (ibuf[1] >= MTU_SIZE)
+			if (ibuf[1] <= MTU_SIZE)
 				ATT_UpdateMtuSize(gapRole_ConnectionHandle, ibuf[1]);
 			else
 				obuf[1] = 0xff;

@@ -531,16 +531,17 @@ function sendLastOTA() {
 			let s = "Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды";
 			showProgress(s);
 		  	addLog(s);
+/*  Сброс - отключен для теста
+			var data = "02ff";
+			return otaCharSend(data).then(_ => {
+				addLog("Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды");
+			}).catch(function(err) {
+				updateFail(err);
+			}); 
+*/
 		} else
 			showError("Ошибка ("+value.getUint8(0)+") OTA: " + get_msg_ota_err(value.getUint8(0)));
 	 }).catch(function(err) { updateFail(err); });
-/*  Сброс - отключен для теста
-	var data = "02ff";
-	otaCharSend(data).then(_ => {
-		addLog("Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды");
-	}).catch(function(err) {
-		updateFail(err);
-	}); */
 }
 
 function sendOTAblock(blockNr) {

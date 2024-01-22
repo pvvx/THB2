@@ -134,6 +134,9 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 				ota.pkt_index = -1;
 				ota.pkt_total = 0;
 				ota.fw_value = START_UP_FLAG;
+/*		        GAPRole_SendUpdateParam( gapRole_MinConnInterval, gapRole_MaxConnInterval,
+		                                 0, gapRole_TimeoutMultiplier,
+		                                 GAPROLE_RESEND_PARAM_UPDATE ); */
 			} else if (ota_adr == CMD_OTA_SET) {
 				if(ota.start_flag) {
 					err_flg = OTA_NO_START;
@@ -218,18 +221,20 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 							} else
 								err_flg = OTA_FW_CRC32_ERR;
 						}
-						if (err_flg == OTA_SUCCESS && ota_adr < ota.pkt_total) {
-							tmp = (ota.program_offset + (ota_adr << 4))
+						if (err_flg == OTA_SUCCESS) {
+							if(ota_adr < ota.pkt_total) {
+								tmp = (ota.program_offset + (ota_adr << 4))
 									& (~(FLASH_SECTOR_SIZE-1));
-							if (tmp > ota.erase_addr) {
-								ota.erase_addr = tmp;
-								hal_flash_erase_sector(tmp);
-								ota.debug_flag++;
-							}
-							hal_flash_write(ota.program_offset + (ota_adr << 4), pmsg + 2, 16);
-							ota.pkt_index = ota_adr;
-						} else
-							err_flg = OTA_OVERFLOW;
+								if (tmp > ota.erase_addr) {
+									ota.erase_addr = tmp;
+									hal_flash_erase_sector(tmp);
+									ota.debug_flag++;
+								}
+								hal_flash_write(ota.program_offset + (ota_adr << 4), pmsg + 2, 16);
+								ota.pkt_index = ota_adr;
+							} else
+								err_flg = OTA_OVERFLOW;
+						}
 					} else
 						err_flg = OTA_PKT_CRC_ERR; // crc error
 				} else
@@ -262,7 +267,7 @@ static uint32_t start_app(void) {
 
 	spif_read(info_seg_faddr, (uint8_t*)&info_app, sizeof(info_app));
 	if(info_app.flag == START_UP_FLAG) {
-		if(info_app.seg_count <= 16) {
+		if(info_app.seg_count <= 15) {
 			while(info_app.seg_count) {
 				info_seg_faddr +=  sizeof(info_app);
 				spif_read(info_seg_faddr, (uint8_t*)&info_seg, sizeof(info_seg));

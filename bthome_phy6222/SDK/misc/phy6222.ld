@@ -14,7 +14,7 @@ MEMORY
   jumptbl (rw)  : ORIGIN = 0x1fff0000, LENGTH = 0x00400
   gcfgtbl (rw)  : ORIGIN = 0x1fff0400, LENGTH = 0x00400
   sram    (rwx) : ORIGIN = 0x1fff1838, LENGTH = 0x0E7C8
-  flash   (rx)  : ORIGIN = 0x11020000, LENGTH = 0x20000
+  flash   (rx)  : ORIGIN = 0x11010100, LENGTH = 0x1ff00
   sram2   (rwx) : ORIGIN = 0x20000000, LENGTH = 0x10000
   sram3   (rwx) : ORIGIN = 0x20010000, LENGTH = 0x02000
   sram4   (rwx) : ORIGIN = 0x20012000, LENGTH = 0x00800

@@ -82,10 +82,17 @@ CFLAGS     += -funsigned-char -funsigned-bitfields
 CFLAGS     += -fms-extensions
 CFLAGS     += -specs=nosys.specs
 CFLAGS     += -Wl,--gc-sections
-#CFLAGS     +=  -MM $(CFLAGS) $(INCFLAGS) $< -MT $@ -MF $(OBJ_DIR)/$(patsubst %.o,%.d,$@)
 
-#LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
+ifdef BOOT_OTA
 LDSCRIPT   ?= $(SDK_PATH)/misc/boot_ota_phy62x2.ld
+DEFINES += -DOTA_TYPE=OTA_TYPE_BOOT
+BIN_OTA	=
+else
+LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
+DEFINES += -DOTA_TYPE=OTA_TYPE_APP
+BIN_OTA	= $(OBJ_DIR)/$(PROJECT_NAME).bin
+endif
+
 LDFLAGS    := $(ARCH_FLAGS)
 LDFLAGS    += --static -nostartfiles -nostdlib
 LDFLAGS    += -Wl,--gc-sections
@@ -229,7 +236,7 @@ DEPENDENCY_LIST = $(OBJS:%o=%d)
 ##############################################################################
 .PHONY: all directory clean size flash erase_and_flash
 
-all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex  $(OBJ_DIR)/$(PROJECT_NAME).asm size
+all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex $(BIN_OTA) $(OBJ_DIR)/$(PROJECT_NAME).asm size
 
 %.elf %.map: $(SRC_O) $(LDSCRIPT) Makefile
 	@echo LD: $@
@@ -239,9 +246,9 @@ all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME
 	@echo OBJCOPY: $@
 	@$(OBJCOPY) -O ihex $^ $@
 
-%.bin: %.elf
-	@echo OBJCOPY: $@
-	@$(OBJCOPY) -O binary $^ $@
+%.bin: %.hex
+	@echo Make: $@
+	@$(PYTHON) ./phy62x2_ota.py $(OBJ_DIR)/$(PROJECT_NAME).hex
 
 %.asm: %.elf
 	@echo OBJDUMP: $@

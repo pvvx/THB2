@@ -1,1 +1,0 @@
-python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r -e wh .\bin\THB2_v06.hex

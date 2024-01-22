@@ -396,7 +396,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	pGlobal_config[LL_SWITCH] |= CONN_CSA2_ALLOW;
 	llInitFeatureSetCodedPHY(TRUE);
 #endif
-//	llInitFeatureSet2MPHY(TRUE);
+	llInitFeatureSet2MPHY(TRUE);
 	llInitFeatureSetDLE(TRUE);
 #else
 	llInitFeatureSet2MPHY(FALSE);

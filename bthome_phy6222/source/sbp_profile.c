@@ -1,10 +1,10 @@
-/**************************************************************************************************
+/****************************************************************************
 	Filename:		sbpProfile.c
 	Revised:
 	Revision:
-	Description:	This file contains the Simple GATT profile sample GATT service
-				  profile for use with the BLE sample application.
-**************************************************************************************************/
+	Description:	This file contains the Simple GATT profile sample GATT
+		service profile for use with the BLE sample application.
+*****************************************************************************/
 
 /*********************************************************************
 	INCLUDES
@@ -185,7 +185,6 @@ static gattAttribute_t simpleProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] =
 	},
 #endif
 };
-
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -438,7 +437,6 @@ static void simpleProfile_HandleConnStatusCB( uint16_t connHandle, uint8_t chang
 		}
 	}
 }
-
 
 void new_cmd_data(void) {
 	attHandleValueNoti_t noti;

@@ -3,11 +3,13 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2) and [BTH01](https:/
 
 * Проект в начальной стадии разработки, до появления функционального OTA.
 
+* Тестовый [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
+
 В плане проекта предусматривается дальнейшая поддержка [TH-05](https://pvvx.github.io/TH-05).
 
-Прошивка для THB2 (файл THB2_v06.hex). 
+Прошивка для THB2 (файл BOOT_THB2_v06.hex). 
 
-Прошивка для BTH01 (файл BTH01_v06.hex). 
+Прошивка для BTH01 (файл BOOT_BTH01_v06.hex). 
 
 ## Основные характеристики:
 
@@ -24,7 +26,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2) and [BTH01](https:/
 1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
 2. Запустить:
 ```
-python3 rdwr_phy62x2.py -p COM11 -e -r wh THB2_v05.hex
+python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_xxx_vxx.hex
 ```
 3. Прошивка зашита. Устройство работает.
 
