@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# wrflash_phy6202.py 07.12.2019 pvvx #
+# rdwr_phy62x2.py 11.01.2024 pvvx #
 
 import serial;
 import time;

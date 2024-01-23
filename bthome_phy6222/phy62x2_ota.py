@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# wrflash_phy6202.py 07.12.2019 pvvx #
+# phy62x2_ota.py 22.01.2024 pvvx #
 
 import argparse
 import io
@@ -23,13 +23,13 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2 OTA Utility'
 __filename__ = 'phy62x2_ota.py'
-__version__ = "22.01.24"
+__version__ = "23.01.24"
 
 def do_crc(s, c):
 	return zlib.crc32(s, c) & 0xffffffff
 
 class phy_ota:
-	def ParseHexFile(self, hexfile):
+	def ParseHexFile(self, hexfile, faddr = DEF_START_WR_FLASH_ADDR):
 		try:
 			fin = open(hexfile)
 		except:
@@ -41,7 +41,7 @@ class phy_ota:
 		naddr = 0
 		taddr = 0
 		addr_flg = 0
-		table.append([0, result, 0x2000])
+		table.append([0, result, faddr])
 		for hexstr in fin.readlines():
 			hexstr = hexstr.strip()
 			if hexstr[7:9] == '04':
@@ -76,50 +76,57 @@ class phy_ota:
 		idx = 0
 		size = len(ph[1])
 		return True
-	def HexfHeader(self, hp, start = DEF_START_RUN_APP_ADDR, raddr = DEF_START_WR_FLASH_ADDR, otaid = START_UP_FLAG):
+	def HexfHeader(self, hp, start = DEF_START_RUN_APP_ADDR, wrfaddr = DEF_START_WR_FLASH_ADDR, otaid = START_UP_FLAG):
 		if len(hp) > 1:
 			if len(hp) > 15:
 				print('Maximum number of segments = 15!')
 				return None
 			size = 0x100
 			sections = 15
-			faddr_min = MAX_FLASH_SIZE-1
-			faddr_max = 0
-			rsize = 0
+			wfaddr = (wrfaddr & (MAX_FLASH_SIZE-1)) + size
+			faddr_min = MAX_FLASH_SIZE-1 # xip addr min
+			faddr_max = 0 # xip addr max
+			rsize = 0 # size ram data
 			hexf = bytearray(struct.pack('<IIII', otaid, len(hp), start, 0xffffffff))
 			for ihp in hp:
 				if (ihp[0] & 0x1fff0000) == 0x1fff0000:	# SRAM
 					rsize += len(ihp[1])
-				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000: # Flash
+				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000: # Flash (XIP)
 					offset = ihp[0] & (MAX_FLASH_SIZE-1)
 					if faddr_min > offset:
 						faddr_min = offset
 					send = offset + len(ihp[1])
 					if faddr_max <= send:
 						faddr_max = send
-			if (raddr + rsize) >= faddr_min:
-				raddr = (faddr_max + 3) & 0xfffffffc
-			#print('Test: Flash addr min: %08x, max: %08x, RAM addr: %08x' % (faddr_min, faddr_max, raddr))
+			if (wrfaddr + rsize) >= faddr_min:  
+				wrfaddr = (faddr_max + 3) & 0xfffffffc # start wr faddr ram data
+			#print('Test: Flash addr min: %08x, max: %08x, RAM addr: %08x' % (faddr_min, faddr_max, wrfaddr))
 			print ('---- Segments Table -------------------------------------')
+			
 			for ihp in hp:
 				if (ihp[0] & 0x1fff0000) == 0x1fff0000:	# SRAM
-					faddr = raddr
-					raddr += (len(ihp[1])+3) & 0xfffffffc
+					faddr = wrfaddr # wr faddr ram data
+					wrfaddr += (len(ihp[1])+3) & 0xfffffffc # next wr faddr ram data
 				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000: # Flash
 					faddr = ihp[0] & (MAX_FLASH_SIZE-1)
+					if wfaddr != faddr:
+						print('Error: The segment Flash addr: 0x%08x, Size: 0x%08x does not match the markup (0x%08x)!' % (ihp[0], len(ihp[1]), wfaddr))
+						return None
 				elif ihp[0] == 0:
 					continue
 				else:
-					print('Invalid Segment Address 0x%08x!' % ihp[0])
+					print('Error: Invalid Segment Address 0x%08x!' % ihp[0])
 					return None
 				ihp[2] = faddr
 				sections -= 1
 				print('Segment: %08x <- Flash addr: %08x, Size: %08x' % (ihp[0], faddr, len(ihp[1])))
-				hexf.extend(bytearray(struct.pack('<IIII', faddr, len(ihp[1]), ihp[0], 0xffffffff)))
+				crc = 0xffffffff - do_crc(ihp[1], 0)
+				hexf.extend(bytearray(struct.pack('<IIII', faddr, len(ihp[1]), ihp[0], crc)))
 				fill = len(ihp[1]) % 4
 				if fill != 0:
 					ihp[1].extend(bytearray(b'\xff')*(4 - fill))
 				size += len(ihp[1])
+				wfaddr += len(ihp[1])
 			if sections > 0:
 				hexf.extend(bytearray(b'\xff')*(0x10*sections))
 			fill = size % 16
@@ -144,9 +151,9 @@ def arg_auto_int(x):
 
 def main():
 	parser = argparse.ArgumentParser(description='%s version %s' % (__progname__, __version__), prog = __filename__)
-	parser.add_argument('--flgota', '-f',  help = 'Flag OTA (default: 0x%08x)' % START_UP_FLAG, type = arg_auto_int, default = START_UP_FLAG);
-	parser.add_argument('--start', '-s',  help = 'Application start address (default: 0x%08x)' % DEF_START_RUN_APP_ADDR, type = arg_auto_int, default = DEF_START_RUN_APP_ADDR);
-	parser.add_argument('--address', '-a',  help = 'Application write address (default: 0x%08x)' % DEF_START_WR_FLASH_ADDR, type = arg_auto_int, default = DEF_START_WR_FLASH_ADDR);
+	parser.add_argument('--idota', '-i',  help = 'Flag ID OTA (default: 0x%08x)' % START_UP_FLAG, type = arg_auto_int, default = START_UP_FLAG);
+	parser.add_argument('--runaddr', '-r',  help = 'Application run-start address (default: 0x%08x)' % DEF_START_RUN_APP_ADDR, type = arg_auto_int, default = DEF_START_RUN_APP_ADDR);
+	parser.add_argument('--wraddr', '-w',  help = 'Application write address (default: 0x%08x)' % DEF_START_WR_FLASH_ADDR, type = arg_auto_int, default = DEF_START_WR_FLASH_ADDR);
 	parser.add_argument('--outfile', '-o',  help = 'Output bin file')
 	parser.add_argument('filename', help = 'Name of hex file')
 
@@ -157,15 +164,16 @@ def main():
 	print('---------------------------------------------------------')
 	phy = phy_ota()
 
-	hp = phy.ParseHexFile(args.filename)
+	hp = phy.ParseHexFile(args.filename, args.wraddr)
 
 	if hp == None:
 		sys.exit(2)
-	hexf = phy.HexfHeader(hp, args.start, args.address, args.flgota)
+	hexf = phy.HexfHeader(hp, args.runaddr, args.wraddr, args.idota)
 	if hexf == None:
 		sys.exit(2)
 	hp[0][1] = hexf
-	print ('----------------------------------------------------------')
+				 
+	print ('---- File Structure -------------------------------------')
 	(outfile, ext) = os.path.splitext(args.filename)
 	outfile += '.bin'
 	if args.outfile != None:
@@ -199,7 +207,7 @@ def main():
 	except:
 		print('No write file', outfile)
 		sys.exit(3)
-	print ('----------------------------------------------------------')
+	print ('---------------------------------------------------------')
 	print ('Write to file: %s %u bytes - ok.' % (outfile, size))
 	sys.exit(0)
 
