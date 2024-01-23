@@ -21,6 +21,7 @@ SRC_PRJ += thb2_main.c
 SRC_PRJ += thb2_peripheral.c
 SRC_PRJ += thservice.c
 SRC_PRJ += flash_eep.c
+SRC_PRJ += lcd_th05.c
 SRC_PRJ += ble_ota.c
 
 INCLUDES = -I$(SRC_PATH)

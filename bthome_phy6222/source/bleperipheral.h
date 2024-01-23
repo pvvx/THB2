@@ -25,17 +25,20 @@ extern "C"
  * CONSTANTS
  */
 
-#define DEF_ADV_INERVAL  					8000 // = 5 sec, actual time = advInt * 625us
-#define DEF_ADV_INERVAL_MS 				((DEF_ADV_INERVAL*625)/1000) // 5000 ms
-#define DEF_CON_ADV_INERVAL 			2500 // 1.5625 sec
+#define DEF_ADV_INERVAL  			8000 // = 5 sec, actual time = advInt * 625us
+#define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 5000 ms
+#define DEF_CON_ADV_INERVAL 		2500 // 1.5625 sec
 #define DEF_CON_ADV_INERVAL_MS 		((DEF_CON_ADV_INERVAL*625)/1000) // 1562 ms
+#define DEF_OTA_ADV_INERVAL 		1600 // 1 sec
+#define DEF_OTA_ADV_INERVAL_MS 		((DEF_OTA_ADV_INERVAL*625)/1000) // 1000 ms
+
 // How often to perform periodic event
 #define SBP_PERIODIC_EVT_PERIOD		5000
 
-#define DEVINFO_SYSTEM_ID_LEN			8
-#define DEVINFO_SYSTEM_ID					0
+#define DEVINFO_SYSTEM_ID_LEN		8
+#define DEVINFO_SYSTEM_ID			0
  
-#define DEFAULT_DISCOVERABLE_MODE					GAP_ADTYPE_FLAGS_GENERAL
+#define DEFAULT_DISCOVERABLE_MODE	GAP_ADTYPE_FLAGS_GENERAL
 
 // Whether to enable automatic parameter update request when a connection is formed
 #define DEFAULT_ENABLE_UPDATE_REQUEST			TRUE

@@ -15,46 +15,47 @@
 
 /* CHT8310 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310.Advanced.Datasheet_Ver1.0.20230407.pdf */
 //	I2C addres
-#define CHT8310_I2C_ADDR0	0x40
-#define CHT8310_I2C_ADDR1	0x44
-#define CHT8310_I2C_ADDR2	0x48
-#define CHT8310_I2C_ADDR3	0x4C
+#define CHT8315_I2C_ADDR0	0x40
+#define CHT8315_I2C_ADDR1	0x44
+#define CHT8315_I2C_ADDR2	0x48
+#define CHT8315_I2C_ADDR3	0x4C
 
 //	Registers
-#define CHT8310_REG_TMP		0x00
-#define CHT8310_REG_HMD		0x01
-#define CHT8310_REG_STA		0x02
-#define CHT8310_REG_CFG		0x03
-#define CHT8310_REG_CRT		0x04
-#define CHT8310_REG_TLL		0x05
-#define CHT8310_REG_TLM		0x06
-#define CHT8310_REG_HLL		0x07
-#define CHT8310_REG_HLM		0x08
-#define CHT8310_REG_OST		0x0f
-#define CHT8310_REG_RST		0xfc
-#define CHT8310_REG_MID		0xfe
-#define CHT8310_REG_VID		0xff
+#define CHT8315_REG_TMP		0x00
+#define CHT8315_REG_HMD		0x01
+#define CHT8315_REG_STA		0x02
+#define CHT8315_REG_CFG		0x03
+#define CHT8315_REG_CRT		0x04
+#define CHT8315_REG_TLL		0x05
+#define CHT8315_REG_TLM		0x06
+#define CHT8315_REG_HLL		0x07
+#define CHT8315_REG_HLM		0x08
+#define CHT8315_REG_OST		0x0f
+#define CHT8315_REG_RST		0xfc
+#define CHT8315_REG_MID		0xfe
+#define CHT8315_REG_VID		0xff
 
 //	Status register mask
-#define CHT8310_STA_BUSY	0x8000
-#define CHT8310_STA_THI		0x4000
-#define CHT8310_STA_TLO		0x2000
-#define CHT8310_STA_HHI		0x1000
-#define CHT8310_STA_HLO		0x0800
+#define CHT8315_STA_BUSY	0x8000
+#define CHT8315_STA_THI		0x4000
+#define CHT8315_STA_TLO		0x2000
+#define CHT8315_STA_HHI		0x1000
+#define CHT8315_STA_HLO		0x0800
 
 //	Config register mask
-#define CHT8310_CFG_MASK		0x8000
-#define CHT8310_CFG_SD			0x4000
-#define CHT8310_CFG_ALTH		0x2000
-#define CHT8310_CFG_EM			0x1000
-#define CHT8310_CFG_EHT			0x0100
-#define CHT8310_CFG_TME			0x0080
-#define CHT8310_CFG_POL			0x0020
-#define CHT8310_CFG_ALT			0x0018
-#define CHT8310_CFG_CONSEC_FQ	0x0006
-#define CHT8310_CFG_ATM			0x0001
+#define CHT8315_CFG_MASK		0x8000
+#define CHT8315_CFG_SD			0x4000
+#define CHT8315_CFG_ALTH		0x2000
+#define CHT8315_CFG_EM			0x1000
+#define CHT8315_CFG_EHT			0x0100
+#define CHT8315_CFG_TME			0x0080
+#define CHT8315_CFG_POL			0x0020
+#define CHT8315_CFG_ALT			0x0018
+#define CHT8315_CFG_CONSEC_FQ	0x0006
+#define CHT8315_CFG_ATM			0x0001
 
-#define CHT8310_ID	0x5959
+#define CHT83xx_MID	0x5959
+#define CHT8315_VID	0x8315
 
 /* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/BTH01/CHT8305.pdf */
 
@@ -107,17 +108,17 @@ struct __attribute__((packed)) _cht8305_config_t{
 } cht8305_config_t;
 */
 
-#define CHT8305_ID	0x5959
+#define CHT8305_VID	0x8305
 
 /*---------------------------------------
  Датчик влажности AHT25
 ---------------------------------------*/
-#define AHT30_I2C_ADDR	0x38
+#define AHT2x_I2C_ADDR	0x38
 
-#define AHT30_CMD_INI	0x0E1  // Initialization Command
-#define AHT30_CMD_TMS	0x0AC  // Trigger Measurement Command
-#define AHT30_DATA_TMS	0x3300  // Trigger Measurement data
-#define AHT30_CMD_RST	0x0BA  // Soft Reset Command
+#define AHT2x_CMD_INI	0x0E1  // Initialization Command
+#define AHT2x_CMD_TMS	0x0AC  // Trigger Measurement Command
+#define AHT2x_DATA_TMS	0x3300  // Trigger Measurement data
+#define AHT2x_CMD_RST	0x0BA  // Soft Reset Command
 
 
 typedef struct _measured_data_t {
@@ -137,25 +138,27 @@ typedef struct _thsensor_coef_t {
 	int16_t humi_z;
 } thsensor_coef_t;
 
-extern const thsensor_coef_t def_thcoef;
-#if DEVICE == DEVICE_BTH01
-extern const thsensor_coef_t def_thcoef_aht30;
-#endif
+typedef int (*psernsor_rd_t)(void);
+//typedef void (*psernsor_sm_t)(void);
 
 typedef struct _thsensor_cfg_t {
 	thsensor_coef_t coef;
 	uint16_t mid;
 	uint16_t vid;
 	uint8_t i2c_addr;
+	psernsor_rd_t read_sensor;
+//	psernsor_sm_t start_measure;
 } thsensor_cfg_t;
 extern thsensor_cfg_t thsensor_cfg;
-#define thsensor_cfg_size	(sizeof(thsensor_cfg)-3)
+#define thsensor_cfg_send_size 19
 
 void init_sensor(void);
+void start_measure(void);
 int read_sensor(void);
 
-//void init_i2c(void);
-//void deinit_i2c(void);
+void init_i2c(bool speed400khz);
+void deinit_i2c(void);
+int send_i2c_byte(uint8 addr, uint8 data);
 
 
 #endif // _SENSORS_H_

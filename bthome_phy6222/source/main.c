@@ -133,8 +133,8 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P32, GPIO_PULL_DOWN },
 		{ GPIO_P33, GPIO_PULL_DOWN },
 		{ GPIO_P34, GPIO_PULL_DOWN }
-#elif DEVICE == DEVICE_BTH01
-		{ GPIO_P00, GPIO_PULL_UP },	// Sensor Vdd
+#elif (DEVICE == DEVICE_BTH01)
+ 		{ GPIO_P00, GPIO_PULL_UP },	// Sensor Vdd
 		{ GPIO_P01, GPIO_PULL_DOWN },
 		{ GPIO_P02, GPIO_PULL_DOWN },
 		{ GPIO_P03, GPIO_PULL_DOWN },
@@ -143,7 +143,35 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P10, GPIO_PULL_UP }, // RX1
 		{ GPIO_P11, GPIO_PULL_UP }, // ADC Vbat
 		{ GPIO_P14, GPIO_PULL_UP }, // KEY
+#ifdef GPIO_LED
 		{ GPIO_P15, GPIO_FLOATING }, // LED
+#else
+		{ GPIO_P15, GPIO_PULL_DOWN },
+#endif
+		{ GPIO_P16, GPIO_PULL_DOWN },
+		{ GPIO_P17, GPIO_PULL_DOWN },
+		{ GPIO_P18, GPIO_PULL_UP }, // RX2
+		{ GPIO_P20, GPIO_PULL_UP }, // TX2
+		{ GPIO_P23, GPIO_PULL_DOWN },
+		{ GPIO_P24, GPIO_PULL_DOWN },
+		{ GPIO_P25, GPIO_PULL_DOWN }, // P25
+		{ GPIO_P26, GPIO_PULL_DOWN },
+//		{GPIO_P27, GPIO_FLOATING },
+		{ GPIO_P31, GPIO_PULL_DOWN },
+		{ GPIO_P32, GPIO_PULL_DOWN },
+		{ GPIO_P33, GPIO_FLOATING }, // I2C_SDA
+		{ GPIO_P34, GPIO_FLOATING } // // I2C_SCL
+#elif (DEVICE == DEVICE_TH05)
+		{ GPIO_P00, GPIO_PULL_UP }, // Sensor Vdd
+		{ GPIO_P01, GPIO_PULL_DOWN },
+		{ GPIO_P02, GPIO_PULL_UP },
+		{ GPIO_P03, GPIO_PULL_DOWN },
+		{ GPIO_P07, GPIO_PULL_DOWN },
+		{ GPIO_P09, GPIO_PULL_UP }, // TX1
+		{ GPIO_P10, GPIO_PULL_UP }, // RX1
+		{ GPIO_P11, GPIO_PULL_UP }, // ADC Vbat
+		{ GPIO_P14, GPIO_PULL_UP }, // KEY
+		{ GPIO_P15, GPIO_PULL_DOWN },
 		{ GPIO_P16, GPIO_PULL_DOWN },
 		{ GPIO_P17, GPIO_PULL_DOWN },
 		{ GPIO_P18, GPIO_PULL_UP }, // RX2
@@ -178,11 +206,12 @@ const ioinit_cfg_t ioInit[] = {
 
 	for (uint8_t i = 0; i < sizeof(ioInit) / sizeof(ioinit_cfg_t); i++)
 		hal_gpio_pull_set(ioInit[i].pin, ioInit[i].type);
-#if DEVICE == DEVICE_BTH01
-	hal_gpio_pin_init(GPIO_SPWR, GPIO_OUTPUT);
+#ifdef GPIO_SPWR
 	hal_gpio_write(GPIO_SPWR, 1);
 #endif
+#ifdef GPIO_LED
 	hal_gpio_write(GPIO_LED, LED_ON);
+#endif
 	DCDC_CONFIG_SETTING(0x0a);
 	DCDC_REF_CLK_SETTING(1);
 	DIG_LDO_CURRENT_SETTING(0x01);
@@ -296,8 +325,7 @@ int main(void) {
     	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
     	AP_PCR->CACHE_BYPASS = 1; // just bypass cache
     	startup_app();
-	} else
-		write_reg(OTA_MODE_SELECT_REG, 0);
+	}//  else write_reg(OTA_MODE_SELECT_REG, 0);
 #endif
 
 	watchdog_config(WDG_2S);

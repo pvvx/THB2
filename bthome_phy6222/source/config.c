@@ -67,8 +67,8 @@ void test_config(void) {
 
 	if(cfg.advertising_interval == 0)
 		cfg.advertising_interval = 1;
-	if(cfg.measure_interval == 0)
-		cfg.measure_interval = 1;
+	if(cfg.measure_interval < 2)
+		cfg.measure_interval = 2;
 	adv_wrk.measure_interval_ms = cfg.advertising_interval * cfg.measure_interval * 625 / 10;
 }
 

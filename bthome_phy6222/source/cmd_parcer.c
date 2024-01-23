@@ -26,6 +26,7 @@
 #include "devinfoservice.h"
 #include "ble_ota.h"
 #include "thb2_peripheral.h"
+#include "lcd_th05.h"
 /*********************************************************************/
 #define SEND_DATA_SIZE	16
 
@@ -70,13 +71,13 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				osal_memcpy(&thsensor_cfg.coef, &ibuf[1], len);
 				flash_write_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef));
 			}
-			osal_memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_size);
-			olen = thsensor_cfg_size + 1;
+			osal_memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_send_size);
+			olen = thsensor_cfg_send_size + 1;
 		} else if (cmd == CMD_ID_CFS_DEF) {	// Get/Set default sensor config
-			osal_memset(&thsensor_cfg, 0, thsensor_cfg_size);
+			osal_memset(&thsensor_cfg, 0, thsensor_cfg_send_size);
 			init_sensor();
-			osal_memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_size);
-			olen = thsensor_cfg_size + 1;
+			osal_memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_send_size);
+			olen = thsensor_cfg_send_size + 1;
 		} else if (cmd == CMD_ID_SERIAL) {
 			osal_memcpy(&obuf[1], devInfoSerialNumber, sizeof(devInfoSerialNumber)-1);
 			olen = 1 + sizeof(devInfoSerialNumber)-1;
@@ -100,7 +101,17 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				write_reg(OTA_MODE_SELECT_REG, ibuf[1]);
 			}
 			hal_system_soft_reset();
-
+#if (DEV_SERVICES & SERVICE_SCREEN)
+		} else if (cmd == CMD_ID_LCD_DUMP) { // Get/set lcd buf
+			if (--len > sizeof(display_buff))
+				len = sizeof(display_buff);
+			if (len) {
+				osal_memcpy(display_buff, &ibuf[1], len);
+				update_lcd();
+			}
+			osal_memcpy(&obuf[1], display_buff, sizeof(display_buff));
+			olen = 1 + sizeof(display_buff);
+#endif
 	//---------- Debug commands (unsupported in different versions!):
 
 		} else if (cmd == CMD_ID_EEP_RW && len > 2) {

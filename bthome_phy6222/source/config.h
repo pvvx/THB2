@@ -11,7 +11,7 @@
 #include "types.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x06	// BCD
+#define APP_VERSION	0x07	// BCD
 #endif
 
 /*
@@ -38,7 +38,7 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE DEVICE_BTH01
+#define DEVICE		DEVICE_THB2
 #endif
 
 // supported services by the device (bits)
@@ -128,13 +128,15 @@
 #define USE_RS_SENSOR	0
 #define USE_SECREEN		1
 
-#define I2C_SDA 	GPIO_P33 // CHT8305_SDA
-#define I2C_SCL 	GPIO_P34 // CHT8305_SCL
+#define I2C_SDA 	GPIO_P33 // AHT20_SDA
+#define I2C_SCL 	GPIO_P34 // AHT20_SCL
 #define GPIO_SPWR	GPIO_P00 // питание сенсора CHT8305_VDD
 #define GPIO_KEY	GPIO_P14
-#define GPIO_LED	GPIO_P15
-#define LED_ON		1
-#define LED_OFF		0
+
+#define GPIO_LPWR	GPIO_P02 // питание LCD драйвера
+//#define GPIO_LED	GPIO_P20
+//#define LED_ON		1
+//#define LED_OFF		0
 
 #define DEF_MODEL_NUMBER_STR		"TH05"
 #define DEF_HARDWARE_REVISION		"0001"

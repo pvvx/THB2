@@ -1,12 +1,12 @@
-/**************************************************************************************************
+/*******************************************************************************
   Filename:		  simpleBLEPeripheral.c
   Revised:
   Revision:
 
-  Description:	  This file contains the Simple BLE Peripheral sample application
+  Description:  This file contains the Simple BLE Peripheral sample application
 
 
-**************************************************************************************************/
+*******************************************************************************/
 /*********************************************************************
  * INCLUDES
  */
@@ -41,6 +41,7 @@
 #include "sensor.h"
 #include "battery.h"
 #include "sbp_profile.h"
+#include "lcd_th05.h"
 /*********************************************************************
  * MACROS
  */
@@ -98,7 +99,20 @@ static	gaprole_States_t	gapProfileState	=	GAPROLE_INIT;
 static void simpleBLEPeripheral_ProcessOSALMsg( osal_event_hdr_t *pMsg );
 static void peripheralStateNotificationCB( gaprole_States_t newState );
 //static void simpleProfileChangeCB( uint8 paramID );
-static void peripheralStateReadRssiCB( int8 rssi  );
+static void peripheralStateReadRssiCB( int8 rssi );
+
+
+#if (DEV_SERVICES & SERVICE_SCREEN)
+void chow_measure(void) {
+	show_big_number_x10(measured_data.temp/10);
+	show_small_number(measured_data.humi/100, true);
+	show_battery_symbol(measured_data.battery < 20);
+	show_temp_symbol(3);
+	show_smiley(0);
+	show_ble_symbol(gapRole_state == GAPROLE_CONNECTED);
+	update_lcd();
+}
+#endif
 
 const char* hex_ascii = { "0123456789ABCDEF" };
 uint8_t * str_bin2hex(uint8_t *d, uint8_t *s, int len) {
@@ -180,15 +194,22 @@ static void set_adv_interval(uint16 advInt)
 #endif
 }
 
+//extern void start_measure(void);
+
 static void adv_measure(void) {
 	if(gapRole_AdvEnabled) {
-		if(++adv_wrk.adv_count >= cfg.measure_interval) {
+		if(adv_wrk.adv_count == (uint8_t)(cfg.measure_interval - 1)) {
+			start_measure();
+		} else if(adv_wrk.adv_count >= cfg.measure_interval) {
 			adv_wrk.adv_count = 0;
 			read_sensor();
 			if(++adv_wrk.adv_batt_count >= cfg.batt_interval) { // = 60
 				adv_wrk.adv_batt_count = 0;
 				batt_start_measure();
 			}
+#if (DEV_SERVICES & SERVICE_SCREEN)
+			chow_measure();
+#endif
 			bthome_data_beacon((padv_bthome_ns1_t) gapRole_AdvertData);
 			LL_SetAdvData(sizeof(adv_bthome_ns1_t), gapRole_AdvertData);
 		}
@@ -197,6 +218,7 @@ static void adv_measure(void) {
 				set_new_adv_interval(cfg.advertising_interval * 100);
 			}
 		}
+		adv_wrk.adv_count++;
 	}
 }
 
@@ -208,10 +230,12 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	(void) pin;
 	if(type == POSEDGE)
 	{
-		adv_wrk.adv_con_count = 30000/DEF_CON_ADV_INERVAL_MS; // 60 sec
 		LOG("int or wakeup(pos):gpio:%d type:%d\n", pin, type);
+#ifdef GPIO_LED
 		hal_gpio_write(GPIO_LED, LED_OFF);
+#endif
 		if(gapRole_AdvEnabled) {
+			adv_wrk.adv_con_count = 60000/DEF_CON_ADV_INERVAL_MS; // 60 sec
 			set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
 		}
 	}
@@ -227,7 +251,9 @@ static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	if(type == NEGEDGE)
 	{
 		LOG("int or wakeup(neg):gpio:%d type:%d\n", pin, type);
+#ifdef GPIO_LED
 		hal_gpio_write(GPIO_LED, LED_ON);
+#endif
 	}
 	else
 	{
@@ -237,12 +263,20 @@ static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 
 void init_led_key(void)
 {
+#ifdef GPIO_KEY
 	hal_gpioin_register(GPIO_KEY, posedge_int_wakeup_cb, negedge_int_wakeup_cb);
-	hal_gpioretention_register(GPIO_LED);//enable this pin retention
+#endif
+#ifdef GPIO_LED
 	hal_gpio_write(GPIO_LED, LED_ON);
-#if DEVICE == DEVICE_BTH01
-	hal_gpioretention_register(GPIO_SPWR);//enable this pin retention
+	hal_gpioretention_register(GPIO_LED);//enable this pin retention
+#endif
+#ifdef GPIO_LPWR // питание LCD драйвера
+	hal_gpio_write(GPIO_LPWR, 1);
+	hal_gpioretention_register(GPIO_LPWR);//enable this pin retention
+#endif
+#ifdef GPIO_SPWR  // питание сенсора CHT8305_VDD
 	hal_gpio_write(GPIO_SPWR, 1);
+	hal_gpioretention_register(GPIO_SPWR);//enable this pin retention
 #endif
 }
 
@@ -316,6 +350,10 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 
 	init_led_key();
 
+#if (DEV_SERVICES & SERVICE_SCREEN)
+	init_lcd();
+#endif
+
 	init_sensor();
 
 	set_serial_number();
@@ -355,6 +393,13 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	GGS_SetParameter( GGS_DEVICE_NAME_ATT, gapRole_ScanRspData[0] - 1, (void *)&gapRole_ScanRspData[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
 
 	// Set advertising interval
+#if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
+	if (read_reg(OTA_MODE_SELECT_REG) == 0x55) {
+		write_reg(OTA_MODE_SELECT_REG, 0);
+		adv_wrk.adv_con_count = 60000/DEF_OTA_ADV_INERVAL_MS; // 60 sec
+		set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
+	} else
+#endif
 	set_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
 
 	HCI_PPLUS_AdvEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, ADV_BROADCAST_EVT);
@@ -379,12 +424,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	DevInfo_AddService();								//	Device Information Service
 	Batt_AddService();
 	TH_AddService();
-	//Batt_Register(NULL);
 	SimpleProfile_AddService( GATT_ALL_SERVICES );		//	Simple GATT Profile
-
-	//uint8	OTA_Passward_AscII[8]	=	{'1','2','3','4','5','6','7','8'};
-	//ota_app_AddService_UseKey(8, OTA_Passward_AscII);
-	// ota_app_AddService();
 
 #if (1)
 #if 0 // CODED PHY not work?
@@ -411,9 +451,11 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 #endif
 	// Setup a delayed profile startup
 	osal_set_event( simpleBLEPeripheral_TaskID, SBP_START_DEVICE_EVT );
+
 	// for receive HCI complete message
 	GAP_RegisterForHCIMsgs(simpleBLEPeripheral_TaskID);
 	LL_PLUS_PerStats_Init(&g_perStatsByChanTest);
+
 	batt_start_measure();
 
 	LOG("=====SimpleBLEPeripheral_Init Done=======\n");
@@ -471,6 +513,10 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 	{
 		LOG("TIMER_EVT\n");
 		read_sensor();
+		start_measure();
+#if (DEV_SERVICES & SERVICE_SCREEN)
+		chow_measure();
+#endif
 		// TH Notify
 		TH_NotifyLevel();
 		if(++adv_wrk.adv_batt_count >= cfg.batt_interval) { // 60 sec
@@ -499,7 +545,14 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		VOID GAPBondMgr_Register( &simpleBLEPeripheral_BondMgrCBs );
 #endif
 		HCI_LE_ReadResolvingListSizeCmd();
+#ifdef GPIO_LED
 		hal_gpio_write(GPIO_LED, LED_OFF);
+#endif
+		//adv_wrk.adv_count = 0;
+#if (DEV_SERVICES & SERVICE_SCREEN)
+		show_big_number_x10(APP_VERSION);
+		update_lcd();
+#endif
 		// return unprocessed events
 		return ( events ^ SBP_START_DEVICE_EVT );
 	}
@@ -604,6 +657,10 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, adv_wrk.measure_interval_ms); // 10000 ms
 			HCI_PPLUS_ConnEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, NULL);
 			LOG("Gaprole_Connected\n");
+#if (DEV_SERVICES & SERVICE_SCREEN)
+			show_ble_symbol(1);
+			update_lcd();
+#endif
 		break;
 
 		case GAPROLE_CONNECTED_ADV:
@@ -615,6 +672,10 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 			adv_wrk.adv_con_count = 1;
 			osal_stop_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT);
 			adv_wrk.adv_count = 0;
+#if (DEV_SERVICES & SERVICE_SCREEN)
+			show_ble_symbol(0);
+			update_lcd();
+#endif
 		break;
 
 		case GAPROLE_WAITING_AFTER_TIMEOUT:
@@ -631,6 +692,6 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 	gapProfileState = newState;
 	LOG("[GAP ROLE %d]\n",newState);
 
-	VOID gapProfileState;
+//	VOID gapProfileState;
 }
 

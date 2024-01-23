@@ -262,7 +262,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 
 __ATTR_SECTION_XIP__
 static uint32_t start_app(void) {
-
+	uint32_t i;
 	app_info_t info_app;
 	app_info_seg_t info_seg;
 	uint32_t info_seg_faddr = FADDR_APP_SEC;
@@ -270,23 +270,31 @@ static uint32_t start_app(void) {
 	spif_read(info_seg_faddr, (uint8_t*)&info_app, sizeof(info_app));
 	if(info_app.flag == START_UP_FLAG) {
 		if(info_app.seg_count <= 15) {
-			while(info_app.seg_count) {
-				info_seg_faddr +=  sizeof(info_app);
-				spif_read(info_seg_faddr, (uint8_t*)&info_seg, sizeof(info_seg));
+			i = info_app.seg_count;
+			while(i--) {
 				if(info_app.start_addr == 0xffffffff) // если не назначен
 					// берется значение из первого сегмента отличного от -1
 					info_app.start_addr = info_seg.waddr;
-				info_seg.faddr += FADDR_START_ADDR;
-				info_seg.size &= 0x000fffff;
-				if (info_seg.waddr != info_seg.faddr // не XIP
-						&& info_seg.size < (128*1024)) { // < 128k
-					osal_memcpy((void *)info_seg.waddr, (void *)info_seg.faddr, info_seg.size);
-				}
-				info_app.seg_count--;
 			}
-		}
-		if(info_app.start_addr == 0xffffffff) {
-			info_app.start_addr = 0;
+			if(info_app.start_addr != 0xffffffff) {
+				while(info_app.seg_count) {
+					info_seg_faddr +=  sizeof(info_app);
+					spif_read(info_seg_faddr, (uint8_t*)&info_seg, sizeof(info_seg));
+					if(info_app.start_addr == 0xffffffff) // если не назначен
+						// берется значение из первого сегмента отличного от -1
+						info_app.start_addr = info_seg.waddr;
+					info_seg.faddr += FADDR_START_ADDR;
+					info_seg.size &= 0x000fffff;
+					if (info_seg.waddr != info_seg.faddr // не XIP
+							//&& info_seg.waddr < 0x11000000
+							//&& info_seg.waddr > 0x11020000
+							&& info_seg.size < (128*1024)) { // < 128k
+						osal_memcpy((void *)info_seg.waddr, (void *)info_seg.faddr, info_seg.size);
+					}
+					info_app.seg_count--;
+				}
+			} else
+				info_app.start_addr = 0;
 		}
 	} else
 		info_app.start_addr = 0;

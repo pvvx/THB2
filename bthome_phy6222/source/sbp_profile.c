@@ -86,7 +86,7 @@ static CONST gattAttrType_t simpleProfileService = { ATT_BT_UUID_SIZE, simplePro
 
 #if OTA_TYPE
 // Simple Profile Characteristic 1 Properties
-static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY; //  GATT_PROP_WRITE
+static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY;
 //static CONST uint8_t simpleProfileChar1UserDesp[]		=	"OTA\0";	// Simple Profile Characteristic 1 User Description
 static gattCharCfg_t simpleProfileChar1Config[GATT_MAX_NUM_CONN];		//
 
@@ -96,7 +96,7 @@ static uint8_t ota_in_len;
 #endif
 
 // Simple Profile Characteristic 2 Properties
-static CONST uint8_t simpleProfileChar2Props			=	GATT_PROP_READ | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY; // GATT_PROP_WRITE
+static CONST uint8_t simpleProfileChar2Props			=	GATT_PROP_READ | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY;
 //static CONST uint8_t simpleProfileChar2UserDesp[]		=	"CMD\0";	// Simple Profile Characteristic 2 User Description
 static gattCharCfg_t simpleProfileChar2Config[GATT_MAX_NUM_CONN];		//
 
