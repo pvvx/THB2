@@ -38,8 +38,11 @@
 #include "sensor.h"
 #include "battery.h"
 #include "sbp_profile.h"
+#include "logger.h"
 
 extern gapPeriConnectParams_t periConnParameters;
+
+clock_time_t clkt;
 
 cfg_t cfg;
 
@@ -47,10 +50,33 @@ const cfg_t def_cfg = {
 		.rf_tx_power = RF_PHY_TX_POWER_0DBM,
 		.advertising_interval = 80, // 80 * 62.5 = 5000 ms
 		.measure_interval = 2,  // 5 * 2 = 10 sec
-		.batt_interval = 6, // 60 sec
+		.batt_interval = 60, // 60 sec
 		.connect_latency = 29,	// 30*30 = 900 ms
-		.averaging_measurements = 180 // 180*10 = 1800 sec, 30 min
+		.averaging_measurements = 2 // 180*10 = 1800 sec, 30 min
 };
+
+/*
+uint32_t get_delta_time_rtc(uint32_t start_time_rtc) {
+	uint32_t new_time_rtc = clock_time_rtc();
+	if(new_time_rtc  < start_time_rtc)
+		new_time_rtc += 0x1000000; // + 512 sec
+	return  new_time_rtc - start_time_rtc;
+}
+*/
+
+uint32_t get_utc_time_sec(void) {
+	uint32_t new_time_tik = clock_time_rtc();
+	if(new_time_tik  < clkt.utc_time_tik)
+		new_time_tik += 0x1000000; // + 512 sec
+	clkt.utc_time_add += new_time_tik - clkt.utc_time_tik;
+	clkt.utc_time_tik = new_time_tik;
+	clkt.utc_time_sec += clkt.utc_time_add >> 15; // div 32768
+	clkt.utc_time_add &= 32767;
+#if (DEV_SERVICES & SERVICE_TIME_ADJUST)
+	// TODO
+#endif
+	return clkt.utc_time_sec;
+}
 
 void test_config(void) {
 	if (cfg.rf_tx_power > RF_PHY_TX_POWER_EXTRA_MAX)
@@ -78,10 +104,21 @@ void load_eep_config(void) {
 	} else {
 		if (flash_read_cfg(&cfg, EEP_ID_CFG, sizeof(cfg)) != sizeof(cfg))
 			osal_memcpy(&cfg, &def_cfg, sizeof(cfg));
+#if (DEV_SERVICES & SERVICE_THS)
 		if(flash_read_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef)) != sizeof(thsensor_cfg.coef)) {
 			osal_memset(&thsensor_cfg.coef, 0, sizeof(thsensor_cfg.coef));
 		}
+#endif
 	}
+#if (DEV_SERVICES & SERVICE_TIME_ADJUST)
+	if (flash_read_cfg(&clkt.delta_time, EEP_ID_TIM, sizeof(&clkt.delta_time)) != sizeof(&clkt.delta_time)) {
+		clkt.delta_time = 0;
+	}
+#endif
+#if (DEV_SERVICES & SERVICE_HISTORY)
+	memo_init();
+#endif
 	test_config();
 }
+
 

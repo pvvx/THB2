@@ -8,7 +8,7 @@
 #ifndef BTHOME_BEACON_H_
 #define BTHOME_BEACON_H_
 
-//#include "stack/ble/ble_8258/ble_common.h"
+#include "config.h"
 
 #define ADV_BTHOME_UUID16 0xFCD2 // 16-bit UUID Service 0xFCD2 BTHOME
 
@@ -117,17 +117,24 @@ typedef struct __attribute__((packed)) _adv_bthome_data1_t {
 	uint8		t_id;	// = BtHomeID_temperature
 	int16		temperature; // x 0.01 degree
 	uint8		h_id;	// = BtHomeID_humidity
-	uint16	humidity; // x 0.01 %
+	uint16		humidity; // x 0.01 %
 	uint8		v_id;	// = BtHomeID_voltage
-	uint16	battery_mv; // x 0.001 V
+	uint16		battery_mv; // x 0.001 V
 } adv_bthome_data1_t, * padv_bthome_data1_t;
+
+typedef struct __attribute__((packed)) _adv_bthome_data2_t {
+	uint8		b_id;	// = BtHomeID_battery
+	uint8		battery_level; // 0..100 %
+	uint8		v_id;	// = BtHomeID_voltage
+	uint16		battery_mv; // x 0.001 V
+} adv_bthome_data2_t, * padv_bthome_data2_t;
 
 
 #define ADV_BUFFER_SIZE		(31-3)
 
 // BTHOME data1, no security
 typedef struct __attribute__((packed)) _adv_bthome_ns1_t {
-	uint8 	flag[3];		// Advertise type flags
+	uint8 		flag[3];		// Advertise type flags
 	adv_head_bth_t head;
 	uint8		info;	// = 0x40 BtHomeID_Info
 	uint8		p_id;	// = BtHomeID_PacketId
@@ -135,15 +142,25 @@ typedef struct __attribute__((packed)) _adv_bthome_ns1_t {
 	adv_bthome_data1_t data;
 } adv_bthome_ns1_t, * padv_bthome_ns1_t;
 
+// BTHOME data2, no security
+typedef struct __attribute__((packed)) _adv_bthome_ns2_t {
+	uint8 		flag[3];		// Advertise type flags
+	adv_head_bth_t head;
+	uint8		info;	// = 0x40 BtHomeID_Info
+	uint8		p_id;	// = BtHomeID_PacketId
+	uint8		pid;	// PacketId (measurement count)
+	adv_bthome_data2_t data;
+} adv_bthome_ns2_t, * padv_bthome_ns2_t;
+
 typedef struct _adv_buf_t {
-	uint32	send_count; // count & id advertise, = beacon_nonce.cnt32
-//	uint16	old_measured_count; // old measured_data.count
-//	uint16	adv_restore_count;
+	uint32		send_count; // count & id advertise, = beacon_nonce.cnt32
+//	uint16		old_measured_count; // old measured_data.count
+//	uint16		adv_restore_count;
 	adv_bthome_ns1_t data;
 } adv_buf_t;
 
 //void bls_set_advertise_prepare(void *p);
 //int app_advertise_prepare_handler(rf_packet_adv_t * p);
-void bthome_data_beacon(padv_bthome_ns1_t p);
+void bthome_data_beacon(void * padbuf);
 
 #endif /* BTHOME_BEACON_H_ */

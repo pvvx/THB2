@@ -36,7 +36,7 @@
 
 #define LCD_BUF_SIZE	6
 
-// extern uint8_t lcd_i2c_addr; // LCD controller I2C address
+extern uint8_t lcd_i2c_addr; // LCD controller I2C address
 extern uint8_t display_buff[LCD_BUF_SIZE];
 
 void init_lcd(void);

@@ -36,7 +36,7 @@
 
 //define flash ucds
 #define FLASH_BASE_ADDR         (0x11000000)
-#define FLASH_UCDS_ADDR_BASE    0x11005000
+//#define FLASH_UCDS_ADDR_BASE    0x11005000
 
 #define CHIP_ID_LENGTH          64
 #define CHIP_ID_PID_LEN         16

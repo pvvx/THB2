@@ -5,8 +5,10 @@
 /*********************************************************************
 	INCLUDES
 */
-#include "bcomdef.h"
 #include "types.h"
+#include "config.h"
+#if (DEV_SERVICES & SERVICE_THS)
+#include "bcomdef.h"
 #include "OSAL.h"
 #include "linkdb.h"
 #include "att.h"
@@ -385,4 +387,6 @@ void TH_HandleConnStatusCB( uint16 connHandle, uint8 changeType )
 		}
 	}
 }
+
+#endif // (DEV_SERVICES & SERVICE_THS)
 

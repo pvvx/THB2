@@ -6,6 +6,7 @@
  */
 #include "rom_sym_def.h"
 #include "types.h"
+#include "config.h"
 #include "bcomdef.h"
 #include "gapbondmgr.h"
 #include "sensor.h"
@@ -13,8 +14,12 @@
 
 //adv_buf_t adv_buf;
 
-void bthome_data_beacon(padv_bthome_ns1_t p) {
-	//	padv_bthome_ns1_t p = (padv_bthome_ns1_t)&adv_buf.data;
+void bthome_data_beacon(void * padbuf) {
+#if (DEV_SERVICES & SERVICE_THS)
+	padv_bthome_ns1_t p = (padv_bthome_ns1_t)padbuf;
+#else
+	padv_bthome_ns2_t p = (padv_bthome_ns2_t)padbuf;
+#endif
 	p->flag[0] = 0x02; // size
 	p->flag[1] = GAP_ADTYPE_FLAGS; // type
 	/*	Flags:
@@ -33,10 +38,12 @@ void bthome_data_beacon(padv_bthome_ns1_t p) {
 	p->pid = (uint8)measured_data.count;
 	p->data.b_id = BtHomeID_battery;
 	p->data.battery_level = measured_data.battery;
+#if (DEV_SERVICES & SERVICE_THS)
 	p->data.t_id = BtHomeID_temperature;
 	p->data.temperature = measured_data.temp; // x0.01 C
 	p->data.h_id = BtHomeID_humidity;
 	p->data.humidity = measured_data.humi; // x0.01 %
+#endif
 	p->data.v_id = BtHomeID_voltage;
 	p->data.battery_mv = measured_data.battery_mv; // x mV
 	p->head.size = sizeof(adv_bthome_ns1_t) - sizeof(p->head.size) - sizeof(p->flag);

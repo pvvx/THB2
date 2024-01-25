@@ -253,6 +253,15 @@ typedef struct
     gattAttribute_t* attrs;
 } gattService_t;
 
+// Structure to keep Attribute Server info
+typedef struct
+{
+    // Info maintained for Handle Value Confirmation message
+    uint16 connHandle;    // connection message was sent on
+    uint8 timerId;        // confirmation timeout timer id
+    uint8 taskId;         // task to be notified of confirmation
+} gattServerInfo_t;
+bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer );
 /*********************************************************************
     VARIABLES
 */
@@ -785,7 +794,7 @@ extern bStatus_t GATT_DiscCharsByUUID( uint16 connHandle, attReadByTypeReq_t* pR
 
 /**
     @brief   This sub-procedure is used by a client to find all the
-            characteristic descriptor’s Attribute Handles and Attribute
+            characteristic descriptorï¿½s Attribute Handles and Attribute
             Types within a characteristic definition when only the
             characteristic handle range is known. The characteristic
             specified is identified by the characteristic handle range.
@@ -1149,7 +1158,7 @@ extern bStatus_t GATT_ReliableWrites( uint16 connHandle, attPrepareWriteReq_t* p
 /**
     @brief   This sub-procedure is used to read a characteristic descriptor
             from a server when the client knows the characteristic descriptor
-            declaration’s Attribute handle.
+            declarationï¿½s Attribute handle.
 
             The ATT Read Request is used for this sub-procedure. The Read
             Request is used with the Attribute Handle parameter set to the
@@ -1182,7 +1191,7 @@ extern bStatus_t GATT_ReadCharDesc( uint16 connHandle, attReadReq_t* pReq, uint8
 /**
     @brief   This sub-procedure is used to read a characteristic descriptor
             from a server when the client knows the characteristic descriptor
-            declaration’s Attribute handle and the length of the characteristic
+            declarationï¿½s Attribute handle and the length of the characteristic
             descriptor declaration is longer than can be sent in a single Read
             Response attribute protocol message.
 

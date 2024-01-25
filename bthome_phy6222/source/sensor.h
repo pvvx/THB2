@@ -6,7 +6,9 @@
 #ifndef _SENSORS_H_
 #define _SENSORS_H_
 
-#include <stdint.h>
+#include "config.h"
+
+#if (DEV_SERVICES & SERVICE_THS)
 
 // Timing
 #define SENSOR_POWER_TIMEOUT_ms		3
@@ -120,7 +122,6 @@ struct __attribute__((packed)) _cht8305_config_t{
 #define AHT2x_DATA_TMS	0x3300  // Trigger Measurement data
 #define AHT2x_CMD_RST	0x0BA  // Soft Reset Command
 
-
 typedef struct _measured_data_t {
 	uint16_t	count;
 	int16_t		temp; // x 0.01 C
@@ -156,9 +157,19 @@ void init_sensor(void);
 void start_measure(void);
 int read_sensor(void);
 
-void init_i2c(bool speed400khz);
-void deinit_i2c(void);
-int send_i2c_byte(uint8 addr, uint8 data);
+#else // (DEV_SERVICES & SERVICE_THS)
 
+typedef struct _measured_data_t {
+	uint16_t	count;
+//	int16_t		temp; // x 0.01 C
+//	int16_t		humi; // x 0.01 %
+	uint16_t	battery_mv; // mV
+	uint8_t		battery; // 0..100 %
+} measured_data_t;
+
+extern measured_data_t measured_data;
+
+
+#endif // (DEV_SERVICES & SERVICE_THS)
 
 #endif // _SENSORS_H_

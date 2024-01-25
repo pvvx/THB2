@@ -7,14 +7,16 @@
 #include <string.h>
 #include "types.h"
 #include "config.h"
+#if (DEV_SERVICES & SERVICE_SCREEN)
 #include "OSAL.h"
 #include "gpio.h"
 #include "rom_sym_def.h"
-#include "i2c.h"
+#include "dev_i2c.h"
 #include "sensor.h"
 #include "lcd_th05.h"
 
-#define SET_I2C_SPEED	400 // 100 or 400 kHz
+#define LCD_I2C_SPEED	100 // 100 or 400 kHz
+#define LCD_I2C_ADDR	0x3E
 #define I2C_WAIT_ms		1
 
 /* 0,1,2,3,4,5,6,7,8,9,A,b,C,d,E,F*/
@@ -46,7 +48,7 @@ const uint8_t display_numbers[] = {
 #define LCD_SYM_0  0b011110011 // "0"
 #define LCD_SYM_a  0b011110110 // 'a'
 
-#define lcd_i2c_addr	0x3E
+uint8_t lcd_i2c_addr; // = 0x3E
 
 uint8_t display_buff[LCD_BUF_SIZE] = {
 		LCD_SYM_o, LCD_SYM_o, LCD_SYM_o,
@@ -207,37 +209,16 @@ void show_clock(void) {
 
 extern volatile uint32 osal_sys_tick;
 
-int send_i2c_buf(uint8 addr, uint8 * pdata, int len) {
-	AP_I2C_TypeDef * pi2cdev = AP_I2C0;
-	pi2cdev->IC_ENABLE = 0;
-	pi2cdev->IC_TAR = addr;
-	HAL_ENTER_CRITICAL_SECTION();
-	pi2cdev->IC_ENABLE = 1;
-	while(len--) {
-	  pi2cdev->IC_DATA_CMD = *pdata++;
-	  while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
-	}
-	HAL_EXIT_CRITICAL_SECTION();
-	uint32 to = osal_sys_tick;
-	while(1) {
-		if(pi2cdev->IC_RAW_INTR_STAT & 0x200)// check tx empty
-			break;
-		if(osal_sys_tick - to > I2C_WAIT_ms)
-			return 1;
-	}
-	return 0;
-}
+
 
 static void send_to_lcd(uint8_t *pbuf, int len){
 	init_i2c(0);
-	//send_i2c_byte(lcd_i2c_addr, 0x48);
-	send_i2c_buf(lcd_i2c_addr, pbuf, len);
-	//send_i2c_byte(lcd_i2c_addr, 0x58);
+	if (send_i2c_buf(0x3E, pbuf, len))
 	deinit_i2c();
 }
 
 void update_lcd(void) {
-	if (memcmp(&display_out_buff[1], display_buff, sizeof(display_buff))) {
+	if (lcd_i2c_addr && memcmp(&display_out_buff[1], display_buff, sizeof(display_buff))) {
 		memcpy(&display_out_buff[1], display_buff, sizeof(display_buff));
 		send_to_lcd(display_out_buff, sizeof(display_out_buff));
 	}
@@ -245,13 +226,13 @@ void update_lcd(void) {
 
 void init_lcd(void) {
 	init_i2c(0);
-	send_to_lcd((uint8_t *) lcd_init_cmd, sizeof(lcd_init_cmd)); // sleep: 15.5 uA
-//	display_out_buff[0] = 0xf0;
-//	display_out_buff[1] = 0x00;
-	display_out_buff[3] = 0xFF;
-	//display_cmp_buff[2+LCD_BUF_SIZE] = 0x58;
-	//send_i2c_byte(lcd_i2c_addr, 0x58);
+	if(!send_i2c_buf(LCD_I2C_ADDR, (uint8_t *) lcd_init_cmd, sizeof(lcd_init_cmd)))  // sleep: 15.5 uA
+		lcd_i2c_addr = LCD_I2C_ADDR;
+	else
+		lcd_i2c_addr = 0;
 	deinit_i2c();
 }
 
 /****************************************************/
+#endif // (DEV_SERVICES & SERVICE_SCREEN)
+

@@ -15,14 +15,16 @@ SRC_PRJ += peripheral_main.c
 SRC_PRJ += sbp_profile.c
 SRC_PRJ += devinfoservice.c
 SRC_PRJ += sensors.c
+SRC_PRJ += dev_i2c.c
 SRC_PRJ += config.c
-SRC_PRJ += cmd_parcer.c
+SRC_PRJ += cmd_parser.c
 SRC_PRJ += thb2_main.c
 SRC_PRJ += thb2_peripheral.c
 SRC_PRJ += thservice.c
 SRC_PRJ += flash_eep.c
 SRC_PRJ += lcd_th05.c
 SRC_PRJ += ble_ota.c
+SRC_PRJ += logger.c
 
 INCLUDES = -I$(SRC_PATH)
 

@@ -42,14 +42,6 @@ typedef struct _attAttrList
     gattService_t service;      // service record
 } gattServiceList_t;
 
-// Structure to keep Attribute Server info
-typedef struct
-{
-    // Info maintained for Handle Value Confirmation message
-    uint16 connHandle;    // connection message was sent on
-    uint8 timerId;        // confirmation timeout timer id
-    uint8 taskId;         // task to be notified of confirmation
-} gattServerInfo_t;
 
 // Structure to keep the Parse and Process function pointers for Requests
 typedef struct
@@ -100,7 +92,7 @@ static bStatus_t gattProcessWriteReq( uint16 connHandle, attMsg_t* pMsg );
 static bStatus_t gattProcessExecuteWriteReq( uint16 connHandle, attMsg_t* pMsg );
 
 static void gattStoreServerInfo( gattServerInfo_t* pServer, uint8 taskId );
-static bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer );
+//static bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer );
 static gattServerInfo_t* gattFindServerInfo( uint16 connHandle );
 static void gattResetServerInfo( gattServerInfo_t* pServer );
 static void gattServerStartTimer( uint8* pData, uint16 timeout, uint8* pTimerId );
@@ -1324,7 +1316,7 @@ static bStatus_t gattProcessExecuteWriteReq( uint16 connHandle, attMsg_t* pMsg )
                 blePending: Confirmation pending
                 bleTimeout: Previous transaction timed out
 */
-static bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer )
+bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer )
 {
     gattServerInfo_t* pServer;
     pServer = gattFindServerInfo( connHandle );

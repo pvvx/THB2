@@ -8,6 +8,7 @@
 #ifndef SOURCE_CONFIG_H_
 #define SOURCE_CONFIG_H_
 
+#include <string.h>
 #include "types.h"
 
 #ifndef APP_VERSION
@@ -38,40 +39,49 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB2
+#define DEVICE		DEVICE_TH05
 #endif
 
 // supported services by the device (bits)
-#define SERVICE_OTA		0x0001
-#define SERVICE_OTA_EXT	0x0002
-#define SERVICE_PINCODE 0x0004	// пока нет
-#define SERVICE_BINDKEY 0x0008	// пока нет
-#define SERVICE_HISTORY 0x0010	// пока нет
-#define SERVICE_SCREEN	0x0020	// пока нет
-#define SERVICE_LE_LR	0x0040	// пока нет
-#define SERVICE_THS		0x0080
-#define SERVICE_RDS		0x0100	// пока нет
-#define SERVICE_KEY		0x0200
-#define SERVICE_OUTS	0x0400	// пока нет
-#define SERVICE_INS		0x0800	// пока нет
+#define SERVICE_OTA			0x00001
+#define SERVICE_OTA_EXT		0x00002
+#define SERVICE_PINCODE 	0x00004	// пока нет
+#define SERVICE_BINDKEY 	0x00008	// пока нет
+#define SERVICE_HISTORY 	0x00010	// пока нет
+#define SERVICE_SCREEN		0x00020	// пока нет
+#define SERVICE_LE_LR		0x00040	// пока нет
+#define SERVICE_THS			0x00080
+#define SERVICE_RDS			0x00100	// пока нет
+#define SERVICE_KEY			0x00200
+#define SERVICE_OUTS		0x00400	// пока нет
+#define SERVICE_INS			0x00800	// пока нет
+#define SERVICE_TIME_ADJUST 0x01000	// пока нет
+#define SERVICE_HARD_CLOCK	0x02000	// пока нет
 
 #define OTA_TYPE_NONE	0	// нет OTA
 #define OTA_TYPE_BOOT	(SERVICE_OTA | SERVICE_OTA_EXT)		// вариант для прошивки boot + OTA
 #define OTA_TYPE_APP	SERVICE_OTA_EXT	// переключение из APP на OTA + boot прошивку, пока не реализовано
 
 #ifndef OTA_TYPE
-#define OTA_TYPE	OTA_TYPE_BOOT
+#define OTA_TYPE	OTA_TYPE_NONE
 #endif
 
 #define DEF_SOFTWARE_REVISION	{'V', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
 
 #if DEVICE == DEVICE_THB2
 /* Model: THB2 */
-
+#if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_THS \
 		| SERVICE_KEY \
 )
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+		| SERVICE_HISTORY \
+)
+#endif
 
 #define ADC_PIN_USE_OUT		0
 #define ADC_PIN 	GPIO_P11
@@ -90,10 +100,18 @@
 
 #elif DEVICE == DEVICE_BTH01
 /* Model: BTH01 */
+#if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_THS \
 		| SERVICE_KEY \
 )
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+		| SERVICE_HISTORY \
+)
+#endif
 
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
 #define ADC_PIN 	GPIO_P11
@@ -113,12 +131,20 @@
 
 #elif DEVICE == DEVICE_TH05
 /* Model: TH05 */
-
+#if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_THS \
-		| SERVICE_KEY \
 		| SERVICE_SCREEN \
+		| SERVICE_KEY \
 )
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_THS \
+		| SERVICE_SCREEN \
+		| SERVICE_KEY \
+		| SERVICE_HISTORY \
+)
+#endif
 
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
 #define ADC_PIN 	GPIO_P11
@@ -175,12 +201,32 @@ extern const cfg_t def_cfg;
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;
+	uint32_t	measure_batt_tik;
 	uint8_t		adv_count;
-	uint8_t		adv_batt_count;
 	uint8_t 	adv_con_count;
+	uint8_t		adv_batt;
 } adv_work_t;
 
 extern adv_work_t adv_wrk;
+
+// uint32_t rtc_get_counter(void); // tik 32768
+inline uint32 clock_time_rtc(void) {
+    return (*(volatile unsigned int*)0x4000f028);// & 0xffffff; // max 512 sec
+}
+// uint32_t get_delta_time_rtc(uint32_t start_time_rtc);
+
+typedef struct _clock_time_t {
+	uint32_t utc_time_sec; // utc, sec 01 01 1970
+	uint32_t utc_time_add; // add
+	uint32_t utc_time_tik; // old rtc tik, in 32768 Hz
+	uint32_t utc_set_time_sec; // время установки utc_time_sec
+#if (DEV_SERVICES & SERVICE_TIME_ADJUST)
+	int32_t delta_time; // коррекция времени rtc
+#endif
+} clock_time_t;
+extern clock_time_t clkt;
+
+uint32_t get_utc_time_sec(void);
 
 void test_config(void);
 void load_eep_config(void);

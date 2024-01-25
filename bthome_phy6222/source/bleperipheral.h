@@ -52,7 +52,7 @@ extern "C"
 #define TIMER_BATT_EVT				0x0008  // for battery detect
 #define BATT_VALUE_EVT				0x0010  // Event for battery voltage value update
 #define ADV_BROADCAST_EVT			0x0020  // Advent. Event Done Notice
-//#define	SBP_OTADATA					0x0040  // receive OTA data
+#define	WRK_NOTIFY_EVT				0x0040  // work notify
 
 /*********************************************************************
  * MACROS

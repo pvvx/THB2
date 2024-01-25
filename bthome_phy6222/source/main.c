@@ -321,7 +321,10 @@ int main(void) {
 
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
     if (read_reg(OTA_MODE_SELECT_REG) != 0x55
-    		&&  hal_gpio_read(GPIO_KEY) ) {
+#if (DEV_SERVICES & SERVICE_KEY)
+    		&&  hal_gpio_read(GPIO_KEY)
+#endif
+    ) {
     	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
     	AP_PCR->CACHE_BYPASS = 1; // just bypass cache
     	startup_app();

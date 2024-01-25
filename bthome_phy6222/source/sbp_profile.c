@@ -22,8 +22,9 @@
 #include "thb2_peripheral.h"
 #include "bleperipheral.h"
 #include "sbp_profile.h"
-#include "cmd_parcer.h"
+#include "cmd_parser.h"
 #include "ble_ota.h"
+#include "logger.h"
 
 /*********************************************************************
  * MACROS
@@ -65,7 +66,7 @@ CONST uint8_t simpleProfilechar2UUID[ATT_BT_UUID_SIZE] =
 /*********************************************************************
  * EXTERNAL VARIABLES
  */
-
+extern gapPeriConnectParams_t periConnParameters;
 /*********************************************************************
  * EXTERNAL FUNCTIONS
  */
@@ -444,9 +445,9 @@ static void simpleProfile_HandleConnStatusCB( uint16_t connHandle, uint8_t chang
 
 void new_cmd_data(void) {
 	attHandleValueNoti_t noti;
-	noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
 	noti.len = cmd_parser(noti.value, cmd_in_buffer, cmd_in_len);
 	if(noti.len) {
+		noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
 		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
 	}
 }
@@ -454,10 +455,31 @@ void new_cmd_data(void) {
 #if OTA_TYPE
 void new_ota_data(void) {
 	attHandleValueNoti_t noti;
-	noti.handle = simpleProfileAttrTbl[OTA_DATA_ATTR_IDX].handle;
 	noti.len = ota_parser(noti.value, ota_in_buffer, ota_in_len);
 	if(noti.len) {
+		noti.handle = simpleProfileAttrTbl[OTA_DATA_ATTR_IDX].handle;
 		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
 	}
 }
 #endif
+
+
+void wrk_notify(void) {
+	gattServerInfo_t* pServer;
+	attHandleValueNoti_t noti;
+    if (gattGetServerStatus( gapRole_ConnectionHandle,  &pServer ) != bleTimeout) {
+    	noti.len = 0;
+#if (DEV_SERVICES & SERVICE_HISTORY)
+//    	if(rd_memo.cnt)
+    	noti.len = send_memo_blk(noti.value);
+#endif
+    	if(noti.len) {
+    		noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
+    		if(ATT_HandleValueNoti(gapRole_ConnectionHandle, &noti) != SUCCESS || noti.len <= 3)
+    			return;
+        	osal_set_event(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT);
+    	} else
+    		return;
+    } else
+    	osal_start_timerEx(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT, 30);
+}

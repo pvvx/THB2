@@ -64,6 +64,9 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 			measured_data.battery = 0;
 	else
 		measured_data.battery = 100;
+#if ((DEV_SERVICES & SERVICE_THS) == 0)
+	measured_data.count++;
+#endif
 	extern uint8 gapRole_AdvEnabled;
 	if (!gapRole_AdvEnabled)
 		osal_set_event(simpleBLEPeripheral_TaskID, BATT_VALUE_EVT);
