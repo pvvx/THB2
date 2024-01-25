@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2 Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "11.01.24"
+__version__ = "25.01.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -166,11 +166,15 @@ class phyflasher:
 		self._port.setRTS(False) #RSTN (hi)
 		self._port.timeout = 0.04
 		ttcl = 50;
+		fct_mode = False
 		pkt = 'UXTDWU' # UXTL16 UDLL48 UXTDWU
 		while ttcl > 0:
 			sent = self._port.write(pkt.encode());
 			read = self._port.read(6);
 			if read == b'cmd>>:' :
+				break
+			if read == b'fct>>:' :
+				fct_mode = True
 				break
 			ttcl = ttcl - 1
 			if ttcl < 1:
@@ -183,6 +187,9 @@ class phyflasher:
 		self._port.baudrate = DEF_RUN_BAUD
 		self._port.open();
 		self._port.timeout = 0.2
+		if fct_mode:
+			print('PHY62x2 in FCT mode!')
+			return False
 		if not self.ReadRevision():
 			self._port.close()
 			exit(4)
@@ -498,7 +505,15 @@ def main():
 	phy = phyflasher(args.port)
 	print ('Connecting...')
 	#--------------------------------
-	phy.Connect(args.baud)
+	if not phy.Connect(args.baud):
+		if args.operation == 'ea':
+			if not phy.cmd_er512():
+				print ('Error: Erase All Flash!')
+				sys.exit(3)
+			exit(0)
+		else:
+			print ("Use the 'Erase All Flash' (ea) command to exit FCT mode!")
+			exit(2)
 	if args.operation == 'rc':
 		#filename = "r%08x-%08x.bin" % (addr, length)
 		if args.size == 0:
