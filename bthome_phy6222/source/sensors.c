@@ -121,7 +121,7 @@ __ATTR_SECTION_XIP__ void init_sensor(void) {
 			if(thsensor_cfg.vid == CHT8305_VID) {
 				ptabinit = (uint8_t *)&def_thcoef_cht8305;
 				thsensor_cfg.read_sensor = read_sensor_cht83xx;
-			} else if(thsensor_cfg.vid == CHT8315_VID) { // 0x8310/0x8315 ?
+			} else if(thsensor_cfg.vid == CHT8315_VID) { // 0x8210/0x8215 ?
 /* #if  USE_DEFAULT_SETS_SENSOR
 				hal_gpio_write(GPIO_SPWR, 0);
 				WaitMs(SENSOR_POWER_TIMEOUT_ms);
@@ -134,7 +134,7 @@ __ATTR_SECTION_XIP__ void init_sensor(void) {
 				// Configure
 				send_i2c_wreg(thsensor_cfg.i2c_addr, CHT8305_REG_CFG, CHT8305_CFG_MODE );
 #endif */
-				if(adv_wrk.measure_interval_ms >= 5050) // > 5 sec
+				if(adv_wrk.measure_interval_ms >= 5000) // > 5 sec
 					send_i2c_wreg(CHT8315_I2C_ADDR0, CHT8315_REG_CRT, 0x0300); // Set conversion ratio 5 sec
 				// else 1 sec
 				thsensor_cfg.read_sensor = read_sensor_cht83xx;

@@ -57,7 +57,7 @@
 #define CHT8315_CFG_ATM			0x0001
 
 #define CHT83xx_MID	0x5959
-#define CHT8315_VID	0x8315
+#define CHT8315_VID	0x1582
 
 /* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/BTH01/CHT8305.pdf */
 
@@ -110,7 +110,7 @@ struct __attribute__((packed)) _cht8305_config_t{
 } cht8305_config_t;
 */
 
-#define CHT8305_VID	0x8305
+#define CHT8305_VID	0x0583
 
 /*---------------------------------------
  Датчик влажности AHT25
