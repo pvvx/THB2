@@ -15,49 +15,59 @@
 #define SENSOR_RESET_TIMEOUT_ms		3
 #define SENSOR_MEASURING_TIMEOUT_ms	7
 
-/* CHT8310 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310.Advanced.Datasheet_Ver1.0.20230407.pdf */
-//	I2C addres
-#define CHT8315_I2C_ADDR0	0x40
-#define CHT8315_I2C_ADDR1	0x44
-#define CHT8315_I2C_ADDR2	0x48
-#define CHT8315_I2C_ADDR3	0x4C
-
-//	Registers
-#define CHT8315_REG_TMP		0x00
-#define CHT8315_REG_HMD		0x01
-#define CHT8315_REG_STA		0x02
-#define CHT8315_REG_CFG		0x03
-#define CHT8315_REG_CRT		0x04
-#define CHT8315_REG_TLL		0x05
-#define CHT8315_REG_TLM		0x06
-#define CHT8315_REG_HLL		0x07
-#define CHT8315_REG_HLM		0x08
-#define CHT8315_REG_OST		0x0f
-#define CHT8315_REG_RST		0xfc
-#define CHT8315_REG_MID		0xfe
-#define CHT8315_REG_VID		0xff
-
-//	Status register mask
-#define CHT8315_STA_BUSY	0x8000
-#define CHT8315_STA_THI		0x4000
-#define CHT8315_STA_TLO		0x2000
-#define CHT8315_STA_HHI		0x1000
-#define CHT8315_STA_HLO		0x0800
-
-//	Config register mask
-#define CHT8315_CFG_MASK		0x8000
-#define CHT8315_CFG_SD			0x4000
-#define CHT8315_CFG_ALTH		0x2000
-#define CHT8315_CFG_EM			0x1000
-#define CHT8315_CFG_EHT			0x0100
-#define CHT8315_CFG_TME			0x0080
-#define CHT8315_CFG_POL			0x0020
-#define CHT8315_CFG_ALT			0x0018
-#define CHT8315_CFG_CONSEC_FQ	0x0006
-#define CHT8315_CFG_ATM			0x0001
+#define CHT83xx_I2C_ADDR	0x40
+#define CHT83xx_REG_TMP		0x00
+#define CHT83xx_REG_HMD		0x01
+#define CHT83xx_REG_MID		0xfe
+#define CHT83xx_REG_VID		0xff
 
 #define CHT83xx_MID	0x5959
-#define CHT8315_VID	0x1582
+
+
+/* CHT8310 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310.Advanced.Datasheet_Ver1.0.20230407.pdf */
+//	I2C addres
+
+#define CHT8215_I2C_ADDR0	0x40
+#define CHT8215_I2C_ADDR1	0x44
+#define CHT8215_I2C_ADDR2	0x48
+#define CHT8215_I2C_ADDR3	0x4C
+
+//	Registers
+#define CHT8215_REG_TMP		0x00
+#define CHT8215_REG_HMD		0x01
+#define CHT8215_REG_STA		0x02
+#define CHT8215_REG_CFG		0x03
+#define CHT8215_REG_CRT		0x04
+#define CHT8215_REG_TLL		0x05
+#define CHT8215_REG_TLM		0x06
+#define CHT8215_REG_HLL		0x07
+#define CHT8215_REG_HLM		0x08
+#define CHT8215_REG_OST		0x0f
+#define CHT8215_REG_RST		0xfc
+#define CHT8215_REG_MID		0xfe
+#define CHT8215_REG_VID		0xff
+
+//	Status register mask
+#define CHT8215_STA_BUSY	0x8000
+#define CHT8215_STA_THI		0x4000
+#define CHT8215_STA_TLO		0x2000
+#define CHT8215_STA_HHI		0x1000
+#define CHT8215_STA_HLO		0x0800
+
+//	Config register mask
+#define CHT8215_CFG_MASK		0x8000
+#define CHT8215_CFG_SD			0x4000
+#define CHT8215_CFG_ALTH		0x2000
+#define CHT8215_CFG_EM			0x1000
+#define CHT8215_CFG_EHT			0x0100
+#define CHT8215_CFG_TME			0x0080
+#define CHT8215_CFG_POL			0x0020
+#define CHT8215_CFG_ALT			0x0018
+#define CHT8215_CFG_CONSEC_FQ	0x0006
+#define CHT8215_CFG_ATM			0x0001
+
+#define CHT8315_MID	0x5959
+#define CHT8215_VID	0x1582
 
 /* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/BTH01/CHT8305.pdf */
 
@@ -110,6 +120,7 @@ struct __attribute__((packed)) _cht8305_config_t{
 } cht8305_config_t;
 */
 
+#define CHT8305_MID	0x5959
 #define CHT8305_VID	0x0583
 
 /*---------------------------------------

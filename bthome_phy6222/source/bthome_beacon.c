@@ -12,9 +12,7 @@
 #include "sensor.h"
 #include "bthome_beacon.h"
 
-//adv_buf_t adv_buf;
-
-void bthome_data_beacon(void * padbuf) {
+uint8_t bthome_data_beacon(void * padbuf) {
 #if (DEV_SERVICES & SERVICE_THS)
 	padv_bthome_ns1_t p = (padv_bthome_ns1_t)padbuf;
 #else
@@ -46,7 +44,13 @@ void bthome_data_beacon(void * padbuf) {
 #endif
 	p->data.v_id = BtHomeID_voltage;
 	p->data.battery_mv = measured_data.battery_mv; // x mV
+#if (DEV_SERVICES & SERVICE_THS)
 	p->head.size = sizeof(adv_bthome_ns1_t) - sizeof(p->head.size) - sizeof(p->flag);
+	return sizeof(adv_bthome_ns1_t);
+#else
+	p->head.size = sizeof(adv_bthome_ns2_t) - sizeof(p->head.size) - sizeof(p->flag);
+	return sizeof(adv_bthome_ns2_t);
+#endif
 }
 
 

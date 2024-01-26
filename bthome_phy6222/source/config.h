@@ -39,7 +39,7 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB2
+#define DEVICE		DEVICE_TH05
 #endif
 
 // supported services by the device (bits)
@@ -63,7 +63,7 @@
 #define OTA_TYPE_APP	SERVICE_OTA_EXT	// переключение из APP на OTA + boot прошивку, пока не реализовано
 
 #ifndef OTA_TYPE
-#define OTA_TYPE	OTA_TYPE_NONE
+#define OTA_TYPE	OTA_TYPE_BOOT
 #endif
 
 #define DEF_SOFTWARE_REVISION	{'V', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
@@ -133,14 +133,14 @@
 /* Model: TH05 */
 #if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
-		| SERVICE_THS \
 		| SERVICE_SCREEN \
+		| SERVICE_THS \
 		| SERVICE_KEY \
 )
 #else
 #define DEV_SERVICES (OTA_TYPE \
-		| SERVICE_THS \
 		| SERVICE_SCREEN \
+		| SERVICE_THS \
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
 )
@@ -181,7 +181,7 @@
 // Supervision timeout value (units of 10ms, 1000=10s) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_CONN_TIMEOUT			400 // 4s
 
-typedef struct /*__attribute__((packed))*/ _cfg_t {
+typedef struct _cfg_t {
 	uint32_t flg;
 
 	uint8_t rf_tx_power; //
@@ -189,8 +189,8 @@ typedef struct /*__attribute__((packed))*/ _cfg_t {
 	uint8_t connect_latency; // +1 x 0.03 sec ( = connection interval), Tmin = 1*30 = 30 ms, Tmax = 256 * 30 = 7680 ms
 	uint8_t reserved1;
 
-	uint8_t measure_interval; // measure_interval
-	uint8_t batt_interval; // * measure_interval
+	uint8_t measure_interval; // measure TH sensor count * advertising_interval
+	uint8_t batt_interval; // measure battery * seconds
 	uint8_t averaging_measurements; // * measure_interval, 0 - off, 1..255 * measure_interval
 	uint8_t reserved2;
 

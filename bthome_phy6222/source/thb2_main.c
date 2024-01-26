@@ -112,7 +112,7 @@ void chow_measure(void) {
 	show_temp_symbol(3);
 #else
 	show_big_number_x10(measured_data.battery_mv/100);
-	show_small_number(measured_data.battery, true);
+	show_small_number((measured_data.battery > 99)? 99 : measured_data.battery, true);
 	show_battery_symbol(1);
 #endif
 	show_smiley(0);
@@ -228,8 +228,8 @@ static void adv_measure(void) {
 			if (cfg.averaging_measurements != 0)
 				write_memo();
 #endif
-			bthome_data_beacon((void *) gapRole_AdvertData);
-			LL_SetAdvData(sizeof(adv_bthome_ns2_t), gapRole_AdvertData);
+
+			LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 #endif
 		}
 #if (DEV_SERVICES & SERVICE_THS)
@@ -245,8 +245,8 @@ static void adv_measure(void) {
 			if (cfg.averaging_measurements != 0)
 				write_memo();
 #endif
-			bthome_data_beacon((void *) gapRole_AdvertData);
-			LL_SetAdvData(sizeof(adv_bthome_ns1_t), gapRole_AdvertData);
+
+			LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 		}
 #endif	// (DEV_SERVICES & SERVICE_THS)
 		if(adv_wrk.adv_con_count) {

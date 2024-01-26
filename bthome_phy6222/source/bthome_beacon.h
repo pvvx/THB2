@@ -152,15 +152,6 @@ typedef struct __attribute__((packed)) _adv_bthome_ns2_t {
 	adv_bthome_data2_t data;
 } adv_bthome_ns2_t, * padv_bthome_ns2_t;
 
-typedef struct _adv_buf_t {
-	uint32		send_count; // count & id advertise, = beacon_nonce.cnt32
-//	uint16		old_measured_count; // old measured_data.count
-//	uint16		adv_restore_count;
-	adv_bthome_ns1_t data;
-} adv_buf_t;
-
-//void bls_set_advertise_prepare(void *p);
-//int app_advertise_prepare_handler(rf_packet_adv_t * p);
-void bthome_data_beacon(void * padbuf);
+uint8_t bthome_data_beacon(void * padbuf);
 
 #endif /* BTHOME_BEACON_H_ */

@@ -177,11 +177,11 @@ void show_small_number(int16_t number, bool percent) {
 	display_buff[4] &= BIT(3); // connect
 	display_buff[5] = percent? BIT(3) : 0;
 	if (number > 99) {
-		display_buff[4] |= LCD_SYM_i; // "i"
-		display_buff[5] |= LCD_SYM_H; // "H"
+		display_buff[4] |= LCD_SYM_H; // "H"
+		display_buff[5] |= LCD_SYM_i; // "i"
 	} else if (number < -9) {
-		display_buff[4] |= LCD_SYM_o; // "o"
-		display_buff[5] |= LCD_SYM_L; // "L"
+		display_buff[4] |= LCD_SYM_L; // "L"
+		display_buff[5] |= LCD_SYM_o; // "o"
 	} else {
 		if (number < 0) {
 			number = -number;
