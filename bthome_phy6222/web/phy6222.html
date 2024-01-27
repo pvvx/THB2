@@ -1,0 +1,621 @@
+<html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="styles.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHY62x2-BTHome тестовая версия</title>
+</head>
+<body>
+<script>
+//BLE values
+const FLASH_SIZE = 0x80000;
+var bluetoothDevice, gattServer, otaCharacteristic, myCharacteristic;
+//Firmware values
+var firmwareArray = "",
+    startTime = 0,
+    flgRdFF = false,
+    blockCount = 0;
+//Connection values
+var connectTrys = 0;
+
+var $ = function(id) { return document.getElementById(id);}
+
+function resetVariables() {
+    busy = false;
+    gattServer = null;
+    Theservice = null;
+    otaCharacteristic = null;
+    myCharacteristic = null;
+    $('btnDisconnect').disabled = true;
+    $('btnReadFF').disabled = true;
+    $('btnReadAddr').disabled = true;
+    $('btnSave').disabled = true;
+    $('btnStartDFU').disabled = true;
+    $('btnSendData').disabled = true;
+    $('btnSendCommand').disabled = true;
+    // showState("Ожидание соединения с устройством")
+}
+
+function handleError(text) {
+    showError(text);
+    resetVariables();
+    if (connectTrys < 5) {
+        connectTrys++;
+        addLog("Переподключение " + connectTrys + " из " + 5);
+        doConnect();
+    } else {
+        addLog("Подключиться не удалось!");
+        connectTrys = 0;
+    }
+}
+
+function doConnect() {
+    showState("Ожидание соединения с " + bluetoothDevice.name)
+    bluetoothDevice.gatt.connect().then(server => {
+        console.log("Найден GATT сервер");
+        gattServer = server;
+        return gattServer.getPrimaryService(0xfff0);
+    }).then(service => {
+        console.log("Найден Main сервис");
+        Theservice = service;
+        return service.getCharacteristic(0xfff3);
+    }).then(characteristic => {
+        console.log("Найдена OTA характеристика");
+        otaCharacteristic = characteristic;
+        return Theservice.getCharacteristic(0xfff4);
+    }).then(characteristic => {
+        console.log("Найдена CMD характеристика");
+        myCharacteristic = characteristic;
+        myCharacteristic.readValue().then(value => {
+	if(value.byteLength >= 10)
+		addLog("DevCfg: " + dump8(value, value.byteLength));
+	//flash_buf = new Uint8Array(FLASH_SIZE);
+	myCharacteristic.addEventListener('characteristicvaluechanged', event => customBlkParse(event.target.value));
+	myCharacteristic.startNotifications().then(_ => {
+		showState("Устройство подключено.");
+        $('btnDisconnect').disabled = false;
+        $('btnReconnect').disabled = false;
+        $('btnSendCommand').disabled = false;
+		$('btnReadFF').disabled = false;
+		$('btnReadAddr').disabled = false;
+		$('btnSendData').disabled = false;
+		$('btnStartDFU').disabled = false; })
+     })
+     }).catch(handleError);
+}
+
+function onDisconnected() {
+    resetVariables();
+    showState('Устройство отключено.');
+}
+
+function connect() {
+	var deviceOptions = {
+		optionalServices: [0xfff0],
+		services: [0x180a, 0x181c, 0x181e, 0xfff0],
+		acceptAllDevices: true };
+	const namePrefix = $('inpNamePrefix').value;
+	if (namePrefix) {
+		deviceOptions.acceptAllDevices = false;
+		deviceOptions.filters = namePrefix.split(",")
+			.map((x) => ({ namePrefix: x }));
+	} else {
+		deviceOptions.acceptAllDevices = false;
+		deviceOptions.filters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz_#@!*0123456789';,.<>{}[]"
+			.split("")
+			.map((x) => ({ namePrefix: x }));
+	}
+    if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
+    resetVariables();
+    $('btnReconnect').disabled = true;
+
+    showState("Поиск устройств");
+    connectTrys = 0;
+    navigator.bluetooth.requestDevice(deviceOptions).then(device => {
+        bluetoothDevice = device;
+        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+        // addLog("Connecting to: " + bluetoothDevice.name);
+        doConnect();
+    }).catch(handleError);
+}
+
+
+function disconnect() {
+    addLog("Отключение");
+    if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
+}
+
+function reconnect() {
+    addLog("Переподключение");
+    if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
+    connectTrys = 0;
+    doConnect();
+}
+
+function startDFU() {
+    addLog("Start DFU");
+    updateBegin();
+}
+
+function addLog(text) {
+    var stime = new Date().toLocaleTimeString();
+    var string = stime + ": " + text;
+    console.log(string)
+    $("log").innerHTML += string + "<br>";
+}
+
+function clearLog() {
+    $("log").innerHTML = "";
+}
+
+function showState(text) {
+//    console.log("Status: " + status);
+	let s = "Состояние: " + text;
+	document.getElementById("lblStatus").className = "shadowbox";
+    $("lblStatus").innerHTML = s;
+    addLog(text);
+}
+
+function showError(text) {
+//    console.log("Status: " + status);
+	let s = "Ошибка: " + text;
+	document.getElementById("lblStatus").className = "shadowerror";
+    $("lblStatus").innerHTML = s;
+    addLog(text);
+}
+
+function showProgress(text) {
+	document.getElementById("lblStatus").className = "shadowprogress";
+    $("lblStatus").innerHTML = text;
+}
+
+function updateFail(err) {
+    let s = err + ". Update failed";
+    showError(s);
+}
+
+function decimalToHex(d, padding) {
+    var hex = Number(d).toString(16);
+    while (hex.length < 4) {
+        hex = "0" + hex;
+    }
+    return hex;
+}
+
+function hexToBytes(hex) {
+    for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substr(c, 2), 16));
+    return new Uint8Array(bytes);
+}
+
+function bytesToHex(data) {
+    return new Uint8Array(data).reduce(function(memo, i) {
+        return memo + ("0" + i.toString(16)).slice(-2);
+    }, "");
+}
+
+function crc16_modbus(buffer) {
+    var crc = 0xFFFF;
+    var odd;
+    for (var i = 0; i < buffer.length; i++) {
+        crc = crc ^ buffer[i];
+        for (var j = 0; j < 8; j++) {
+            odd = crc & 0x0001;
+            crc = crc >> 1;
+            if (odd) {
+                crc = crc ^ 0xA001;
+            }
+        }
+    }
+    return crc;
+};
+
+function getHexCRC(data) {
+    var tempCRC = decimalToHex(crc16_modbus(hexToBytes(data)));
+    return tempCRC.substring(2, 4) + tempCRC.substring(0, 2);
+}
+
+function makeRandomID(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return bytesToHex(new TextEncoder("utf-8").encode(result));
+}
+
+function hex(number, len) {
+	var str = (number.toString(16)).toUpperCase();
+	while (str.length < len) str = '0' + str;
+	return str;
+}
+
+function hexToBytes(hex) {
+	for (var bytes = [], c = 0; c < hex.length; c += 2)
+		bytes.push(parseInt(hex.substr(c, 2), 16));
+	return new Uint8Array(bytes);
+}
+
+function dump(ar, len) {
+	let s = '';
+	for(let i=0; i < len; i++) {
+		s += hex(ar[i],2);
+	}
+	return s;
+}
+
+function dump8(ar, len) {
+	let s = '';
+	for(let i=0; i < len; i++) {
+		s += hex(ar.getUint8(i),2);
+	}
+	return s;
+}
+
+function hex2ascii(hexx) {
+    var hex = hexx.toString();
+    var str = '';
+    for (var i = 0;
+        (i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
+}
+
+function updateBegin() {
+    if (blockCount <= 0) {
+        showError("Не выбран файл!");
+        return;
+    }
+
+    setTimeout(function() {
+        otaCharSend("00ff").then(function(character) {
+            otaCharSend("01ff").then(function(character) {
+                setTimeout(function() {
+                    startTime = new Date().getTime();
+                    sendOTAblock(0);
+                }, 300);
+            }).catch(function(err) {
+                updateFail(err);
+            });
+        }).catch(function(err) {
+            updateFail(err);
+        });
+    }, 500);
+}
+
+function sendOTAblock(blockNr) {
+    if (blockNr >= blockCount) {
+        sendLastOTA();
+        return;
+    }
+    showProgress("Передан блок N: " + blockNr + " из " + blockCount + ", " + Math.floor(blockNr / (blockCount * 1.0) * 100) + "% успеха, время " + (new Date().getTime() - startTime) / 1000.0 + "сек");
+    var blockNrString = getHexBLockCount(blockNr);
+    var blockString = blockNrString + firmwareArray.substring(blockNr * 32, blockNr * 32 + 32);
+    var blockCRC = getHexCRC(blockString);
+    otaCharSend(blockString + blockCRC).then(function(character) {
+        setTimeout(function() {
+            if ((blockNr + 1) % 8 == 0) {
+                otaCharacteristic.readValue().then(function(result) {
+                    console.log('Чтение OTA');
+                    sendOTAblock(blockNr + 1);
+                }).catch(function(err) {
+                    updateFail(err);
+                });
+            } else {
+                sendOTAblock(blockNr + 1);
+            }
+        }, 0);
+    }).catch(function(err) {
+        updateFail(err);
+    });
+}
+
+function getHexBLockCount(count) {
+    var tempHEX = decimalToHex(count);
+    return tempHEX.substring(2, 4) + tempHEX.substring(0, 2);
+}
+
+
+function sendLastOTA() {
+    var data = "02ff" + getHexBLockCount(blockCount - 1) + getHexBLockCount(~(blockCount - 1) & 0xffff);
+    otaCharSend(data).then(function(character) {
+    	showProgress("Прошивка выполнена за " + (new Date().getTime() - startTime) / 1000 + " сек");
+    }).catch(function(err) {
+        updateFail(err);
+    });
+}
+
+var otaCharSend = function(data) {
+    return new Promise(function(resolve, reject) {
+        // console.log("OTA: " + data);
+        otaCharacteristic.writeValue(hexToBytes(data)).then(function(character) {
+            resolve("ok");
+        }).catch(function(err) {
+            reject("some error while sending char data");
+        });
+    });
+}
+
+var mainCharSend = function(data, characteristic) {
+    return new Promise(function(resolve, reject) {
+        console.log("Send: " + data);
+        characteristic.writeValue(hexToBytes(data)).then(function(character) {
+            resolve("OK");
+        }).catch(function(err) {
+            reject("Some error while sending char data");
+        });
+    });
+}
+
+function readAddr(addr) {
+	if (myCharacteristic) {
+		let blk = new Uint8Array([0xdb, addr&0xff, (addr>>8)&0xff, (addr>>16)&0xff, (addr>>24)&0xff]);
+		myCharacteristic.writeValue(blk).then(_ => {
+			startTime = new Date().getTime();
+			showState("Прочитано 16 байт из адреса 0x" + hex(addr,8));
+		});
+	}
+}
+
+function writeAddr(addr, data) {
+	if (myCharacteristic) {
+		len = data.length;
+		if(len != 0 && len <= 16) {
+			let blk = new Uint8Array(len + 5);
+			blk.set([0xdb, addr&0xff, (addr>>8)&0xff, (addr>>16)&0xff, (addr>>24)&0xff]);
+			blk.set(data, 5);
+			console.log(blk);
+			myCharacteristic.writeValue(blk);
+			showState("Записано " + len + " байт по адресу 0x" + hex(addr,8));
+		} else {
+			console.log(data);
+		    showState('Ошибка, длина блока от 1 до 16 байт!');
+		}
+	}
+}
+
+
+function infoReadAddr() {
+	if(myCharacteristic) {
+		let faddr = parseInt($('inputAddr').value, 16);
+		readAddr(faddr);
+	}
+}
+
+function writeCmd(data) {
+	if(myCharacteristic) {
+		len = data.length;
+		if(len != 0 && len <= 20) {
+			let blk = new Uint8Array(data);
+			console.log(blk);
+			myCharacteristic.writeValue(blk);
+		} else {
+			console.log(data);
+		    showState('Ошибка, длина команды от 1 до 20 байт!');
+		}
+	}
+}
+
+function sendData() {
+	let addr = parseInt($('inputAddr').value, 16);
+	let data = hexToBytes($('inputData').value);
+	if(data.length != 0 && data.length <= 16)
+		writeAddr(addr, data);
+	else
+	    console.log('Ошибка, длина от 1 до 16 байт!');
+
+}
+
+function sendCommand() {
+	let data = hexToBytes($('inpCmdData').value);
+	if(data.length != 0 && data.length <= 20)
+		WriteCmd(data);
+	else
+	    console.log('Должно быть от 1 до 20 hex байт!');
+}
+
+
+function customBlkParse(value) {
+	let len = value.byteLength;
+	if(len == 0) return;
+	len--;	// size from cmd
+	let blkId = value.getUint8(0);
+	s = 'Ответ на команду Id: ' + hex(blkId,2) + ' data: ' + bytesToHex(value.buffer.slice(1));
+	addLog(s);
+	if((blkId == 0xdb) && (value.byteLength > 4)) {
+		len -= 4;
+		let addr = value.getUint32(1,true);
+		let s = bytesToHex(value.buffer.slice(5), len);
+		$('inputData').value = s;
+		addLog(hex(addr,8) + ':' + s);
+		showProgress("Считано: " + len + " байт из 0x" + hex(addr,8)); 
+	} else 
+		console.log('blk: ' + dump8(value, value.byteLength));
+}
+
+var url;
+function download(data, filename, type) {
+	var file = new Blob([data], {type: type});
+	if (window.navigator.msSaveOrOpenBlob) { // ie10+
+		window.navigator.msSaveOrOpenBlob(file, filename);
+	} else { // ff, chrome
+		url = URL.createObjectURL(file);
+		let a = document.createElement("a");
+		a.href = url;
+		a.download = filename;
+		document.body.appendChild(a);
+		a.click();
+		setTimeout(function(){document.body.removeChild(a);window.URL.revokeObjectURL(url);},0);
+		URL.revokeObjectURL(url);
+	}
+}
+
+function readFile(file) {
+
+    var reader = new FileReader();
+
+    if (file != null) {
+        reader.readAsArrayBuffer(file);
+    } else {
+        showError("Файл не загружен");
+	}
+
+    reader.onload = function() {
+
+	    // console.log(this.result);
+
+        firmwareArray = bytesToHex(this.result);
+		if(firmwareArray.substring(0,4) != "1234"){
+			blockCount = 0;
+			firmwareArray = "";
+
+			$("lblFile").innerHTML = "не загружен";
+
+			alert("Выбранный файл не для PHY62x2 OTA!");
+			showError("Выбранный файл не для PHY62x2 OTA!");
+
+			return;
+		}
+        showState("Файл загружен, размер: " + firmwareArray.length / 2 + " байт");
+
+        if (firmwareArray.length % 32 !== 0) { // pad last block to 16bytes
+            var padHex = "ffffffffffffffffffffffffffffffff";
+            firmwareArray += padHex.substr(0, 32 - firmwareArray.length % 32);
+        }
+        blockCount = firmwareArray.length / 32;
+        addLog("Блоков: " + blockCount);
+    }
+
+	reader.onerror = function() {
+		console.log(this.error);
+	};
+}
+
+const selectFile = function() {
+	
+	let regex = /[^\\]+$/
+	
+	this.choose,
+	this.selected
+	
+	this.msg = str => {
+		let prefix = '[selectFile]\n\nError: '
+		return alert(prefix+str)
+	}
+		
+	this.check = () => {
+		if (this.choose && this.selected != null) {
+			let choose = document.getElementById(this.choose),
+				selected = document.getElementById(this.selected)
+			choose.addEventListener('change',() => {
+				if (choose.value != '') { 
+					selected.innerHTML = choose.value.match(regex);
+                    readFile(choose.files[0]);
+				}
+			})
+		} else {
+			this.msg('Targets not set.')
+		}
+	}
+	
+	selectFile.prototype.targets = (trigger, filetext) => {
+		this.choose = trigger
+		this.selected = filetext
+	}
+	
+	selectFile.prototype.simulate = () => {
+		if (this.choose != null) {
+			let choose = document.getElementById(this.choose)
+			if (typeof choose != 'undefined') {
+				choose.click()
+				this.check()
+			} else {
+				this.msg('Could not find element '+this.choose)
+			}
+		} else {
+			this.msg('Targets not set.')
+		}
+	}	
+	
+};
+
+var getFile = new selectFile;
+getFile.targets('inpFile','lblFile');
+
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+    console.log(evt.currentTarget.className);
+}
+
+window.onload = function() {
+
+    $("btnSave").onclick =  function() { download(flash_buf, 'ff.bin', 'application/octet-stream;charset=utf-8'); };
+}
+
+
+window.onload = (event) => {
+    // console.log("page is fully loaded");
+    showState("Нет подключения" )
+
+   	openTab(event, 'tabOTA');
+    // Selected Tab header style
+    tablinks = document.getElementsByClassName("tablinks");
+    tablinks[0].className += " active";
+};
+
+</script>
+<h2>PHY62x2-BTHome <a href="https://github.com/pvvx/THB2"><small>&#9432;</small></a></h2>
+<label for="inpNamePrefix">Префикс названия устройств(а)</label><br>
+<input type="text" id="inpNamePrefix" value="" placeholder="THB, BT">
+<hr>
+<label id="lblStatus">Состояние: загрузка страницы</label>
+<br><br><hr>
+<button type="button" id="btnConnect"     onclick="connect()">Соединение</button>
+<button type="button" id="btnDisconnect"  onclick="disconnect()" disabled="true">Отключение</button>
+<button type="button" id="btnReconnect"   onclick="reconnect()" disabled="true">Переподключение</button>
+<br><hr>
+<div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'tabOTA')">OTA</button>
+  <button class="tablinks" onclick="openTab(event, 'tabFlash')">Flash</button>
+  <button class="tablinks" onclick="openTab(event, 'tabService')">Service</button>
+</div>
+
+<div id="tabOTA" class="tabcontent">
+  <p>Файл прошивки:
+  <input type=file hidden id=inpFile>
+  <label id=lblFile>не выбран</label>
+  <button type=button onClick=getFile.simulate()>Выбрать</button>
+  <p>
+<hr>
+<button type="button"id="btnStartDFU" onclick="startDFU()" disabled="true" >Старт программирования</button>
+</div>
+
+<div id="tabFlash" class="tabcontent">
+  <p>
+  <button type="button" id="btnReadFF" onclick="startReadFF()" disabled="true">Прочитать</button>
+  <button type="button" id="btnSave" disabled="true">Сохранить в файл</button>
+  <p>
+</div>
+
+<div id="tabService" class="tabcontent">
+  Чтение и запись памяти:<br>
+  Адрес (hex): <input size="8" type="text" id="inputAddr" value="11000000" maxlength="8">
+  <button type="button" id="btnReadAddr"    onclick="infoReadAddr()" disabled="true">Прочитать</button>
+  Данные (hex): <input size="32" type="text" id="inputData" value="?" maxlength="32">
+  <button type="button" id="btnSendData"    onclick="sendData()" disabled="true">Записать</button><hr>
+  <button type="button" id="btnSendCommand" onclick="sendCommand()" disabled="true">Команда</button>
+  <input type="text" id="inpCmdData" value="55" size="40" maxlength="40"><hr>
+</div>
+<hr>
+<button type="button" onclick="clearLog()">Очистить лог</button><br>
+<div id="log"></div>
+</body></html>

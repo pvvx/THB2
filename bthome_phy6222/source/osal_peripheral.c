@@ -46,6 +46,24 @@
 	GLOBAL VARIABLES
 */
 
+/*
+extern l2capSegmentBuff_t   l2capSegmentPkt[MAX_NUM_LL_CONN];
+uint8_t notify_enable_TaskID;
+extern uint16 gapRole_ConnectionHandle;
+// add event free buf
+uint16 _HCI_ProcessEvent( uint8 task_id, uint16 events ) {
+	uint16 ret = HCI_ProcessEvent(task_id, events);
+	if(ret == 0) {
+		if(notify_enable_TaskID) {
+			//&& l2capSegmentPkt[gapRole_ConnectionHandle].fragment
+			//&& l2capSegmentPkt[gapRole_ConnectionHandle].depth < 3) {
+			osal_set_event(notify_enable_TaskID, WRK_NOTIFY_EVT);
+		}
+	}
+	return ret;
+}
+*/
+
 // The order in this table must be identical to the task initialization calls below in osalInitTask.
 const pTaskEventHandlerFn tasksArr[] =
 {
@@ -73,7 +91,6 @@ uint16* tasksEvents;
 /*********************************************************************
 	FUNCTIONS
  *********************************************************************/
-
 /*********************************************************************
 	@fn		 osalInitTasks
 

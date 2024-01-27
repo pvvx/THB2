@@ -25,6 +25,8 @@
 #include "cmd_parser.h"
 #include "ble_ota.h"
 #include "logger.h"
+#include "hci.h"
+#include "lcd_th05.h"
 
 /*********************************************************************
  * MACROS
@@ -463,23 +465,32 @@ void new_ota_data(void) {
 }
 #endif
 
-
+#if (DEV_SERVICES & SERVICE_HISTORY)
 void wrk_notify(void) {
 	gattServerInfo_t* pServer;
 	attHandleValueNoti_t noti;
     if (gattGetServerStatus( gapRole_ConnectionHandle,  &pServer ) != bleTimeout) {
-    	noti.len = 0;
-#if (DEV_SERVICES & SERVICE_HISTORY)
-//    	if(rd_memo.cnt)
-    	noti.len = send_memo_blk(noti.value);
-#endif
-    	if(noti.len) {
-    		noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
-    		if(ATT_HandleValueNoti(gapRole_ConnectionHandle, &noti) != SUCCESS || noti.len <= 3)
-    			return;
-        	osal_set_event(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT);
-    	} else
-    		return;
+    	// gattStoreServerInfo( pServer, simpleBLEPeripheral_TaskID );
+		noti.len = 0;
+		if(rd_memo.cnt) {
+			while(1) { // 4096 memo 43 sec [memo = 13 bytes] -> 1238 bytes/s
+	    		noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
+	        	noti.len = send_memo_blk(noti.value);
+	        	if(noti.len) {
+	        		bStatus_t err = ATT_HandleValueNoti(gapRole_ConnectionHandle, &noti);
+	        		if(err == bleMemAllocError
+	        				|| err == MSG_BUFFER_NOT_AVAIL
+	        				|| err == HCI_ERROR_CODE_MEM_CAP_EXCEEDED) {
+	        			rd_memo.cur--;
+	        			osal_start_timerEx(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT, (DEFAULT_DESIRED_MIN_CONN_INTERVAL *125)/100);
+	        			break;
+	        		} else if (err != SUCCESS || noti.len <= 3)
+	        			break;
+	        	} else
+	        		break;
+			}
+    	}
     } else
-    	osal_start_timerEx(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT, 30);
+		osal_start_timerEx(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT, 30);
 }
+#endif

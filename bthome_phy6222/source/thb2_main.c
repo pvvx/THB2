@@ -109,7 +109,7 @@ void chow_measure(void) {
 	show_big_number_x10(measured_data.temp/10);
 	show_small_number(measured_data.humi/100, true);
 	show_battery_symbol(measured_data.battery < 20);
-	show_temp_symbol(3);
+	show_temp_symbol(CLD_TSYMBOL_C);
 #else
 	show_big_number_x10(measured_data.battery_mv/100);
 	show_small_number((measured_data.battery > 99)? 99 : measured_data.battery, true);
@@ -159,6 +159,7 @@ static void set_mac(void)
 		}
 	}
 	set_def_name(ownPublicAddr);
+	// TODO: pGlobal_config[MAC_ADDRESS_LOC]
 }
 
 static void set_serial_number(void)
@@ -484,9 +485,12 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 //    HCI_LE_SetDefaultPhyMode(0,0xff,0x01,0x01);
 
 #ifdef MTU_SIZE
+#if MTU_SIZE > ATT_MAX_MTU_SIZE
+#error "MTU_SIZE > 517"
+#endif
 	ATT_SetMTUSizeMax(MTU_SIZE);
 #else
-	ATT_SetMTUSizeMax(23);
+	ATT_SetMTUSizeMax(ATT_MTU_SIZE_MIN);
 #endif
 	// Setup a delayed profile startup
 	osal_set_event( simpleBLEPeripheral_TaskID, SBP_START_DEVICE_EVT );
@@ -604,11 +608,13 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		// return unprocessed events
 		return ( events ^ SBP_START_DEVICE_EVT );
 	}
+#if (DEV_SERVICES & SERVICE_HISTORY)
 	if(events & WRK_NOTIFY_EVT) {
 		LOG("Wrk notify events\n");
 		wrk_notify();
 		return(events ^ WRK_NOTIFY_EVT);
 	}
+#endif
 	if(events & SBP_CMDDATA) {
 		LOG("CMD data events\n");
 		new_cmd_data();
@@ -636,7 +642,6 @@ static void simpleBLEPeripheral_ProcessOSALMsg( osal_event_hdr_t *pMsg )
 	switch ( pMsg->event ){
 		case HCI_GAP_EVENT_EVENT:{
 			switch( pMsg->status ){
-
 				case HCI_COMMAND_COMPLETE_EVENT_CODE:
 #if DEBUG_INFO
 					pHciMsg = (hciEvt_CmdComplete_t *)pMsg;

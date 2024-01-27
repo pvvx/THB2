@@ -158,7 +158,6 @@ int send_memo_blk(uint8_t * send_buf) {
 		send_buf[1] = 0;
 		send_buf[2] = 0;
 		olen = 3;
-		// bls_pm_setManualLatency(cfg.connect_latency);
 		rd_memo.cnt = 0;
 	} else {
 		send_buf[1] = rd_memo.cur;

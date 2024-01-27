@@ -39,6 +39,23 @@
 extern uint8_t lcd_i2c_addr; // LCD controller I2C address
 extern uint8_t display_buff[LCD_BUF_SIZE];
 
+
+/* 0x0 = "  "
+ * 0x1 = "°Г"
+ * 0x2 = " _"
+ * 0x3 = "°C"
+ * 0x4 = " -"
+ * 0x5 = "°F"
+ * 0x6 = " ="
+ * 0x7 = "°E" */
+typedef enum {
+	CLD_TSYMBOL_NONE, 	// "  "
+	CLD_TSYMBOL_C = 3,	// "°C"
+	CLD_TSYMBOL_F = 5,	// "°F"
+	CLD_TSYMBOL_EQ = 6,	// " ="
+	CLD_TSYMBOL_E = 7	// "°E"
+} CLD_TEMP_SYMBOL;
+
 void init_lcd(void);
 void update_lcd(void);
 void show_small_number(int16_t number, bool percent);
@@ -46,6 +63,6 @@ void show_big_number_x10(int16_t number);
 void show_battery_symbol(bool state);
 void show_ble_symbol(bool state);
 void show_smiley(uint8_t state);
-void show_temp_symbol(uint8_t symbol);
+void show_temp_symbol(CLD_TEMP_SYMBOL symbol);
 
 #endif /* _LCD_TH05_H_ */

@@ -18,7 +18,7 @@ extern "C"
  */
 // A complete list of interface commands for different devices.
 // Not all commands are supported by a specific device (!)
-enum CMD_ID_KEYS {
+typedef enum {
 	CMD_ID_DEVID 	= 0x00, // Get dev id, version, services
 	CMD_ID_DNAME    = 0x01, // Get/Set device name, "\0" - default: THB2_xxxx
 	CMD_ID_GDEVS 	= 0x02, // Get address devices
@@ -65,7 +65,7 @@ enum CMD_ID_KEYS {
 	CMD_ID_LR_RESET = 0xDD,	// Reset Long Range
 	CMD_ID_DEBUG    = 0xDE	// Test/Debug
 
-};
+} CMD_ID_KEYS;
 
 // supported services by the device
 typedef struct _dev_services_t{

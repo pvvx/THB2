@@ -101,7 +101,7 @@ const uint8_t lcd_init_cmd[]	=	{
  * 0x5 = "°F"
  * 0x6 = " ="
  * 0x7 = "°E" */
-void show_temp_symbol(uint8_t symbol) {
+void show_temp_symbol(CLD_TEMP_SYMBOL symbol) {
 	display_buff[2] &= ~BIT(3);
 	display_buff[3] &= ~(BIT(7)|BIT(5)) ;
 	display_buff[2] |= (symbol << 2) & BIT(3);
@@ -167,7 +167,7 @@ void show_big_number_x10(int16_t number) {
 		if (number > 99) display_buff[0] |= display_numbers[number / 100 % 10];
 		if (number > 9) display_buff[1] |= display_numbers[number / 10 % 10];
 		else display_buff[1] |= LCD_SYM_0; // "0"
-	    display_buff[2] = display_numbers[number %10];
+	    display_buff[2] |= display_numbers[number %10];
 	}
 }
 

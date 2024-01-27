@@ -86,6 +86,7 @@ void test_config(void) {
 	gapRole_MinConnInterval = periConnParameters.intervalMin = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
 	gapRole_MaxConnInterval = periConnParameters.intervalMax = DEFAULT_DESIRED_MAX_CONN_INTERVAL;
 	gapRole_SlaveLatency = periConnParameters.latency = cfg.connect_latency;
+
 	periConnParameters.timeout = (cfg.connect_latency + 1) * 3 * 4;
 	if(periConnParameters.timeout > 2048)
 		periConnParameters.timeout = 2048; // 20.48 sec мax
