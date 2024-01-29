@@ -1,1 +1,1 @@
-python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_THB2_v07.hex
+python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_THB2_v08.hex

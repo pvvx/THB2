@@ -82,6 +82,8 @@ CFLAGS     += -fno-diagnostics-show-caret
 CFLAGS     += -fdata-sections -ffunction-sections
 CFLAGS     += -funsigned-char -funsigned-bitfields
 #CFLAGS     += -fpack-struct
+#CFLAGS     += -mno-unaligned-access
+#CFLAGS     += -munaligned-access
 CFLAGS     += -fms-extensions
 CFLAGS     += -specs=nosys.specs
 CFLAGS     += -Wl,--gc-sections

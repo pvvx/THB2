@@ -316,6 +316,20 @@ int __attribute__((used)) hal_pwrmgr_wakeup_process(void)
 	NVIC_SetPriority((IRQn_Type)TIM2_IRQn,	IRQ_PRIO_HIGH);		//OSAL_TICK
 	NVIC_SetPriority((IRQn_Type)TIM4_IRQn,	IRQ_PRIO_HIGH);		//LL_EXA_ADV
 	//peripheral_interrupt_restore_default();
+	NVIC_SetPriority((IRQn_Type)KSCAN_IRQn, IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)WDT_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)UART0_IRQn, IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)UART1_IRQn, IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)I2C0_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)I2C1_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)SPI0_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)SPI1_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)GPIO_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)DMAC_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)TIM5_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)TIM6_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)ADCC_IRQn,	IRQ_PRIO_HAL);
+
 
 	for(i = 0; i< s_pwrmgr_cfg.moudle_num; i++)
 	{

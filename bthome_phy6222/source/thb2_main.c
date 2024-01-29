@@ -13,6 +13,7 @@
 #include "bcomdef.h"
 #include "config.h"
 #include "rf_phy_driver.h"
+//#include "bus_dev.h"
 #include "global_config.h"
 #include "OSAL.h"
 #include "OSAL_PwrMgr.h"
@@ -21,7 +22,6 @@
 #include "gapgattserver.h"
 #include "gattservapp.h"
 #include "devinfoservice.h"
-#include "ota_app_service.h"
 #include "thb2_peripheral.h"
 #include "gapbondmgr.h"
 #include "pwrmgr.h"
@@ -41,6 +41,7 @@
 #include "sensor.h"
 #include "battery.h"
 #include "sbp_profile.h"
+#include "ble_ota.h"
 #include "lcd_th05.h"
 #include "logger.h"
 /*********************************************************************
@@ -101,25 +102,6 @@ static void simpleBLEPeripheral_ProcessOSALMsg( osal_event_hdr_t *pMsg );
 static void peripheralStateNotificationCB( gaprole_States_t newState );
 //static void simpleProfileChangeCB( uint8 paramID );
 static void peripheralStateReadRssiCB( int8 rssi );
-
-
-#if (DEV_SERVICES & SERVICE_SCREEN)
-void chow_measure(void) {
-#if (DEV_SERVICES & SERVICE_THS)
-	show_big_number_x10(measured_data.temp/10);
-	show_small_number(measured_data.humi/100, true);
-	show_battery_symbol(measured_data.battery < 20);
-	show_temp_symbol(CLD_TSYMBOL_C);
-#else
-	show_big_number_x10(measured_data.battery_mv/100);
-	show_small_number((measured_data.battery > 99)? 99 : measured_data.battery, true);
-	show_battery_symbol(1);
-#endif
-	show_smiley(0);
-	show_ble_symbol(gapRole_state == GAPROLE_CONNECTED);
-	update_lcd();
-}
-#endif
 
 const char* hex_ascii = { "0123456789ABCDEF" };
 uint8_t * str_bin2hex(uint8_t *d, uint8_t *s, int len) {
@@ -220,35 +202,50 @@ static void adv_measure(void) {
 			batt_start_measure();
 #if ((DEV_SERVICES & SERVICE_THS) == 0)
 			adv_wrk.adv_batt = 1;
-		} else	if(adv_wrk.adv_batt) {
-			adv_wrk.adv_batt = 0;
+		} else {
+			if(adv_wrk.adv_batt) {
+				adv_wrk.adv_batt = 0;
 #if (DEV_SERVICES & SERVICE_SCREEN)
-			chow_measure();
+				chow_lcd(1);
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
-			if (cfg.averaging_measurements != 0)
-				write_memo();
+				if (cfg.averaging_measurements != 0)
+					write_memo();
 #endif
 
-			LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+#if (DEV_SERVICES & SERVICE_SCREEN)
+			} else {
+				chow_lcd(0);
+#endif
+			}
 #endif
 		}
 #if (DEV_SERVICES & SERVICE_THS)
 		if(adv_wrk.adv_count == (uint8_t)(cfg.measure_interval - 1)) {
 			start_measure();
-		} else if(adv_wrk.adv_count >= cfg.measure_interval) {
-			adv_wrk.adv_count = 0;
-			read_sensor();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-			chow_measure();
+			chow_lcd(0);
+#endif
+		} else {
+			if(adv_wrk.adv_count >= cfg.measure_interval) {
+				adv_wrk.adv_count = 0;
+				read_sensor();
+#if (DEV_SERVICES & SERVICE_SCREEN)
+				chow_lcd(1);
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
-			if (cfg.averaging_measurements != 0)
-				write_memo();
+				if (cfg.averaging_measurements != 0)
+					write_memo();
 #endif
-
-			LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+#if (DEV_SERVICES & SERVICE_SCREEN)
+			} else {
+				chow_lcd(0);
+#endif
+			}
 		}
+
 #endif	// (DEV_SERVICES & SERVICE_THS)
 		if(adv_wrk.adv_con_count) {
 			if(--adv_wrk.adv_con_count == 0) {
@@ -560,7 +557,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		read_sensor();
 		start_measure();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-		chow_measure();
+		chow_lcd(1);
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
 		if (cfg.averaging_measurements != 0)
@@ -602,8 +599,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 #endif
 		//adv_wrk.adv_count = 0;
 #if (DEV_SERVICES & SERVICE_SCREEN)
-		show_big_number_x10(APP_VERSION);
-		update_lcd();
+		lcd_show_version();
 #endif
 		// return unprocessed events
 		return ( events ^ SBP_START_DEVICE_EVT );

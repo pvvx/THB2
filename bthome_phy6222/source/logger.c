@@ -56,7 +56,7 @@ static void memo_sec_close(uint32_t faddr) {
 	uint32_t mfaddr = faddr;
 	uint16_t flg = 0;
 	mfaddr &= ~(FLASH_SECTOR_SIZE-1);
-	_flash_write(mfaddr + _memo_head_size - sizeof(flg), sizeof(flg), &flg);
+	_flash_write(mfaddr + _memo_head_size - 2, 2, &flg); // sizeof(flg), sizeof(flg), &flg);
 	memo_sec_init(test_next_memo_sec_addr(mfaddr + FLASH_SECTOR_SIZE));
 }
 
@@ -77,15 +77,25 @@ void memo_init_count(void) {
 }
 #endif
 
+
+static void restore_time(uint32_t time) {
+	if(time && clkt.utc_time_sec == 0) {
+		clkt.utc_time_sec = time;
+		clkt.utc_time_add = 1024;
+		clkt.utc_time_tik = clock_time_rtc();
+	}
+}
+
 void memo_init(void) {
 	memo_head_t mhs;
-	uint32_t tmp, fsec_end;
+	uint32_t tmp, fsec_end, time = 0;
 	uint32_t faddr = FLASH_ADDR_START_MEMO;
 	memo.cnt_cur_sec = 0;
 	while (faddr < FLASH_ADDR_END_MEMO) {
 		_flash_read(faddr, _memo_head_size, &mhs);
 		if (mhs.id != MEMO_SEC_ID) {
 			memo_sec_init(faddr);
+			restore_time(time);
 			return;
 		} else if (mhs.flg == 0xffff) {
 			fsec_end = faddr + FLASH_SECTOR_SIZE;
@@ -94,18 +104,22 @@ void memo_init(void) {
 				_flash_read(faddr, sizeof(tmp), &tmp);
 				if (tmp == 0xffffffff) {
 					memo.faddr = faddr;
+					restore_time(time);
 					return;
 				}
-				clkt.utc_time_sec = tmp + 5;
+				if(time < tmp)
+					time = tmp;
 				memo.cnt_cur_sec++;
 				faddr += _memo_blk_size;
 			}
 			memo_sec_close(fsec_end - FLASH_SECTOR_SIZE);
+			restore_time(time);
 			return;
 		}
 		faddr += FLASH_SECTOR_SIZE;
 	}
 	memo_sec_init(FLASH_ADDR_START_MEMO);
+	restore_time(time);
 	return;
 }
 
@@ -114,7 +128,7 @@ void clear_memo(void) {
 	uint32_t faddr = FLASH_ADDR_START_MEMO + FLASH_SECTOR_SIZE;
 	memo.cnt_cur_sec = 0;
 	while (faddr < FLASH_ADDR_END_MEMO) {
-		_flash_read(faddr, sizeof(tmp), &tmp);
+		_flash_read(faddr, 4, &tmp); // sizeof(tmp), &tmp);
 		if (tmp == MEMO_SEC_ID)
 			_flash_erase_sector(faddr);
 		faddr += FLASH_SECTOR_SIZE;
@@ -187,10 +201,7 @@ void write_memo(void) {
 		mblk.vbat = (uint16_t)(summ_data.battery_mv/summ_data.count);
 		memset(&summ_data, 0, sizeof(summ_data));
 	}
-	if (clkt.utc_time_sec == 0xffffffff)
-		mblk.time = 0xfffffffe;
-	else
-		mblk.time = clkt.utc_time_sec;
+	mblk.time = clkt.utc_time_sec;
 	uint32_t faddr = memo.faddr;
 	if (!faddr) {
 		memo_init();

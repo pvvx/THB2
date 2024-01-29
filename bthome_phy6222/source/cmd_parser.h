@@ -59,7 +59,7 @@ typedef enum {
 	CMD_ID_RDFB		= 0xD4,	// Read Flash Block
 	CMD_ID_ERFB		= 0xD5,	// Erase Flash Sector
 	CMD_ID_CHGB		= 0xD7,	// Change boot
-	CMD_ID_REG_RW	= 0xDA,	// Read/Write Registers
+	CMD_ID_REG_RW	= 0xDA,	// Read/Write 32 bits Registers (aligned)
 	CMD_ID_MEM_RW	= 0xDB,	// Read/Write memory
 	CMD_ID_EEP_RW	= 0xDC,	// Get/set EEP
 	CMD_ID_LR_RESET = 0xDD,	// Reset Long Range

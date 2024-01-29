@@ -367,7 +367,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 		{
 #if OTA_TYPE
 			case SIMPLEPROFILE_CHAR1_UUID:
-	            //Validate the value
+	            // Validate the value
 	            // Make sure it's not a blob oper
 	            if ( offset == 0 ) {
 					if ( len > sizeof(ota_in_buffer))

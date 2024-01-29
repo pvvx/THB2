@@ -11,9 +11,9 @@
 #include "i2c.h"
 #include "dev_i2c.h"
 
-#define I2C_WAIT_ms		1
+#define I2C_WAIT_ms		3
 
-void init_i2c(bool speed400khz) {
+void init_i2c(i2c_speed_e speed400khz) {
 	hal_gpio_fmux_set(I2C_SCL, FMUX_IIC0_SCL);
 	hal_gpio_fmux_set(I2C_SDA, FMUX_IIC0_SDA);
 

@@ -14,6 +14,7 @@
 #include "dev_i2c.h"
 #include "sensor.h"
 #include "lcd_th05.h"
+#include "thb2_peripheral.h"
 
 #define LCD_I2C_SPEED	100 // 100 or 400 kHz
 #define LCD_I2C_ADDR	0x3E
@@ -192,28 +193,63 @@ void show_small_number(int16_t number, bool percent) {
 	}
 }
 
-#if	USE_CLOCK
-void show_clock(void) {
-	uint32_t tmp = utc_time_sec / 60;
+void lcd_show_version(void) {
+	show_big_number_x10(APP_VERSION);
+#if OTA_TYPE
+	display_buff[0] = LCD_SYM_o;
+#endif
+	update_lcd();
+}
+
+void chow_clock(void) {
+	uint32_t tmp = clkt.utc_time_sec / 60;
 	uint32_t min = tmp % 60;
-	uint32_t hrs = tmp / 60 % 24;
-	display_buff[0] = display_numbers[min % 10];
-	display_buff[1] = display_numbers[min / 10 % 10];
-	display_buff[2] = 0;
+	uint32_t hrs = (tmp / 60) % 24;
+	display_buff[0] = 0;
+	display_buff[1] = display_numbers[(hrs / 10) % 10];
+	display_buff[2] = display_numbers[hrs % 10];
 	display_buff[3] &= BIT(6); // bat
 	display_buff[4] &= BIT(3); // connect
-	display_buff[4] |= display_numbers[hrs % 10];
-	display_buff[5] = display_numbers[hrs / 10 % 10];
+	display_buff[4] |= display_numbers[(min / 10) % 10];
+	display_buff[5] = display_numbers[min % 10];
+	update_lcd();
 }
-#endif // USE_CLOCK
 
-extern volatile uint32 osal_sys_tick;
+void chow_measure(void) {
+#if (DEV_SERVICES & SERVICE_THS)
+	show_big_number_x10(measured_data.temp/10);
+	show_small_number(measured_data.humi/100, true);
+	show_battery_symbol(measured_data.battery < 20);
+	show_temp_symbol(CLD_TSYMBOL_C);
+#else
+	show_big_number_x10(measured_data.battery_mv/100);
+	show_small_number((measured_data.battery > 99)? 99 : measured_data.battery, true);
+	show_battery_symbol(1);
+#endif
+	show_smiley(0);
+	show_ble_symbol(gapRole_state == GAPROLE_CONNECTED);
+	update_lcd();
+}
 
+struct {
+//	uint32_t chow_tik;
+	uint8_t count;
+} lcd;
 
+void chow_lcd(int flg) {
+	if(cfg.flg & 1) {
+		if(lcd.count++ & 1)
+			chow_clock();
+		else
+			chow_measure();
+	} else if(flg) {
+		chow_measure();
+	}
+}
 
 static void send_to_lcd(uint8_t *pbuf, int len){
-	init_i2c(0);
-	if (send_i2c_buf(0x3E, pbuf, len))
+	init_i2c(I2C_400KHZ);
+	send_i2c_buf(LCD_I2C_ADDR, pbuf, len);
 	deinit_i2c();
 }
 
@@ -225,7 +261,7 @@ void update_lcd(void) {
 }
 
 void init_lcd(void) {
-	init_i2c(0);
+	init_i2c(I2C_100KHZ);
 	if(!send_i2c_buf(LCD_I2C_ADDR, (uint8_t *) lcd_init_cmd, sizeof(lcd_init_cmd)))  // sleep: 15.5 uA
 		lcd_i2c_addr = LCD_I2C_ADDR;
 	else

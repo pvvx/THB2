@@ -56,7 +56,7 @@ typedef struct _ota_par_t {
 	uint32_t erase_addr;
 } ota_par_t;
 
-#define OTA_MODE_SELECT_REG 0x4000f034 // == 0x55 -> OTA
+#define OTA_MODE_SELECT_REG (AP_AON->RTCCC2) // [0x4000f034] == 0x55 -> OTA
 
 extern ota_par_t ota;
 

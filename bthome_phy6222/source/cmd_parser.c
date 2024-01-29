@@ -46,6 +46,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 	int olen = 0;
 	if (len) {
 		uint8_t cmd = ibuf[0];
+		uint32_t tmp = ibuf[1] | (ibuf[2]<<8) | (ibuf[3]<<16) | (ibuf[4]<<24);
 		obuf[0] = cmd;
 		obuf[1] = 0; // no err
 		if (cmd == CMD_ID_DEVID) { // Get DEV_ID
@@ -95,11 +96,6 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 					rd_memo.cur = ibuf[3] | (ibuf[4] << 8);
 				else
 					rd_memo.cur = 0;
-				//gapRole_SlaveLatency = periConnParameters.latency = 0;
-				//osal_set_event(gapRole_TaskID, START_CONN_UPDATE_EVT);
-			} else {
-				//gapRole_SlaveLatency = periConnParameters.latency = cfg.connect_latency;
-				//osal_set_event(gapRole_TaskID, START_CONN_UPDATE_EVT);
 			}
 			wrk_notify();
 //			osal_set_event(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT);
@@ -141,27 +137,26 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			olen = 1 + sizeof(display_buff);
 #endif
 		} else if (cmd == CMD_ID_UTC_TIME) { // Get/set utc time
-			if (--len > sizeof(clkt.utc_time_sec))
-				len = sizeof(clkt.utc_time_sec);
-			if (len) {
-				memcpy(&clkt.utc_time_sec, &ibuf[1], len);
+			if (len > 4) {
+				clkt.utc_time_sec = tmp;
 #if (DEV_SERVICES & SERVICE_TIME_ADJUST)
-				clkt.utc_set_time_sec =clkt. utc_time_sec;
+				@TODO
 #endif
 				clkt.utc_time_tik = clock_time_rtc();
+				//clkt.utc_time_add = 0;
 			}
-			get_utc_time_sec();
-			osal_memcpy(&obuf[1], &clkt.utc_time_sec, sizeof(clkt.utc_time_sec));
+			tmp = get_utc_time_sec();
+			osal_memcpy(&obuf[1], &tmp, 4);
 #if (DEV_SERVICES & SERVICE_TIME_ADJUST)
-			memcpy(&obuf[sizeof(clkt.utc_time_sec) + 1], &clkt.utc_set_time_sec, sizeof(clkt.utc_set_time_sec));
-			olen = sizeof(clkt.utc_time_sec) + sizeof(clkt.utc_set_time_sec) + 1;
+			memcpy(&obuf[4 + 1], &clkt.utc_set_time_sec, sizeof(clkt.utc_set_time_sec));
+			olen = 4 + sizeof(clkt.utc_set_time_sec) + 1;
 #else
-			olen = sizeof(clkt.utc_time_sec) + 1;
+			olen = 4 + 1;
 #endif // SERVICE_TIME_ADJUST
 #if (DEV_SERVICES & SERVICE_TIME_ADJUST)
 		} else if (cmd == CMD_ID_TADJUST) { // Get/set adjust time clock delta (in 1/16 us for 1 sec)
 			if (len > 4) {
-				memcpy(&clkt.delta_time, &ibuf[1], 4);
+				clkt.delta_time = tmp;
 				flash_write_cfg(&clkt.delta_time, EEP_ID_TIM, sizeof(&clkt.delta_time));
 			}
 			memcpy(&send_buf[1], &clkt.delta_time, sizeof(clkt.delta_time));
@@ -173,7 +168,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		} else if (cmd == CMD_ID_EEP_RW && len > 2) {
 			obuf[1] = ibuf[1];
 			obuf[2] = ibuf[2];
-			uint16_t id = ibuf[1] | (ibuf[2] << 8);
+			uint16_t id = (uint16_t)tmp;
 			if(len > 3) {
 				flash_write_cfg(&ibuf[3], id, len - 3);
 			}
@@ -184,8 +179,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			} else
 				olen = i + 3;
 		} else if (cmd == CMD_ID_MEM_RW && len > 4) { // Read/Write memory
-			uint8_t *p = (uint8_t *)
-				((uint32_t)(ibuf[1] | (ibuf[2]<<8) | (ibuf[3]<<16) | (ibuf[4]<<24)));
+			uint8_t *p = (uint8_t *)tmp;
 			if(len > 5) {
 				len -= 5;
 				osal_memcpy(p, &ibuf[5], len);
@@ -194,10 +188,8 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			osal_memcpy(obuf, ibuf, 5);
 			osal_memcpy(&obuf[5], p, len);
 			olen = len + 1 + 4;
-		} else if (cmd == CMD_ID_REG_RW && len > 4) { // Read/Write register
-			volatile uint32_t *p = (volatile uint32_t *)
-					((uint32_t)(ibuf[1] | (ibuf[2]<<8) | (ibuf[3]<<16) | (ibuf[4]<<24)));
-			uint32_t tmp;
+		} else if (cmd == CMD_ID_REG_RW && len > 4) { // Read/Write 32 bits register (aligned)
+			volatile uint32_t *p = (volatile uint32_t *)tmp;
 			if(len > 8) {
 				tmp = ibuf[5] | (ibuf[6]<<8) | (ibuf[7]<<16) | (ibuf[8]<<24);
 				*p = tmp;

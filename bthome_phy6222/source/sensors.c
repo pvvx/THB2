@@ -45,7 +45,7 @@ int read_sensor_cht8xxx(void) {
 	uint8_t reg_data[4];
 	int32_t _r32;
 	int16_t _r16;
-	init_i2c(I2C_SPEED);
+	init_i2c(I2C_100KHZ);
 	if(thsensor_cfg.vid == CHT8305_VID) {
 		_r32 = read_i2c_nabuf(thsensor_cfg.i2c_addr, reg_data, 4);
 	} else  {
@@ -71,7 +71,7 @@ int read_sensor_cht8xxx(void) {
 int read_sensor_ahtxx(void) {
 	uint32_t _temp;
 	uint8_t reg_data[8];
-	init_i2c(I2C_SPEED);
+	init_i2c(I2C_400KHZ);
 	if(!read_i2c_nabuf(thsensor_cfg.i2c_addr, reg_data, 7)
 			&& (reg_data[0] & 0x80) == 0) { // busy
 		deinit_i2c();
@@ -118,7 +118,7 @@ void start_measure(void) {
 __ATTR_SECTION_XIP__ void init_sensor(void) {
 	uint8_t *ptabinit = NULL;
 	thsensor_cfg.read_sensor = NULL;
-	init_i2c(I2C_SPEED);
+	init_i2c(I2C_400KHZ);
 	//send_i2c_byte(0,6);
 	thsensor_cfg.i2c_addr = CHT83xx_I2C_ADDR;
 	if(!read_i2c_bytes(thsensor_cfg.i2c_addr, CHT83xx_REG_MID, (uint8 *)&thsensor_cfg.mid, 2) // 0x5959

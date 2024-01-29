@@ -1,5 +1,5 @@
 /**
-	@headerfile:	th_peripheral.h
+	@headerfile:	thb2_peripheral.h
 	$Date:
 	$Revision:
 

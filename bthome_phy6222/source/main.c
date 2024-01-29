@@ -354,6 +354,7 @@ int main(void) {
 	hal_rfphy_init();
 	hal_init();
 
+	restore_utc_time_sec();
 	load_eep_config();
 
 	LOG("SDK Version ID %08x \n",SDK_VER_RELEASE_ID);

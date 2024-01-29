@@ -18,7 +18,6 @@
 #include "gapgattserver.h"
 #include "gattservapp.h"
 #include "devinfoservice.h"
-#include "ota_app_service.h"
 #include "thb2_peripheral.h"
 #include "gapbondmgr.h"
 #include "pwrmgr.h"
@@ -47,6 +46,7 @@ clock_time_t clkt;
 cfg_t cfg;
 
 const cfg_t def_cfg = {
+		.flg = 0,
 		.rf_tx_power = RF_PHY_TX_POWER_0DBM,
 		.advertising_interval = 80, // 80 * 62.5 = 5000 ms
 		.measure_interval = 2,  // 5 * 2 = 10 sec
@@ -63,15 +63,31 @@ uint32_t get_delta_time_rtc(uint32_t start_time_rtc) {
 	return  new_time_rtc - start_time_rtc;
 }
 */
+void restore_utc_time_sec(void) {
+	if(clkt.utc_set_time_sec == 0) {
+		clkt.utc_time_add = AP_AON->SLEEP_R[2] + 10;
+		clkt.utc_time_sec = AP_AON->SLEEP_R[3];
+		//if(clkt.utc_time_sec < 1704067200ul) clkt.utc_time_sec = 1704067200ul;
+	}
+	clkt.utc_time_tik = clock_time_rtc() & 0xffffff;
+}
 
 uint32_t get_utc_time_sec(void) {
-	uint32_t new_time_tik = clock_time_rtc();
-	if(new_time_tik  < clkt.utc_time_tik)
-		new_time_tik += 0x1000000; // + 512 sec
-	clkt.utc_time_add += new_time_tik - clkt.utc_time_tik;
+	// HAL_ENTER_CRITICAL_SECTION();
+	uint32_t new_time_tik;
+	do {
+		new_time_tik = AP_AON->RTCCNT;
+	} while(new_time_tik != AP_AON->RTCCNT);
+	if(new_time_tik <= clkt.utc_time_tik)
+		clkt.utc_time_add += new_time_tik - clkt.utc_time_tik;
+	else
+		clkt.utc_time_add += 0xffffffff - clkt.utc_time_tik + new_time_tik;
 	clkt.utc_time_tik = new_time_tik;
 	clkt.utc_time_sec += clkt.utc_time_add >> 15; // div 32768
-	clkt.utc_time_add &= 32767;
+	clkt.utc_time_add &= (1<<15) - 1;
+	AP_AON->SLEEP_R[2] = clkt.utc_time_add; // сохранить
+	AP_AON->SLEEP_R[3] = clkt.utc_time_sec; // сохранить
+	// HAL_EXIT_CRITICAL_SECTION();
 #if (DEV_SERVICES & SERVICE_TIME_ADJUST)
 	// TODO
 #endif

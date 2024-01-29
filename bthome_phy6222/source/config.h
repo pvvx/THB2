@@ -10,9 +10,10 @@
 
 #include <string.h>
 #include "types.h"
+// #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x07	// BCD
+#define APP_VERSION	0x08	// BCD
 #endif
 
 /*
@@ -39,24 +40,24 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05
+#define DEVICE		DEVICE_THB2
 #endif
 
 // supported services by the device (bits)
-#define SERVICE_OTA			0x00001
-#define SERVICE_OTA_EXT		0x00002
-#define SERVICE_PINCODE 	0x00004	// пока нет
-#define SERVICE_BINDKEY 	0x00008	// пока нет
-#define SERVICE_HISTORY 	0x00010	// пока нет
-#define SERVICE_SCREEN		0x00020	// пока нет
-#define SERVICE_LE_LR		0x00040	// пока нет
-#define SERVICE_THS			0x00080
-#define SERVICE_RDS			0x00100	// пока нет
-#define SERVICE_KEY			0x00200
-#define SERVICE_OUTS		0x00400	// пока нет
-#define SERVICE_INS			0x00800	// пока нет
-#define SERVICE_TIME_ADJUST 0x01000	// пока нет
-#define SERVICE_HARD_CLOCK	0x02000	// пока нет
+#define SERVICE_OTA			0x00000001
+#define SERVICE_OTA_EXT		0x00000002
+#define SERVICE_PINCODE 	0x00000004	// пока нет
+#define SERVICE_BINDKEY 	0x00000008	// пока нет
+#define SERVICE_HISTORY 	0x00000010
+#define SERVICE_SCREEN		0x00000020
+#define SERVICE_LE_LR		0x00000040	// пока нет
+#define SERVICE_THS			0x00000080
+#define SERVICE_RDS			0x00000100	// пока нет
+#define SERVICE_KEY			0x00000200
+#define SERVICE_OUTS		0x00000400	// пока нет
+#define SERVICE_INS			0x00000800	// пока нет
+#define SERVICE_TIME_ADJUST 0x00001000	// пока нет
+#define SERVICE_HARD_CLOCK	0x00002000	// пока нет
 
 #define OTA_TYPE_NONE	0	// нет OTA
 #define OTA_TYPE_BOOT	(SERVICE_OTA | SERVICE_OTA_EXT)		// вариант для прошивки boot + OTA
@@ -184,7 +185,7 @@
 typedef struct _cfg_t {
 	uint32_t flg;
 
-	uint8_t rf_tx_power; //
+	uint8_t rf_tx_power; // 0..0x3F
 	uint8_t advertising_interval; // multiply by 62.5 for value in ms (1..160,  62.5 ms .. 10 sec)
 	uint8_t connect_latency; // +1 x 0.03 sec ( = connection interval), Tmin = 1*30 = 30 ms, Tmax = 256 * 30 = 7680 ms
 	uint8_t reserved1;
@@ -210,9 +211,11 @@ typedef struct _adv_work_t {
 extern adv_work_t adv_wrk;
 
 // uint32_t rtc_get_counter(void); // tik 32768
-inline uint32 clock_time_rtc(void) {
-    return (*(volatile unsigned int*)0x4000f028);// & 0xffffff; // max 512 sec
-}
+#if 1
+#define clock_time_rtc() rtc_get_counter()
+#else
+inline uint32 clock_time_rtc(void) { return AP_AON->RTCCNT; } // (*(volatile unsigned int*)0x4000f028); }// & 0xffffff; // max 512 sec
+#endif
 // uint32_t get_delta_time_rtc(uint32_t start_time_rtc);
 
 typedef struct _clock_time_t {
@@ -227,6 +230,7 @@ typedef struct _clock_time_t {
 extern clock_time_t clkt;
 
 uint32_t get_utc_time_sec(void);
+void restore_utc_time_sec(void);
 
 void test_config(void);
 void load_eep_config(void);

@@ -8,7 +8,12 @@
 #ifndef _DEV_I2C_H_
 #define _DEV_I2C_H_
 
-void init_i2c(bool speed400khz);
+typedef enum {
+	I2C_100KHZ,
+	I2C_400KHZ
+}i2c_speed_e;
+
+void init_i2c(i2c_speed_e speed400khz);
 void deinit_i2c(void);
 int send_i2c_byte(uint8_t addr, uint8_t data);
 int send_i2c_wreg(uint8 addr, uint8 reg, uint16 data);
