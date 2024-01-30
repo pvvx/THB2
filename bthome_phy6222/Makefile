@@ -1,12 +1,16 @@
 ##############################################################################
 PROJECT_NAME ?= bthome_phy6222
-#POJECT_DEF ?= -DDEVICE=DEVICE_THB2
+DEVICE     ?= DEVICE_THB2
+OTA_TYPE   ?= 0
+DEBUG_INFO ?= 0
+# AUX_DEFS   ?= -DEXT_ADV_ENABLE 
+PROJ_DEFS  ?= -DDEVICE=$(DEVICE) -DDEBUG_INFO=$(DEBUG_INFO)
 ##############################################################################
 COM_PORT = COM11
 ##############################################################################
 # Source
-SRC_PATH = ./source
-SRC_PRJ = main.c
+SRC_PATH:= ./source
+SRC_PRJ := main.c
 SRC_PRJ += battery.c
 SRC_PRJ += battservice.c
 SRC_PRJ += bthome_beacon.c
@@ -26,13 +30,11 @@ SRC_PRJ += lcd_th05.c
 SRC_PRJ += ble_ota.c
 SRC_PRJ += logger.c
 
-INCLUDES = -I$(SRC_PATH)
+INCLUDES:= -I$(SRC_PATH)
 
 SRCS = $(addprefix $(SRC_PATH)/, $(SRC_PRJ))
 ##############################################################################
-DEFINES = -D__GCC
-DEFINES += $(POJECT_DEF)
-DEFINES += -DDEBUG_INFO=0
+DEFINES += $(PROJ_DEFS)
 DEFINES += -DMTU_SIZE=247
 DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
 DEFINES += -DADV_NCONN_CFG=0x01
@@ -60,18 +62,18 @@ DEFINES += -DUSE_FS=0
 DEFINES += -DMAX_NUM_LL_CONN=1
 #DEFINES += -DXFLASH_HIGH_SPEED=1
 ##############################################################################
-BIN_DIR = ./bin
-OBJ_DIR = ./build
-SDK_PATH = ./SDK
-PYTHON = python3
-GCC_PATH = 
-CC = $(GCC_PATH)arm-none-eabi-gcc
-OBJCOPY = $(GCC_PATH)arm-none-eabi-objcopy
-OBJDUMP = $(GCC_PATH)arm-none-eabi-objdump
-SIZE = $(GCC_PATH)arm-none-eabi-size
-READELF = $(GCC_PATH)arm-none-eabi-readelf
+BIN_DIR := ./bin
+OBJ_DIR := ./build
+SDK     := ./SDK
+PYTHON  := python3
+GCC     ?= 
+CC      := $(GCC)arm-none-eabi-gcc
+OBJCOPY := $(GCC)arm-none-eabi-objcopy
+OBJDUMP := $(GCC)arm-none-eabi-objdump
+SIZE    := $(GCC)arm-none-eabi-size
+READELF := $(GCC)arm-none-eabi-readelf
 ##############################################################################
-ARCH_FLAGS := -mcpu=cortex-m0 -mthumb -mthumb-interwork
+ARCH_FLAGS := -mcpu=cortex-m0 -mthumb
 OPT_CFLAGS ?= -Os
 DEB_CFLAGS ?= -g3 -ggdb
 ##############################################################################
@@ -82,156 +84,163 @@ CFLAGS     += -fno-diagnostics-show-caret
 CFLAGS     += -fdata-sections -ffunction-sections
 CFLAGS     += -funsigned-char -funsigned-bitfields
 #CFLAGS     += -fpack-struct
-#CFLAGS     += -mno-unaligned-access
-#CFLAGS     += -munaligned-access
 CFLAGS     += -fms-extensions
 CFLAGS     += -specs=nosys.specs
 CFLAGS     += -Wl,--gc-sections
 
-ifdef BOOT_OTA
-LDSCRIPT   ?= $(SDK_PATH)/misc/boot_ota_phy62x2.ld
-DEFINES += -DOTA_TYPE=OTA_TYPE_BOOT
-BIN_OTA	=
-else
-LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
-DEFINES += -DOTA_TYPE=OTA_TYPE_APP
-BIN_OTA	= $(OBJ_DIR)/$(PROJECT_NAME).bin
+$(info DEVICE is [${DEVICE}])
+$(info OTA TYPE is [${OTA_TYPE}])
+
+ifeq ($(OTA_TYPE), 0)
+DEFINES += -DOTA_TYPE=OTA_TYPE_NONE
+LDSCRIPT?= $(SDK)/misc/phy62x2.ld
 endif
+ifeq ($(OTA_TYPE), 1)
+DEFINES += -DOTA_TYPE=OTA_TYPE_BOOT
+LDSCRIPT?= $(SDK)/misc/phy62x2_ota_boot.ld
+BIN_OTA	:= $(OBJ_DIR)/$(PROJECT_NAME).bin
+endif
+ifeq ($(OTA_TYPE), 2)
+DEFINES += -DOTA_TYPE=OTA_TYPE_APP
+LDSCRIPT?= $(SDK)/misc/phy62x2_ota_app.ld
+BIN_OTA	:= $(OBJ_DIR)/$(PROJECT_NAME).bin
+endif
+$(info $$LDSCRIPT is [${LDSCRIPT}])
 
 LDFLAGS    := $(ARCH_FLAGS)
 LDFLAGS    += --static -nostartfiles -nostdlib
 LDFLAGS    += -Wl,--gc-sections
 LDFLAGS    += -Wl,--script=$(LDSCRIPT)
 # LDFLAGS    += -Wl,--no-warn-rwx-segments
-LDFLAGS    += -Wl,--just-symbols=$(SDK_PATH)/misc/bb_rom_sym_m0.gcc
+LDFLAGS    += -Wl,--just-symbols=$(SDK)/misc/bb_rom_sym_m0.gcc
 LDFLAGS    += -Wl,-Map=$(OBJ_DIR)/$(PROJECT_NAME).map 
 LIBS       += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
 
 ##############################################################################
-INCLUDES += -I$(SDK_PATH)/misc
-INCLUDES += -I$(SDK_PATH)/misc/CMSIS/include
-INCLUDES += -I$(SDK_PATH)/components/arch/cm0
-INCLUDES += -I$(SDK_PATH)/components/ble/controller
-INCLUDES += -I$(SDK_PATH)/components/ble/include
-INCLUDES += -I$(SDK_PATH)/components/ble/hci
-INCLUDES += -I$(SDK_PATH)/components/ble/host
-INCLUDES += -I$(SDK_PATH)/components/inc
-INCLUDES += -I$(SDK_PATH)/components/osal/include
-INCLUDES += -I$(SDK_PATH)/components/common
-INCLUDES += -I$(SDK_PATH)/components/profiles/ota_app
-INCLUDES += -I$(SDK_PATH)/components/profiles/DevInfo
-INCLUDES += -I$(SDK_PATH)/components/profiles/SimpleProfile
-INCLUDES += -I$(SDK_PATH)/components/profiles/Roles
-INCLUDES += -I$(SDK_PATH)/components/driver/adc
-INCLUDES += -I$(SDK_PATH)/components/driver/bsp_button
-INCLUDES += -I$(SDK_PATH)/components/driver/clock
-INCLUDES += -I$(SDK_PATH)/components/driver/dma
-INCLUDES += -I$(SDK_PATH)/components/driver/flash
-INCLUDES += -I$(SDK_PATH)/components/driver/gpio
-INCLUDES += -I$(SDK_PATH)/components/driver/i2c
-INCLUDES += -I$(SDK_PATH)/components/driver/key
-INCLUDES += -I$(SDK_PATH)/components/driver/kscan
-INCLUDES += -I$(SDK_PATH)/components/driver/led_light
-INCLUDES += -I$(SDK_PATH)/components/driver/log
-INCLUDES += -I$(SDK_PATH)/components/driver/pwm
-INCLUDES += -I$(SDK_PATH)/components/driver/pwrmgr
-INCLUDES += -I$(SDK_PATH)/components/driver/qdec
-INCLUDES += -I$(SDK_PATH)/components/driver/spi
-INCLUDES += -I$(SDK_PATH)/components/driver/spiflash
-INCLUDES += -I$(SDK_PATH)/components/driver/timer
-INCLUDES += -I$(SDK_PATH)/components/driver/uart
-INCLUDES += -I$(SDK_PATH)/components/driver/voice
-INCLUDES += -I$(SDK_PATH)/components/driver/watchdog
-INCLUDES += -I$(SDK_PATH)/components/libraries/crc16
-INCLUDES += -I$(SDK_PATH)/components/libraries/cliface
-#INCLUDES += -I$(SDK_PATH)/components/libraries/fs
-INCLUDES += -I$(SDK_PATH)/components/driver/watchdog
+INCLUDES += -I$(SDK)/misc
+INCLUDES += -I$(SDK)/misc/CMSIS/include
+INCLUDES += -I$(SDK)/components/arch/cm0
+INCLUDES += -I$(SDK)/components/ble/controller
+INCLUDES += -I$(SDK)/components/ble/include
+INCLUDES += -I$(SDK)/components/ble/hci
+INCLUDES += -I$(SDK)/components/ble/host
+INCLUDES += -I$(SDK)/components/inc
+INCLUDES += -I$(SDK)/components/osal/include
+INCLUDES += -I$(SDK)/components/common
+INCLUDES += -I$(SDK)/components/profiles/ota_app
+INCLUDES += -I$(SDK)/components/profiles/DevInfo
+INCLUDES += -I$(SDK)/components/profiles/SimpleProfile
+INCLUDES += -I$(SDK)/components/profiles/Roles
+INCLUDES += -I$(SDK)/components/driver/adc
+INCLUDES += -I$(SDK)/components/driver/bsp_button
+INCLUDES += -I$(SDK)/components/driver/clock
+INCLUDES += -I$(SDK)/components/driver/dma
+INCLUDES += -I$(SDK)/components/driver/flash
+INCLUDES += -I$(SDK)/components/driver/gpio
+INCLUDES += -I$(SDK)/components/driver/i2c
+INCLUDES += -I$(SDK)/components/driver/key
+INCLUDES += -I$(SDK)/components/driver/kscan
+INCLUDES += -I$(SDK)/components/driver/led_light
+INCLUDES += -I$(SDK)/components/driver/log
+INCLUDES += -I$(SDK)/components/driver/pwm
+INCLUDES += -I$(SDK)/components/driver/pwrmgr
+INCLUDES += -I$(SDK)/components/driver/qdec
+INCLUDES += -I$(SDK)/components/driver/spi
+INCLUDES += -I$(SDK)/components/driver/spiflash
+INCLUDES += -I$(SDK)/components/driver/timer
+INCLUDES += -I$(SDK)/components/driver/uart
+INCLUDES += -I$(SDK)/components/driver/voice
+INCLUDES += -I$(SDK)/components/driver/watchdog
+INCLUDES += -I$(SDK)/components/libraries/crc16
+INCLUDES += -I$(SDK)/components/libraries/cliface
+#INCLUDES += -I$(SDK)/components/libraries/fs
+INCLUDES += -I$(SDK)/components/driver/watchdog
 
 ###########################################
 # LIBs
-SRCS += $(SDK_PATH)/lib/rf/patch.c
-SRCS += $(SDK_PATH)/lib/sec/phy_sec_ext.c
-SRCS += $(SDK_PATH)/lib/sec/aes.c
-SRCS += $(SDK_PATH)/lib/ble_host/att_client.c
-SRCS += $(SDK_PATH)/lib/ble_host/att_server.c
-SRCS += $(SDK_PATH)/lib/ble_host/att_util.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_centdevmgr.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_centlinkmgr.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_configmgr.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_devmgr.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_linkmgr.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_peridevmgr.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_perilinkmgr.c
-#SRCS += $(SDK_PATH)/lib/ble_host/gap_simpletask.c
-SRCS += $(SDK_PATH)/lib/ble_host/gap_task.c
-SRCS += $(SDK_PATH)/lib/ble_host/gatt_client.c
-SRCS += $(SDK_PATH)/lib/ble_host/gatt_server.c
-SRCS += $(SDK_PATH)/lib/ble_host/gatt_task.c
-SRCS += $(SDK_PATH)/lib/ble_host/gatt_uuid.c
-SRCS += $(SDK_PATH)/lib/ble_host/l2cap_if.c
-SRCS += $(SDK_PATH)/lib/ble_host/l2cap_task.c
-SRCS += $(SDK_PATH)/lib/ble_host/l2cap_util.c
-SRCS += $(SDK_PATH)/lib/ble_host/linkdb.c
-SRCS += $(SDK_PATH)/lib/ble_host/sm_intpairing.c
-SRCS += $(SDK_PATH)/lib/ble_host/sm_mgr.c
-SRCS += $(SDK_PATH)/lib/ble_host/sm_pairing.c
-SRCS += $(SDK_PATH)/lib/ble_host/smp.c
-SRCS += $(SDK_PATH)/lib/ble_host/sm_rsppairing.c
-SRCS += $(SDK_PATH)/lib/ble_host/sm_task.c
+SRCS += $(SDK)/lib/rf/patch.c
+SRCS += $(SDK)/lib/sec/phy_sec_ext.c
+SRCS += $(SDK)/lib/sec/aes.c
+SRCS += $(SDK)/lib/ble_host/att_client.c
+SRCS += $(SDK)/lib/ble_host/att_server.c
+SRCS += $(SDK)/lib/ble_host/att_util.c
+SRCS += $(SDK)/lib/ble_host/gap_centdevmgr.c
+SRCS += $(SDK)/lib/ble_host/gap_centlinkmgr.c
+SRCS += $(SDK)/lib/ble_host/gap_configmgr.c
+SRCS += $(SDK)/lib/ble_host/gap_devmgr.c
+SRCS += $(SDK)/lib/ble_host/gap_linkmgr.c
+SRCS += $(SDK)/lib/ble_host/gap_peridevmgr.c
+SRCS += $(SDK)/lib/ble_host/gap_perilinkmgr.c
+SRCS += $(SDK)/lib/ble_host/gap_simpletask.c
+SRCS += $(SDK)/lib/ble_host/gap_task.c
+SRCS += $(SDK)/lib/ble_host/gatt_client.c
+SRCS += $(SDK)/lib/ble_host/gatt_server.c
+SRCS += $(SDK)/lib/ble_host/gatt_task.c
+SRCS += $(SDK)/lib/ble_host/gatt_uuid.c
+SRCS += $(SDK)/lib/ble_host/l2cap_if.c
+SRCS += $(SDK)/lib/ble_host/l2cap_task.c
+SRCS += $(SDK)/lib/ble_host/l2cap_util.c
+SRCS += $(SDK)/lib/ble_host/linkdb.c
+SRCS += $(SDK)/lib/ble_host/sm_intpairing.c
+SRCS += $(SDK)/lib/ble_host/sm_mgr.c
+SRCS += $(SDK)/lib/ble_host/sm_pairing.c
+SRCS += $(SDK)/lib/ble_host/smp.c
+SRCS += $(SDK)/lib/ble_host/sm_rsppairing.c
+SRCS += $(SDK)/lib/ble_host/sm_task.c
 ifdef LIB_BLE_ADD
-SRCS += $(SDK_PATH)/lib/ble_controller/ll_common.c
-SRCS += $(SDK_PATH)/lib/ble_controller/ll_enc.c
-SRCS += $(SDK_PATH)/lib/ble_controller/ll_hw_drv.c
-SRCS += $(SDK_PATH)/lib/ble_controller/ll_hwItf.c
-SRCS += $(SDK_PATH)/lib/ble_controller/ll.c
-SRCS += $(SDK_PATH)/lib/ble_controller/ll_masterEndCauses.c
-SRCS += $(SDK_PATH)/lib/ble_controller/ll_slaveEndCauses.c
-SRCS += $(SDK_PATH)/lib/ble_controller/ll_sleep.c
+SRCS += $(SDK)/lib/ble_controller/ll_common.c
+SRCS += $(SDK)/lib/ble_controller/ll_enc.c
+SRCS += $(SDK)/lib/ble_controller/ll_hw_drv.c
+SRCS += $(SDK)/lib/ble_controller/ll_hwItf.c
+SRCS += $(SDK)/lib/ble_controller/ll.c
+SRCS += $(SDK)/lib/ble_controller/ll_masterEndCauses.c
+SRCS += $(SDK)/lib/ble_controller/ll_slaveEndCauses.c
+SRCS += $(SDK)/lib/ble_controller/ll_sleep.c
 endif
-SRCS += $(SDK_PATH)/lib/ble_controller/rf_phy_driver.c
+SRCS += $(SDK)/lib/ble_controller/rf_phy_driver.c
 
 ###########################################
 # SDK
-SRCS += $(SDK_PATH)/components/driver/clock/clock.c
-SRCS += $(SDK_PATH)/components/driver/flash/flash.c
-SRCS += $(SDK_PATH)/components/driver/gpio/gpio.c
-#SRCS += $(SDK_PATH)/components/driver/key/key.c
-#SRCS += $(SDK_PATH)/components/driver/led_light/led_light.c
-#SRCS += $(SDK_PATH)/components/driver/pwm/pwm.c
-SRCS += $(SDK_PATH)/components/driver/pwrmgr/pwrmgr.c
-SRCS += $(SDK_PATH)/components/driver/timer/timer.c
-SRCS += $(SDK_PATH)/components/driver/uart/uart.c
-SRCS += $(SDK_PATH)/components/driver/watchdog/watchdog.c
-SRCS += $(SDK_PATH)/components/driver/log/my_printf.c
+SRCS += $(SDK)/components/driver/clock/clock.c
+SRCS += $(SDK)/components/driver/flash/flash.c
+SRCS += $(SDK)/components/driver/gpio/gpio.c
+#SRCS += $(SDK)/components/driver/key/key.c
+#SRCS += $(SDK)/components/driver/led_light/led_light.c
+#SRCS += $(SDK)/components/driver/pwm/pwm.c
+SRCS += $(SDK)/components/driver/pwrmgr/pwrmgr.c
+SRCS += $(SDK)/components/driver/timer/timer.c
+SRCS += $(SDK)/components/driver/uart/uart.c
+SRCS += $(SDK)/components/driver/watchdog/watchdog.c
+SRCS += $(SDK)/components/driver/log/my_printf.c
 
-#SRCS += $(SDK_PATH)/components/profiles/Roles/central.c
-#SRCS += $(SDK_PATH)/components/profiles/ota_app/ota_app_service.c
-#SRCS += $(SDK_PATH)/components/profiles/Roles/peripheral.c
-SRCS += $(SDK_PATH)/components/profiles/Roles/gap.c
-SRCS += $(SDK_PATH)/components/profiles/Roles/gapbondmgr.c
-SRCS += $(SDK_PATH)/components/profiles/Roles/gapgattserver.c
-SRCS += $(SDK_PATH)/components/profiles/GATT/gattservapp.c
-#SRCS += $(SDK_PATH)/components/profiles/DevInfo/devinfoservice.c
+#SRCS += $(SDK)/components/profiles/Roles/central.c
+#SRCS += $(SDK)/components/profiles/ota_app/ota_app_service.c
+#SRCS += $(SDK)/components/profiles/Roles/peripheral.c
+SRCS += $(SDK)/components/profiles/Roles/gap.c
+SRCS += $(SDK)/components/profiles/Roles/gapbondmgr.c
+SRCS += $(SDK)/components/profiles/Roles/gapgattserver.c
+SRCS += $(SDK)/components/profiles/GATT/gattservapp.c
+#SRCS += $(SDK)/components/profiles/DevInfo/devinfoservice.c
 
-SRCS += $(SDK_PATH)/components/osal/snv/osal_snv.c
-SRCS += $(SDK_PATH)/components/libraries/fs/fs.c
+SRCS += $(SDK)/components/osal/snv/osal_snv.c
+SRCS += $(SDK)/components/libraries/fs/fs.c
 
-SRCS += $(SDK_PATH)/misc/jump_table.c
+SRCS += $(SDK)/misc/jump_table.c
 
 ##############################################################################
 
-INCLUDES += -I$(SDK_PATH)/misc/CMSIS/device/phyplus
+INCLUDES += -I$(SDK)/misc/CMSIS/device/phyplus
 
-STARTUP_ASM = $(SDK_PATH)/misc/CMSIS/device/phyplus/phy6222_start.s
+STARTUP_ASM = $(SDK)/misc/CMSIS/device/phyplus/phy6222_start.s
 
-SRCS += $(SDK_PATH)/misc/CMSIS/device/phyplus/phy6222_cstart.c
-SRCS += $(SDK_PATH)/misc/CMSIS/device/phyplus/phy6222_vectors.c
+SRCS += $(SDK)/misc/CMSIS/device/phyplus/phy6222_cstart.c
+SRCS += $(SDK)/misc/CMSIS/device/phyplus/phy6222_vectors.c
 
 ##############################################################################
 
 CFLAGS  += $(DEFINES) $(INCLUDES) 
 
-#SRC_O = $(patsubst %.c,%.o,$(patsubst sdk/%, $(SDK_PATH)%, $(SRCS)))
+#SRC_O = $(patsubst %.c,%.o,$(patsubst sdk/%, $(SDK)%, $(SRCS)))
 
 SRC_O = $(SRCS:%.c=%.o) $(STARTUP_ASM:%.s=%.o)
 OBJS = $(patsubst %, $(OBJ_DIR)/%, $(patsubst ./%, %, $(SRC_O)))
@@ -295,4 +304,4 @@ clean:
 
 -include $(DEPENDENCY_LIST)
 
-VPATH:=$(OBJ_DIR) $(SDK_PATH)
+VPATH:=$(OBJ_DIR) $(SDK)
