@@ -1,7 +1,7 @@
 ##############################################################################
 PROJECT_NAME ?= bthome_phy6222
 DEVICE     ?= DEVICE_THB2
-OTA_TYPE   ?= 0
+OTA_TYPE   ?= 1
 DEBUG_INFO ?= 0
 # AUX_DEFS   ?= -DEXT_ADV_ENABLE 
 PROJ_DEFS  ?= -DDEVICE=$(DEVICE) -DDEBUG_INFO=$(DEBUG_INFO)
