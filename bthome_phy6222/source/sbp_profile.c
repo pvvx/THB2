@@ -32,7 +32,7 @@
  * MACROS
  */
 #ifndef OTA_TYPE
-#error "Define OTA_TYPE!"
+#error "OTA_TYPE is undefined!"
 #endif
 /*********************************************************************
  * CONSTANTS
@@ -52,7 +52,7 @@ CONST uint8_t simpleProfileServUUID[ATT_BT_UUID_SIZE] =
 	LO_UINT16(SERVICE_BTHOME_UUID16), HI_UINT16(SERVICE_BTHOME_UUID16)
 };
 
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 // Characteristic 1 UUID: 0x0001
 CONST uint8_t simpleProfilechar1UUID[ATT_BT_UUID_SIZE] =
 {
@@ -87,7 +87,7 @@ static simpleProfileCBs_t *simpleProfile_AppCBs = NULL;
 // Simple Profile Service attribute 0xFFF0
 static CONST gattAttrType_t simpleProfileService = { ATT_BT_UUID_SIZE, simpleProfileServUUID };
 
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 // Simple Profile Characteristic 1 Properties
 static CONST uint8_t simpleProfileChar1Props			=	GATT_PROP_READ | GATT_PROP_WRITE_NO_RSP | GATT_PROP_NOTIFY;
 //static CONST uint8_t simpleProfileChar1UserDesp[]		=	"OTA\0";	// Simple Profile Characteristic 1 User Description
@@ -109,13 +109,13 @@ static uint8_t cmd_in_len;							// Characteristic 2 Value
 /*********************************************************************
  * Profile Attributes - Table
  */
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 #define SERVAPP_NUM_ATTR_SUPPORTED		  7
 #define OTA_DATA_ATTR_IDX				  2 // Position of OTA in attribute array
-#define CDM_DATA_ATTR_IDX				  5 // Position of CMD in attribute array
+#define CMD_DATA_ATTR_IDX				  5 // Position of CMD in attribute array
 #else
 #define SERVAPP_NUM_ATTR_SUPPORTED		  4
-#define CDM_DATA_ATTR_IDX				  2 // Position of CMD in attribute array
+#define CMD_DATA_ATTR_IDX				  2 // Position of CMD in attribute array
 #endif
 
 static gattAttribute_t simpleProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] =
@@ -127,7 +127,7 @@ static gattAttribute_t simpleProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] =
 			0,											/* handle */
 			(uint8_t *)&simpleProfileService			/* pValue */
 	},
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 	// Characteristic 1 Declaration
 	{
 			{ ATT_BT_UUID_SIZE, characterUUID },
@@ -308,7 +308,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 		{
 			// No need for "GATT_SERVICE_UUID" or "GATT_CLIENT_CHAR_CFG_UUID" cases;
 			// gattserverapp handles those reads
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 			case SIMPLEPROFILE_CHAR1_UUID:
 				*pLen = 20;
 				osal_memcpy( pValue, &ota, *pLen );
@@ -365,9 +365,9 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 		uint16_t uuid = BUILD_UINT16( pAttr->type.uuid[0], pAttr->type.uuid[1]);
 		switch ( uuid )
 		{
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 			case SIMPLEPROFILE_CHAR1_UUID:
-	            // Validate the value
+	            //Validate the value
 	            // Make sure it's not a blob oper
 	            if ( offset == 0 ) {
 					if ( len > sizeof(ota_in_buffer))
@@ -386,7 +386,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 //						osal_set_event(simpleBLEPeripheral_TaskID, SBP_OTADATA);
 	            }
 				break;
-#endif // OTA_TYPE
+#endif // (OTA_TYPE != OTA_TYPE_NONE)
 			case SIMPLEPROFILE_CHAR2_UUID:
 				// Validate the value
 				// Make sure it's not a blob oper
@@ -449,17 +449,17 @@ void new_cmd_data(void) {
 	attHandleValueNoti_t noti;
 	noti.len = cmd_parser(noti.value, cmd_in_buffer, cmd_in_len);
 	if(noti.len) {
-		noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
+		noti.handle = simpleProfileAttrTbl[CMD_DATA_ATTR_IDX].handle;
 		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
 	}
 }
 
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 void new_ota_data(void) {
 	attHandleValueNoti_t noti;
 	noti.len = ota_parser(noti.value, ota_in_buffer, ota_in_len);
 	if(noti.len) {
-		noti.handle = simpleProfileAttrTbl[OTA_DATA_ATTR_IDX].handle;
+	noti.handle = simpleProfileAttrTbl[OTA_DATA_ATTR_IDX].handle;
 		GATT_Notification(gapRole_ConnectionHandle, &noti, FALSE );
 	}
 }
@@ -474,7 +474,7 @@ void wrk_notify(void) {
 		noti.len = 0;
 		if(rd_memo.cnt) {
 			while(1) { // 4096 memo 43 sec [memo = 13 bytes] -> 1238 bytes/s
-	    		noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;
+	    		noti.handle = simpleProfileAttrTbl[CMD_DATA_ATTR_IDX].handle;
 	        	noti.len = send_memo_blk(noti.value);
 	        	if(noti.len) {
 	        		bStatus_t err = ATT_HandleValueNoti(gapRole_ConnectionHandle, &noti);

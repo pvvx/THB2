@@ -19,7 +19,7 @@
 #define	FADDR_OTA_SEC		(FADDR_START_ADDR + 0x03000)		// 52k
 #define	FADDR_APP_SEC		(FADDR_START_ADDR + 0x10000)		// 176k (for 256k Flash)
 
-#if OTA_TYPE
+#if (OTA_TYPE != OTA_TYPE_NONE)
 
 #define	START_UP_FLAG		0x36594850	// "PHY6"
 
@@ -56,16 +56,16 @@ typedef struct _ota_par_t {
 	uint32_t erase_addr;
 } ota_par_t;
 
-#define OTA_MODE_SELECT_REG (AP_AON->RTCCC2) // [0x4000f034] == 0x55 -> OTA
+// #define OTA_MODE_SELECT_REG 0x4000f034 // == 0x55 -> OTA
 
 extern ota_par_t ota;
 
 int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size);
 
-#if OTA_TYPE == OTA_TYPE_BOOT
+#if (OTA_TYPE == OTA_TYPE_BOOT)
 void startup_app(void);
 #endif
 
-#endif // OTA_TYPE
+#endif // (OTA_TYPE != OTA_TYPE_NONE)
 
 #endif /* BLE_OTA_H_ */

@@ -4,7 +4,8 @@
  ******************************************************************************/
 #include "bcomdef.h"
 #include "config.h"
-#if OTA_TYPE
+
+#if (OTA_TYPE != OTA_TYPE_NONE)
 #include "OSAL.h"
 #include "flash.h"
 #include "ble_ota.h"
@@ -171,7 +172,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 						| (pmsg[3] << 8)
 						| (pmsg[4] << 16)
 						| (pmsg[5] << 24));
-					write_reg(OTA_MODE_SELECT_REG, tmp);
+					write_reg(BOOT_MODE_SELECT_REG, tmp);
 				}
 				hal_system_soft_reset();
 			} else
@@ -334,5 +335,5 @@ void startup_app(void) {
     }
 }
 
-#endif // OTA_TYPE
+#endif // (OTA_TYPE != OTA_TYPE_NONE)
 

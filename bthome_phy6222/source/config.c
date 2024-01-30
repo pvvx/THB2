@@ -34,7 +34,7 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "battery.h"
 #include "sbp_profile.h"
 #include "logger.h"
@@ -79,7 +79,7 @@ uint32_t get_utc_time_sec(void) {
 		new_time_tik = AP_AON->RTCCNT;
 	} while(new_time_tik != AP_AON->RTCCNT);
 	if(new_time_tik <= clkt.utc_time_tik)
-		clkt.utc_time_add += new_time_tik - clkt.utc_time_tik;
+	clkt.utc_time_add += new_time_tik - clkt.utc_time_tik;
 	else
 		clkt.utc_time_add += 0xffffffff - clkt.utc_time_tik + new_time_tik;
 	clkt.utc_time_tik = new_time_tik;
@@ -137,5 +137,4 @@ void load_eep_config(void) {
 #endif
 	test_config();
 }
-
 

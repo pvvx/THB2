@@ -9,7 +9,7 @@
 #include "bleperipheral.h"
 #include "pwrmgr.h"
 #include "jump_function.h"
-#include "sensor.h"
+#include "sensors.h"
 
 #ifndef ADC_PIN
 #define ADC_PIN GPIO_P11

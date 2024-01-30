@@ -64,10 +64,10 @@ void show_battery_symbol(bool state);
 void show_ble_symbol(bool state);
 void show_smiley(uint8_t state);
 void show_temp_symbol(CLD_TEMP_SYMBOL symbol);
-//void chow_clock(void);
-//void chow_measure(void);
+//void show_clock(void);
+//void show_measure(void);
 
-void chow_lcd(int flg);
+void show_lcd(int flg);
 void lcd_show_version(void);
 
 #endif /* _LCD_TH05_H_ */

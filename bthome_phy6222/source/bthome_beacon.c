@@ -9,7 +9,7 @@
 #include "config.h"
 #include "bcomdef.h"
 #include "gapbondmgr.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "bthome_beacon.h"
 
 uint8_t bthome_data_beacon(void * padbuf) {
@@ -52,7 +52,3 @@ uint8_t bthome_data_beacon(void * padbuf) {
 	return sizeof(adv_bthome_ns2_t);
 #endif
 }
-
-
-
-

@@ -17,7 +17,7 @@
 #include "peripheral.h"
 
 #include "battservice.h"
-#include "sensor.h"
+#include "sensors.h"
 /*********************************************************************
 	MACROS
 */

@@ -12,7 +12,7 @@
 #include "gpio.h"
 #include "rom_sym_def.h"
 #include "dev_i2c.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "lcd_th05.h"
 #include "thb2_peripheral.h"
 
@@ -201,7 +201,7 @@ void lcd_show_version(void) {
 	update_lcd();
 }
 
-void chow_clock(void) {
+void show_clock(void) {
 	uint32_t tmp = clkt.utc_time_sec / 60;
 	uint32_t min = tmp % 60;
 	uint32_t hrs = (tmp / 60) % 24;
@@ -215,7 +215,7 @@ void chow_clock(void) {
 	update_lcd();
 }
 
-void chow_measure(void) {
+void show_measure(void) {
 #if (DEV_SERVICES & SERVICE_THS)
 	show_big_number_x10(measured_data.temp/10);
 	show_small_number(measured_data.humi/100, true);
@@ -232,18 +232,18 @@ void chow_measure(void) {
 }
 
 struct {
-//	uint32_t chow_tik;
+//	uint32_t show_tik;
 	uint8_t count;
 } lcd;
 
-void chow_lcd(int flg) {
+void show_lcd(int flg) {
 	if(cfg.flg & 1) {
 		if(lcd.count++ & 1)
-			chow_clock();
+			show_clock();
 		else
-			chow_measure();
+			show_measure();
 	} else if(flg) {
-		chow_measure();
+		show_measure();
 	}
 }
 

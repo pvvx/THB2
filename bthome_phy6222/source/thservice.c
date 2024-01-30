@@ -7,6 +7,7 @@
 */
 #include "types.h"
 #include "config.h"
+
 #if (DEV_SERVICES & SERVICE_THS)
 #include "bcomdef.h"
 #include "OSAL.h"
@@ -20,7 +21,7 @@
 //#include "hiddev.h"
 
 #include "thservice.h"
-#include "sensor.h"
+#include "sensors.h"
 /*********************************************************************
 	MACROS
 */

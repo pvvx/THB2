@@ -13,7 +13,6 @@
 #include "bcomdef.h"
 #include "config.h"
 #include "rf_phy_driver.h"
-//#include "bus_dev.h"
 #include "global_config.h"
 #include "OSAL.h"
 #include "OSAL_PwrMgr.h"
@@ -38,7 +37,7 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "battery.h"
 #include "sbp_profile.h"
 #include "ble_ota.h"
@@ -179,7 +178,7 @@ static void set_new_adv_interval(uint16 advInt)
 // Set advertising interval
 static void set_adv_interval(uint16 advInt)
 {
-#ifdef __GCC
+#if defined (__GNUC__)
 	gapParameters[TGAP_LIM_DISC_ADV_INT_MIN] = advInt;
 	gapParameters[TGAP_LIM_DISC_ADV_INT_MAX] = advInt + 10;
 	gapParameters[TGAP_GEN_DISC_ADV_INT_MIN] = advInt;
@@ -204,19 +203,19 @@ static void adv_measure(void) {
 			adv_wrk.adv_batt = 1;
 		} else {
 			if(adv_wrk.adv_batt) {
-				adv_wrk.adv_batt = 0;
+			adv_wrk.adv_batt = 0;
 #if (DEV_SERVICES & SERVICE_SCREEN)
-				chow_lcd(1);
+				show_lcd(1);
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
 				if (cfg.averaging_measurements != 0)
 					write_memo();
 #endif
 
-				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+			LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			} else {
-				chow_lcd(0);
+				show_lcd(0);
 #endif
 			}
 #endif
@@ -225,23 +224,23 @@ static void adv_measure(void) {
 		if(adv_wrk.adv_count == (uint8_t)(cfg.measure_interval - 1)) {
 			start_measure();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-			chow_lcd(0);
+			show_lcd(0);
 #endif
 		} else {
 			if(adv_wrk.adv_count >= cfg.measure_interval) {
-				adv_wrk.adv_count = 0;
-				read_sensor();
+			adv_wrk.adv_count = 0;
+			read_sensor();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-				chow_lcd(1);
+				show_lcd(1);
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
 				if (cfg.averaging_measurements != 0)
 					write_memo();
 #endif
-				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+			LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			} else {
-				chow_lcd(0);
+				show_lcd(0);
 #endif
 			}
 		}
@@ -395,7 +394,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	set_serial_number();
 
 	// Setup the GAP
-#ifdef __GCC
+#if defined (__GNUC__)
 	gapParameters[TGAP_CONN_PAUSE_PERIPHERAL] = DEFAULT_CONN_PAUSE_PERIPHERAL;
 #else
 	GAP_SetParamValue( TGAP_CONN_PAUSE_PERIPHERAL, DEFAULT_CONN_PAUSE_PERIPHERAL );
@@ -428,9 +427,9 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 	GGS_SetParameter( GGS_DEVICE_NAME_ATT, gapRole_ScanRspData[0] - 1, (void *)&gapRole_ScanRspData[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
 
 	// Set advertising interval
-#if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
-	if (read_reg(OTA_MODE_SELECT_REG) == 0x55) {
-		write_reg(OTA_MODE_SELECT_REG, 0);
+#if (OTA_TYPE == OTA_TYPE_BOOT)
+	if (read_reg(BOOT_MODE_SELECT_REG) == 0x55) {
+		write_reg(BOOT_MODE_SELECT_REG, 0);
 		adv_wrk.adv_con_count = 60000/DEF_OTA_ADV_INERVAL_MS; // 60 sec
 		set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
 	} else
@@ -557,7 +556,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		read_sensor();
 		start_measure();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-		chow_lcd(1);
+		show_lcd(1);
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
 		if (cfg.averaging_measurements != 0)
@@ -579,7 +578,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 			BattNotifyLevel();
 #if ((DEV_SERVICES & SERVICE_THS)==0)
 #if (DEV_SERVICES & SERVICE_SCREEN)
-			chow_measure();
+			show_measure();
 #endif
 #endif
 		}
@@ -744,4 +743,3 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 
 //	VOID gapProfileState;
 }
-

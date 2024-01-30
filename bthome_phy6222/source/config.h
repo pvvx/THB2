@@ -10,7 +10,6 @@
 
 #include <string.h>
 #include "types.h"
-// #include "bus_dev.h"
 
 #ifndef APP_VERSION
 #define APP_VERSION	0x08	// BCD
@@ -41,6 +40,7 @@
 
 #ifndef DEVICE
 #define DEVICE		DEVICE_THB2
+#info "Device not selected, assuming THB2"
 #endif
 
 // supported services by the device (bits)
@@ -65,19 +65,22 @@
 
 #ifndef OTA_TYPE
 #define OTA_TYPE	OTA_TYPE_BOOT
+#info "OTA type not selected, assuming OTA boot"
 #endif
 
 #define DEF_SOFTWARE_REVISION	{'V', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
 
 #if DEVICE == DEVICE_THB2
 /* Model: THB2 */
-#if OTA_TYPE == OTA_TYPE_BOOT
-#define DEV_SERVICES (OTA_TYPE \
+#if (OTA_TYPE == OTA_TYPE_BOOT)
+#define DEV_SERVICES ( \
+          OTA_TYPE \
 		| SERVICE_THS \
 		| SERVICE_KEY \
 )
 #else
-#define DEV_SERVICES (OTA_TYPE \
+#define DEV_SERVICES ( \
+          OTA_TYPE \
 		| SERVICE_THS \
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
@@ -101,7 +104,7 @@
 
 #elif DEVICE == DEVICE_BTH01
 /* Model: BTH01 */
-#if OTA_TYPE == OTA_TYPE_BOOT
+#if (OTA_TYPE == OTA_TYPE_BOOT)
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_THS \
 		| SERVICE_KEY \
@@ -132,7 +135,7 @@
 
 #elif DEVICE == DEVICE_TH05
 /* Model: TH05 */
-#if OTA_TYPE == OTA_TYPE_BOOT
+#if (OTA_TYPE == OTA_TYPE_BOOT)
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_SCREEN \
 		| SERVICE_THS \
@@ -173,6 +176,8 @@
 #error "DEVICE Not released!"
 #endif
 
+#define BOOT_MODE_SELECT_REG 0x4000f034 // == 0x55 -> OTA
+
 // Minimum connection interval (units of 1.25ms, 80=100ms) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_MIN_CONN_INTERVAL		24 // 12 -> 15 ms
 // Maximum connection interval (units of 1.25ms, 800=1000ms) if automatic parameter update request is enabled
@@ -195,7 +200,7 @@ typedef struct _cfg_t {
 	uint8_t averaging_measurements; // * measure_interval, 0 - off, 1..255 * measure_interval
 	uint8_t reserved2;
 
-}cfg_t;
+} cfg_t;
 
 extern cfg_t cfg;
 extern const cfg_t def_cfg;

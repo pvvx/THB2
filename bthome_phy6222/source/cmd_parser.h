@@ -1,12 +1,12 @@
 /*
  * cmd_parcer.h
  *
- *  Created on: 16 01 2024
+ *  Created on: 16 янв. 2024 г.
  *      Author: pvvx
  */
 
-#ifndef _CMD_PARSER_H_
-#define _CMD_PARSER_H_
+#ifndef _CMD_PARCER_H_
+#define _CMD_PARCER_H_
 
 #ifdef __cplusplus
 extern "C"
@@ -18,7 +18,7 @@ extern "C"
  */
 // A complete list of interface commands for different devices.
 // Not all commands are supported by a specific device (!)
-typedef enum {
+enum CMD_ID_KEYS {
 	CMD_ID_DEVID 	= 0x00, // Get dev id, version, services
 	CMD_ID_DNAME    = 0x01, // Get/Set device name, "\0" - default: THB2_xxxx
 	CMD_ID_GDEVS 	= 0x02, // Get address devices
@@ -59,13 +59,13 @@ typedef enum {
 	CMD_ID_RDFB		= 0xD4,	// Read Flash Block
 	CMD_ID_ERFB		= 0xD5,	// Erase Flash Sector
 	CMD_ID_CHGB		= 0xD7,	// Change boot
-	CMD_ID_REG_RW	= 0xDA,	// Read/Write 32 bits Registers (aligned)
+	CMD_ID_REG_RW	= 0xDA,	// Read/Write Registers
 	CMD_ID_MEM_RW	= 0xDB,	// Read/Write memory
 	CMD_ID_EEP_RW	= 0xDC,	// Get/set EEP
 	CMD_ID_LR_RESET = 0xDD,	// Reset Long Range
 	CMD_ID_DEBUG    = 0xDE	// Test/Debug
 
-} CMD_ID_KEYS;
+};
 
 // supported services by the device
 typedef struct _dev_services_t{
@@ -103,4 +103,4 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len);
 }
 #endif
 
-#endif /* _CMD_PARSER_H_ */
+#endif /* _CMD_PARCER_H_ */
