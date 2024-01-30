@@ -373,7 +373,7 @@ select {
 				<li> GitHub </li>
 				<li><a href="https://github.com/pvvx/THB2">&#9432;pvvx</a></li>
 				<li> Live Data </li>
-				<li><a href="GraphPhy6.html">Graph TH</a></li>
+				<li><a href="GraphTH.html">Graph TH</a></li>
 				<li>Stored data</li>
 				<li><a href="GraphMemo.html">Memo Graph</a></li>
 				<li>Others & Flasher</li>
@@ -542,15 +542,12 @@ function dump(ar, len) {
 	}
 	return s;
 }
-function ResponsePkt(value) {
-	let ds = value.byteLength;
-	let s = 'msg: ';
-    for(let i=0; i < ds; i++) {
-		s+=' '+hex(value.getUint8(i),2);
-		if(i<ds-1) s+=',';
-	}
-	Clog(s);
-}	
+function bytesToHex(data) {
+	return new Uint8Array(data).reduce(function(m, i) {
+		return m + ("0" + i.toString(16)).slice(-2);
+	}, "");
+}
+
 function show_graph() {
 	if(memo.length > 1) {
 		let hideldate = $('hideLoDate').checked;
@@ -558,13 +555,13 @@ function show_graph() {
 		if($('thvbat').checked) {
 			memo.reduceRight(function(a, b)	{ 
 			if(hideldate) {
-				if(b[0] > 1609459200 && b[0] < 2255486400) datau.push([new Date(b[0]*1000.0+localOffset), b[3]/1000.0]); 
+				if(b[0] > 1704000000 && b[0] < 2255486400) datau.push([new Date(b[0]*1000.0+localOffset), b[3]/1000.0]); 
 			} else datau.push([new Date(b[0]*1000.0+localOffset), b[3]/1000.0]); 
 			return a+1;}, 1 );
 		} else {
 			memo.reduceRight(function(a, b)	{ 
 			if(hideldate) {
-				if(b[0] > 1609459200 && b[0] < 2255486400) datau.push([new Date(b[0]*1000.0+localOffset), b[1], b[2]]); 
+				if(b[0] > 1704000000 && b[0] < 2255486400) datau.push([new Date(b[0]*1000.0+localOffset), b[1], b[2]]); 
 			} else datau.push([new Date(b[0]*1000.0+localOffset), b[1], b[2]]);
 			return a+1;}, 1 );
 		}
@@ -662,7 +659,7 @@ function connectDeviceAndCacheCharacteristic(device) {
 			if(len > 0) {
 				let blkId = value.getUint8(0);
 				if(blkId == 0x35) {
-					ResponsePkt(value);
+					console.log("msg: "+bytesToHex(value.buffer));
 					if(len >= 13) {
 						let cnt = value.getUint16(1, true);
 						let tc = value.getUint32(3, true);
@@ -679,18 +676,19 @@ function connectDeviceAndCacheCharacteristic(device) {
 					} else if(len >= 3) {
 						console.log('Read count: '+ memo.length);
 						console.log('Read time: ' + ((Date.now() - start_time)/1000).toFixed(3) + ' sec');
-						let time = Date.now()/1000;
-						time -= (new Date()).getTimezoneOffset() * 60;
-						blk = new Uint8Array(5);
-						blk[0] = 0x23;
-						blk[1] = time & 0xff;
-						blk[2] = (time >> 8) & 0xff;
-						blk[3] = (time >> 16) & 0xff;
-						blk[4] = (time >> 24) & 0xff;
-						console.log("Send cmd Set DevTime ("+dump(blk, blk.length)+")...");
-						characteristicVTH.writeValue(blk).then(_ => {
-							console.log('Send new DevTime ok');
-						});
+						setTimeout(function() {
+							let time = Date.now()/1000;
+							time -= (new Date()).getTimezoneOffset() * 60;
+							blk = new Uint8Array(5);
+							blk[0] = 0x23;
+							blk[1] = time & 0xff;
+							blk[2] = (time >> 8) & 0xff;
+							blk[3] = (time >> 16) & 0xff;
+							blk[4] = (time >> 24) & 0xff;
+							console.log("Send cmd Set DevTime ("+dump(blk, blk.length)+")...");
+							characteristicVTH.writeValue(blk).then(_ => {
+							console.log('Send new DevTime ok');});
+						}, 100);
 					} else if(len == 2) {
 						 memogetcont = value.getUint16(1, true);
 					}
@@ -743,7 +741,7 @@ function connectDeviceAndCacheCharacteristic(device) {
 						Clog('Unknown device!');
 						disconnect();
 					}
-				} else ResponsePkt(value);
+				} else console.log("msg: "+bytesToHex(value.buffer));
 			}});
 			DevConnected();
 			Clog('Get device config...');

@@ -1,5 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHY62x2 BTHome v0.4</title>
 <style type="text/css">
 /* basic sytles */
 
@@ -301,19 +302,23 @@ select {
   border: 1px solid #ccc;
   border-top: none;
 }
+
 </style>
-<title>PHY62x2-BTHome v0.2</title>
 </head>
 <body>
 <script>
 //BLE values
 const FLASH_SIZE = 0x80000;
+const OTA_MAX_SIZE = 0x30000; // 196608 
 var bluetoothDevice, gattServer, otaCharacteristic, cmdCharacteristic, infoService;
 
 var devinfo = {};
 var devsrs = {};
 var devcfg = {};
 var devcfs = {};
+var devtime = {};
+var devnm = {};
+
 
 var startTime = 0,
 	isConnected = false;
@@ -322,7 +327,7 @@ var ota = {
 	fwArray: null,
 	fwname: "",
 	fwsize: 0,
-	fwmaxsize: 196608,
+	// fwmaxsize: 196608,
 	ext_flg: false,
 	blockCount: 0,
 	program_offset: 0x11010000
@@ -332,6 +337,7 @@ var ota = {
 var connectRetries = 0;
 
 var $ = function(id) { return document.getElementById(id);}
+const isEmpty = str => !str.trim().length;
 
 function resetVariables() {
 	gattServer = null;
@@ -339,6 +345,8 @@ function resetVariables() {
 	otaCharacteristic = null;
 	cmdCharacteristic = null;
 	$('btnDisconnect').disabled = true;
+	$('btnReadFlash').disabled = true;
+	$('btnSaveFlash').disabled = true;
 	$('btnReadAddr').disabled = true;
 	$('btnStartDFU').disabled = true;
 	$('btnSendData').disabled = true;
@@ -348,9 +356,11 @@ function resetVariables() {
 function handleError(text) {
 	showError(text);
 	resetVariables();
-	if (connectRetries < 5) {
-		connectRetries++;
+	if ((bluetoothDevice != null) && (connectRetries < 5)) {
 		addLog("Переподключение " + connectRetries + " из " + 5);
+		$('btnDisconnect').disabled = true;
+		$('btnReconnect').disabled = true;
+		connectRetries++;
 		doConnect();
 	} else {
 		addLog("Подключиться не удалось!");
@@ -378,7 +388,9 @@ function connect() {
 	}
 	if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
 	resetVariables();
+	bluetoothDevice = null;
 	$('btnReconnect').disabled = true;
+	$('tabConfig').style.display = "none";
 
 	if(typeof(navigator.bluetooth) != "undefined") {
 	    $('btnConnect').disabled = true;
@@ -388,7 +400,7 @@ function connect() {
 	    navigator.bluetooth.requestDevice(deviceOptions).then(device => {
 	        bluetoothDevice = device;
 	        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-		//addLog("Connecting to: " + bluetoothDevice.name);
+			//addLog("Connecting to: " + bluetoothDevice.name);
 	        doConnect();
 	    }).catch(handleError);
 	} else {
@@ -409,6 +421,8 @@ function reconnect() {
 		bluetoothDevice.gatt.disconnect();
 		isConnected = false;
 	}
+	$('btnConnect').disabled = true;
+	$('btnReconnect').disabled = true;
 	connectRetries = 0;
 	doConnect();
 }
@@ -508,6 +522,10 @@ function phyConnect(info_flg) {
 		// $('btnConnect').disabled = true;
 		$('btnDisconnect').disabled = false;
 		$('btnReconnect').disabled = false;
+
+		disableCfgButtons(false);
+
+		$('btnReadFlash').disabled = false;
 		$('btnSendCommand').disabled = false;
 		$('btnReadAddr').disabled = false;
 		$('btnSendData').disabled = false;
@@ -544,12 +562,21 @@ function doConnect() {
 	}).catch(handleError);
 }
 
+function disableCfgButtons(state)
+{
+	$('btnGetDev').disabled = state;
+	$('btnSetDev').disabled = state;
+	$('btnGetSens').disabled = state;
+	$('btnSetSens').disabled = state;
+}
+
 function onDisconnected() {
 	isConnected = false;
 	resetVariables();
 	showState('Устройство отключено.');
     $('btnConnect').disabled = false;
-	$('tabConfig').style.display = "none";
+	// $('tabConfig').style.display = "none";
+	disableCfgButtons(true);
 }
 
 function startDFU() {
@@ -699,12 +726,13 @@ var crc32 = (function() {
 })();
 
 function testOTAFirmware(data) {
+	ota.fwsize = 0;
 	let fsize = data.byteLength;
 	console.log("File size = 0x"+ fsize.toString(16));
 	if (fsize < 20)
 		return "Неправильный размер двоичной прошивки PHY6 OTA!";
-	if(fsize > ota.fwmaxsize)
-		return "Размер прошивки более " + (fwmaxsize/1024).toFixed(1) + " кбайт!";
+	if(fsize > OTA_MAX_SIZE)
+		return "Размер прошивки более " + (OTA_MAX_SIZE/1024).toFixed(1) + " кбайт!";
 	if(fsize != (fsize & 0x1ffff0) + 4)
 		return "Неверный формат размера файла для прошивки PHY6 OTA!";
 	ota.fwsize = fsize;
@@ -735,19 +763,21 @@ function testOTAFirmware(data) {
 	if(ota.fcrc != crc) {
 		return "Неправильный CRC в файле OTA!";
 	}
-	return "ok";
+	return "OK";
 }
 
 function getFwArray(data, filename) {
 	addLog("Файл: " + filename);
 	let s = testOTAFirmware(data);
-	if(s != "ok") {
+	if(s != "OK") {
 		$('btnStartDFU').disabled = true;
 		addLog(s);
 		ota.blockCount = 0;
 		ota.fwArray = null;
 		fwname = "";
 		alert(s);
+		showError("OTA файл: " + filename + " не загружен");
+		$('lblFile').innerHTML = "не загружен";
 		return;
 	}
 	ota.fwArray = bytesToHex(data);
@@ -759,12 +789,13 @@ function getFwArray(data, filename) {
 	ota.blockCount = ota.fwArray.length / 32;
 	addLog("Счетчик: " + ota.blockCount + " блоков");
 	ota.fwname = filename;
+	showProgress("OTA файл: " + filename);
 	if(isConnected)
 		$('btnStartDFU').disabled = false;
 }
 
 var ota_errors = [
-'ok',
+'OK',
 'Неверная команда',
 'Не задан старт',
 'Не заданы параметры',
@@ -779,7 +810,7 @@ var ota_errors = [
 
 function get_msg_ota_err(err) {
 	if(err == 0)
-		return "ok";
+		return "OK";
 	if(err == 255)
 		return "OTA end";
 	if(err <= 11)
@@ -870,7 +901,7 @@ function sendOTAblock(blockNr) {
 	                    sendOTAblock(blockNr + 1);
 		            else {
 		            	let s = get_msg_ota_err(value.getUint8(0));
-		            	if(s != "ok")
+		            	if(s != "OK")
 			            	showError("Ошибка ("+value.getUint8(0)+") на передаче блока "+blockNr+" OTA: "+s);
 		            }
 				}).catch(function(err) { updateFail(err); });
@@ -892,7 +923,7 @@ var otaCharSend = function(data) {
 	return new Promise(function(resolve, reject) {
 		//console.log("OTA send: " + data);
 		otaCharacteristic.writeValue(hexToBytes(data)).then(function(character) {
-			resolve("ok");
+			resolve("OK");
 		}).catch(function(err) {
 			reject("Ошибка при отправке данных");
 		});
@@ -903,7 +934,7 @@ var mainCharSend = function(data, characteristic) {
 	return new Promise(function(resolve, reject) {
 		console.log("Send: " + data);
 		characteristic.writeValue(hexToBytes(data)).then(function(character) {
-			resolve("ok");
+			resolve("OK");
 		}).catch(function(err) {
 			reject("Ошибка при отправке данных");
 		});
@@ -915,7 +946,7 @@ function readAddr(addr) {
 		let blk = new Uint8Array([0xdb, addr&0xff, (addr>>8)&0xff, (addr>>16)&0xff, (addr>>24)&0xff]);
 		cmdCharacteristic.writeValue(blk).then(_ => {
 			startTime = new Date().getTime();
-			showState("Прочитано 16 байт из адреса 0x" + hex(addr,8));
+			showState("Чтение 16 байт по адресу 0x" + hex(addr,8));
 		});
 	}
 }
@@ -929,7 +960,7 @@ function writeAddr(addr, data) {
 			blk.set(data, 5);
 			console.log(blk);
 			cmdCharacteristic.writeValue(blk);
-			showState("Записано " + len + " байт по адресу 0x" + hex(addr,8));
+			showState("Запись " + len + " байт по адресу 0x" + hex(addr,8));
 		} else {
 			console.log(data);
 		    showState('Ошибка, длина блока от 1 до 16 байт!');
@@ -1002,6 +1033,21 @@ function customBlkParse(value) {
 				addLog('Нет сервиса записи истории!');
 			} else
 				console.log('blk: ' + dump8(value, value.byteLength));
+	} else if(blkId == 0x33 && len >= 8) {
+		let vbat = value.getUint16(1, true);
+		let temp = value.getInt16(3, true) / 100.0;
+		let humi = value.getInt16(5, true) / 100.0;
+		let count = value.getUint16(7, true);
+		let flg = 0;
+		let rds_count = 0;
+		if(len > 8) {
+			flg = value.getUint8(9);
+			if(len > 12)
+				rds_count = value.getUint32(10, true);
+		}
+		let	s = 'Vbat: '+vbat+' мВ, Температура: '+temp.toFixed(2)+'°C, Влажность: '+humi.toFixed(2)+'%, ID: '+count+', счетчик срабатываний: '+ rds_count+', флаги: 0x'+hex(flg,2)+':r'+(flg&1)+'/t'+((flg>>1)&1);
+		//$("tempHumiData").innerHTML = s;
+		addLog(s);
 	} else if((blkId == 0x25 || blkId == 0x26) && (len > 12)) {
 	// CMD_ID_CFS Get/Set sensor config
 	    devcfs.temp_k = value.getUint32(1, true);
@@ -1024,7 +1070,7 @@ function customBlkParse(value) {
 				s = "CHT"+hex(devcfs.vid,4);
 			else if(devcfs.mid == 0 && devcfs.vid == 0xaaaa)
 				s = "AHT20";
-			$('txtSensor').innerHTML = s+', I2C адрес: 0x'+hex(devcfs.i2c_addr,2);
+			$('lblSensor').innerHTML = s+', I2C адрес: 0x'+hex(devcfs.i2c_addr,2);
 
 			addLog("Dev sensor # id: "+hex(devcfs.mid,4)+"-"+hex(devcfs.vid,4)+", i2c_addr: 0x"+hex(devcfs.i2c_addr,2));
 		}
@@ -1044,48 +1090,140 @@ function customBlkParse(value) {
 		$('inputTxPwr').value = devcfg.rf_tx_power; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
 		$('inputLat').value   = (devcfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
 
-		$('inputAdvInt').value  = devcfg.advertising_interval*62.5; // *62.5 = интервала реклам в ms
+		$('inputAdvInt').value  = devcfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
 		$('inputMeasInt').value = devcfg.measure_interval; // *devcfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
 		$('inputAverInt').value = devcfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
 		$('inputBatInt').value  = devcfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
 
-		addLog("Dev config # flg: "+hex(devcfg.flg,8)+", tx: "+devcfg.rf_tx_power+", adi: "+devcfg.advertising_interval+", cly: "+devcfg.connect_latency+", msi: "+devcfg.measure_interval+", bti: "+devcfg.batt_interval+", avi: "+devcfg.averaging_measurements);
-	} else if((blkId == 0xdb || blkId == 0xda) && (len > 4)) {
+		console.log("Dev config # flg: "+hex(devcfg.flg,8)+", tx: "+devcfg.rf_tx_power+", adi: "+devcfg.advertising_interval+", cly: "+devcfg.connect_latency+", msi: "+devcfg.measure_interval+", bti: "+devcfg.batt_interval+", avi: "+devcfg.averaging_measurements);
+		addLog("Строка конфигурации: "+ bytesToHex(value.buffer));
+	} else if((blkId == 0xdb) && (len > 4)) {
 	// CMD_ID_MEM_RW Read/Write memory
 		len -= 4;
 		let addr = value.getUint32(1,true);
 		let s = bytesToHex(value.buffer.slice(5), len);
 		$('inputData').value = s;
-		addLog(hex(addr,8) + ':' + s);
+		addLog("Данные по адресу 0x" + hex(addr,8) + ': ' + s);
 		showProgress("Считано: " + len + " байт из 0x" + hex(addr,8));
+	} else if((blkId == 0xda) && (len > 8)) {
+		let addr = value.getUint32(1,true);
+		let reg_data = value.getUint32(5,true);
+		addLog("Регистр по адресу 0x"+ hex(addr,8) + " имеет значение 0x" + hex(reg_data,8));
 	} else if((blkId == 0x07) && (len > 1)) {
 	//	CMD_ID_SERIAL Get serial string
 		let s = new TextDecoder("utf-8").decode(value.buffer.slice(1));
-		addLog("Dev serial # "+s)
+		addLog("Серийный номер: "+s)
 	} else if((blkId == 0x06) && (len > 3)) {
 	//	CMD_ID_FLASH_ID	Get Flash JEDEC ID
-		addLog("Dev flash # id: " + bytesToHex(value.buffer.slice(1,4)));
+		addLog("Flash id: " + bytesToHex(value.buffer.slice(1,4)));
+	} else if(blkId == 0x60 && len >= 6) {
+		s = 'LCD data # '+bytesToHex(value.buffer.slice(1));
+		addLog(s);
+	} else if(blkId == 0x18 && len >= 1) { // Get/set beacon bkey in EEP
+		if(len >= 16) {
+			devkeys.cbindkey = value.buffer.slice(1);
+			let s = bytesToHex(devkeys.cbindkey,16);
+			addLog("Bindkey # "+ s);
+			//if($("cbind_key"))
+			//	$("cbind_key").value = s;
+		} else {
+			if(len == 1 && value.getUint8(1) == 0xff)
+				addLog("Bindkey не запсан!");
+			else
+				addAlog("Ошибка чтения Bindkey!");
+			//if($("cbind_key"))
+			//	$("cbind_key").value = '?';
+		}
+	} else if(blkId == 0x23 && len >= 4) {
+		devtime.cur = value.getUint32(1,true);
+		console.log('Device Time: 0x' + hex(devtime.cur,8));
+		let dt = new Date(devtime.cur*1000);
+		addLog('Время на устройстве: '+(dt.toISOString().slice(0, -5)).replace('T',' '));
+		if(len >= 8) {
+			devtime.set = value.getUint32(5,true);
+			console.log('Последняя установка времени: 0x' + hex(devtime.set,8));
+			if(devtime.step == 1) {
+				if(devtime.set > 0x60000000) {
+					devtime.period = devtime.cur - devtime.set;
+					let time = Date.now()/1000;
+					time -= (new Date()).getTimezoneOffset() * 60;
+					devtime.cmp = time;
+					let odt = new Date(devtime.set*1000);
+					addLog('Последняя установка времени: '+(odt.toISOString().slice(0, -5)).replace('T',' '));
+					console.log('Прошло на устройстве: ' + devtime.period.toFixed(1) + ' секунд');
+					let rp = devtime.cmp - devtime.set;
+					let delta = rp - devtime.period;
+					console.log('Прошло реально: ' + rp.toFixed(1) + ' секунд, разница: ' + delta.toFixed(1) + ' секунд');
+					if(rp >= 10800) { // 10800
+						devtime.step = 2;
+						console.log("Send cmd Get StepTimeSec...");
+						settingsCharacteristics.writeValue(new Uint8Array([0x24])).then(_ => {
+							console.log('Get StepTimeSec...');
+						});
+					} else {
+						devtime.step = 0;
+						addLog('Минимальный перод для расчета ухода часов 3 часа!');
+					}
+
+				} else {
+					devtime.step = 0;
+					addLog('Часы необходимо настроить заранее!');
+				}
+			}
+		}
+	} else if(blkId == 0x20 && len >= 8) {
+		devcmf.tmp_lo = value.getInt16(1, true); // temp lo
+		devcmf.tmp_hi = value.getInt16(3, true); // temp hi
+		devcmf.hm_lo = value.getUint16(5, true); // humi lo
+		devcmf.hm_hi = value.getUint16(7, true); // humi lo
+		let s = 'Комфорт температура: '+(devcmf.tmp_lo/100.0).toFixed(2)+'..'+(devcmf.tmp_hi/100.0).toFixed(2)+'°C, Влажность: '+(devcmf.hm_lo/100.0).toFixed(2)+'..'+(devcmf.hm_hi/100.0).toFixed(2)+'%';
+		addLog(s); // UpdCmf();
+	} else if(blkId == 0x01 && len >= 1) {
+		devnm.name = new TextDecoder("utf-8").decode(value.buffer.slice(1));
+		//if($("dev_name"))
+		//	$("dev_name").value = dnm.name;
+		addLog("Имя устройства: ["+devnm.name+"]");
 	} else {
 		console.log('blk: ' + dump8(value, value.byteLength));
 		addLog('Ответ на команду (' + hex(blkId,2) + '): ' + bytesToHex(value.buffer.slice(1)));
 	}
 }
 
-function GetDevCfg() {
+function SetDevTime() {
+	let time = Date.now()/1000;
+	time -= (new Date()).getTimezoneOffset() * 60;
+	blk = new Uint8Array(5);
+	blk[0] = 0x23;
+	blk[1] = time & 0xff;
+	blk[2] = (time >> 8) & 0xff;
+	blk[3] = (time >> 16) & 0xff;
+	blk[4] = (time >> 24) & 0xff;
+	addLog("Установка времени на утройстве ("+dump(blk, blk.length)+")...");
+	cmdCharacteristic.writeValue(blk).then(_ => {
+		console.log('Send new DevTime ok');
+	});
+}
+
+function GetDevTime() {
+	// addLog("Получить ремя от утройства...");
+	cmdCharacteristic.writeValue(new Uint8Array([0x23])).then(_ => { console.log('Send GetDevTime ok');	});
+}
+
+function getDevCfg() {
 	if(cmdCharacteristic != null) {
-		//addLog("GetDevCfg...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x55])).catch(error => { console.log(error); addLog("GetDevCfg error!") });
+		//addLog("getDevCfg...");
+		cmdCharacteristic.writeValue(new Uint8Array([0x55])).catch(error => { console.log(error); addLog("getDevCfg() error!") });
 	}
 }
-function GetSensCfg() {
+function getSensCfg() {
 	if(cmdCharacteristic != null) {
-		//addLog("GetSensCfg...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("GetSensCfg error!"); });
+		//addLog("getSensCfg...");
+		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("getSensCfg() error!"); });
 	}
 }
-function SetDevCfg() {
+function setDevCfg() {
 	if(cmdCharacteristic != null) {
-		// addLog("SetDevCfg...");
+		// addLog("setDevCfg...");
 	    devcfg.flg = parseInt($('inputFlag').value)&0xffffffff; // пока нет
 		devcfg.rf_tx_power = parseInt($('inputTxPwr').value)&0x3f; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inputLat').value); // = (connect_latency + 1)*30 ms
@@ -1130,12 +1268,13 @@ function SetDevCfg() {
 			devcfg.averaging_measurements,
 	    	devcfg.reserved2
 			]);
-		cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("SetDevCfg error!");});
+		cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setDevCfg() error!");});
 	}
 }
-function SetSensCfg() {
+
+function setSensCfg() {
 	if(cmdCharacteristic != null) {
-		addLog("SetSensCfg...");
+		addLog("setSensCfg...");
 
 		devcfs.temp_k = parseInt($('inputTempK').value);
 		devcfs.humi_k = parseInt($('inputHumK').value); 
@@ -1148,74 +1287,9 @@ function SetSensCfg() {
 	    	devcfs.temp_z & 0xff, (devcfs.temp_z >> 8) & 0xff,
 		    devcfs.humi_z & 0xff, (devcfs.humi_z >> 8) & 0xff
 		    ]);
-		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("SetSensCfg error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("setSensCfg() error!"); });
 	}
 }
-
-var url;
-function download(data, filename, type) {
-	var file = new Blob([data], {type: type});
-	if (window.navigator.msSaveOrOpenBlob) { // ie10+
-		window.navigator.msSaveOrOpenBlob(file, filename);
-	} else { // ff, chrome
-		url = URL.createObjectURL(file);
-		let a = document.createElement("a");
-		a.href = url;
-		a.download = filename;
-		document.body.appendChild(a);
-		a.click();
-		setTimeout(function(){document.body.removeChild(a);window.URL.revokeObjectURL(url);},0);
-		URL.revokeObjectURL(url);
-	}
-}
-
-const selectFile = function() {
-
-	let regex = /[^\\]+$/
-
-	this.choose,
-	this.selected
-
-	this.msg = str => {
-		let prefix = '[selectFile]\n\nError: '
-		return alert(prefix+str)
-	}
-
-	this.check = () => {
-		if (this.choose && this.selected != null) {
-			let choose = $(this.choose),
-				selected = $(this.selected)
-			choose.addEventListener('change',() => {
-				if (choose.value != '') {
-					selected.innerHTML = choose.value.match(regex);
-					readFile(choose.files[0]);
-				}
-			})
-		} else {
-			this.msg('Targets not set.')
-		}
-	}
-
-	selectFile.prototype.targets = (trigger, filetext) => {
-		this.choose = trigger
-		this.selected = filetext
-	}
-
-	selectFile.prototype.simulate = () => {
-		if (this.choose != null) {
-			let choose = $(this.choose)
-			if (typeof choose != 'undefined') {
-				choose.click()
-				this.check()
-			} else {
-				this.msg('Could not find element '+this.choose)
-			}
-		} else {
-			this.msg('Targets not set.')
-		}
-	}
-
-};
 
 function readFile(file) {
 
@@ -1225,11 +1299,17 @@ function readFile(file) {
 		reader.fname = file.name;
 		reader.readAsArrayBuffer(file);
 	} else {
+		$('lblFile').innerHTML = "не загружен";
 		showError("Файл не загружен");
 	}
 
 	reader.onload = function() {
 		getFwArray(this.result, this.fname);
+        if (ota.fwsize > 0) {
+            // regex = /[^\\]+$/;
+            // text = fname.match(regex);
+	        $('lblFile').innerHTML = this.fname;
+        }
 	}
 
 	reader.onerror = function() {
@@ -1237,8 +1317,62 @@ function readFile(file) {
 	};
 }
 
+
+// var url;
+function download(data, path, type) {
+	var file = new Blob([data], {type: type} );
+	if (window.navigator.msSaveOrOpenBlob) { // ie10+
+		window.navigator.msSaveOrOpenBlob(file, path);
+	} else { // ff, chrome
+		url = URL.createObjectURL(file);
+		let link = document.createElement("a");
+		link.href = path;
+		link.download = url;
+		document.body.appendChild(link);
+		link.click();
+		setTimeout( function() {
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+		}, 0);
+		URL.revokeObjectURL(url);
+	}
+}
+/*
+// BUG: Access-Control-Allow-Origin
+function download(url, filename) {
+  fetch(url)
+    .then(response => response.blob())
+    .then(blob => {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+  })
+  .catch(console.error);
+}
+download("https://get.geojs.io/v1/ip/geo.json","geoip.json")
+*/
+/*
 var getFile = new selectFile;
 getFile.targets('inpFile','lblFile');
+
+function uploadFile() {
+	if ( isEmpty($("inputUrl").value) ) {
+		getFile.simulate()
+	} else {
+		let regex = /[^\\]+$/;
+		// match(regex);
+		//download(, $("inputUrl").value, "application/octet-stream");
+		download($("inputUrl").value, "OTA.bin");
+        // readFile(file);
+	}
+}
+*/
+
+function readFlash() {
+	// if "OK"
+	$('btnSaveFlash').disabled = false;
+}
 
 function openTab(evt, tabName) {
 	var i, tabcontent, tablinks;
@@ -1267,14 +1401,31 @@ function selectConfigTab() {
 window.onload = (event) => {
 	showState("Нет подключения" );
 	selectConfigTab();
+}
+
+window.onload = function() {
+
+    document.querySelector("#inpFile").addEventListener("change", function() {
+    	var file = this.files[0];
+        if (file != null) {
+			text = "не загружен";
+            readFile(file);
+        } else {
+	        $('lblFile').innerHTML = "не выбран";
+        }
+    }, false);
+
+    $("btnSaveFlash").onclick = function() {
+    	download(flash_buf, 'r11000000-00080000.bin', 'application/octet-stream;charset=utf-8');
+    };
 };
 
 </script>
 <h2>PHY62x2-BTHome <a href="https://github.com/pvvx/THB2"><small>&#9432;</small></a></h2>
 <label for="inpNamePrefix">Префикс названия устройств(а)</label><br>
-<input type="text" id="inpNamePrefix" value="" placeholder="THB, BT">
+<input type="text" id="inpNamePrefix" value="" placeholder="THB, BT, TH">
 <hr>
-<label id="lblStatus">Состояние: загрузка страницы</label>
+<label id="lblStatus">Состояние: не подключено</label>
 <br><br><hr>
 <button type="button" id="btnConnect"     onclick="connect()">Соединение</button>
 <button type="button" id="btnDisconnect"  onclick="disconnect()" disabled="true">Отключение</button>
@@ -1307,9 +1458,9 @@ window.onload = (event) => {
     <th>Conn. Latency</th>
   </tr>
   <tr>
-    <td><input size="8" type="text" id="inputFlag" maxlength="8"></td>
-    <td><input size="4" type="text" id="inputTxPwr" maxlength="4"></td>
-    <td><input size="4" type="text" id="inputLat" maxlength="4"></td>
+    <td><input size="8" type="text" id="inputFlag" maxlength="8" title="Пока не заданы, будут отдельными checkbox" ></td>
+    <td><input size="4" type="text" id="inputTxPwr" maxlength="4" title="-20..+5 dBm нелинейное  0x1f = +0 дБм"></td>
+    <td><input size="4" type="text" id="inputLat" maxlength="4" title="Connect latency, Итоговый интервал = 30 * (Connect latency + 1) мс"></td>
   </tr>
 </table>
 Интервалы
@@ -1321,33 +1472,38 @@ window.onload = (event) => {
     <th>Уровень батареи</th>
   </tr>
   <tr>
-    <td><input size="4" type="text" id="inputAdvInt" maxlength="4"></td>
-    <td><input size="4" type="text" id="inputMeasInt" maxlength="4"></td>
-    <td><input size="4" type="text" id="inputAverInt" maxlength="4"></td>
-    <td><input size="4" type="text" id="inputBatInt" maxlength="4"></td>
+    <td><!--- надо отдельно, на ходу, при изменении, выводить расчетное значение inputAdvInt*62.5 в ms --->
+    <input size="4" type="text" id="inputAdvInt" maxlength="4" title="*62.5 = интервал BLE рекламы в мс"></td>
+    <td><!--- надо отдельно выводить расчетное значение inputAdvInt*62.5*inputMeasInt в ms --->
+    <input size="4" type="text" id="inputMeasInt" maxlength="4" title="Опрос датчика в интервалах BLE рекламы, минимум = 2 интервала рекламы"></td>
+    <td><!--- надо отдельно выводить расчетное значение inputAdvInt*62.5*inputMeasInt*inputAverInt в мс, сек --->
+    <input size="4" type="text" id="inputAverInt" maxlength="4" title="Запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"></td>
+    <td>
+    <input size="4" type="text" id="inputBatInt" maxlength="4" title="В секундах, минимум 2 секунды, но обрабатывается кратно интервалу BLE рекламы"></td>
   </tr>
 </table>
-  <button type="button"id="btnGetDev" onclick="GetDevCfg()" >Прочитать</button>
-  <button type="button"id="btnSetDev" onclick="SetDevCfg()" >Записать</button>
+  <button type="button"id="btnGetDev" disabled="true" onclick="getDevCfg()" >Прочитать</button>
+  <button type="button"id="btnSetDev" disabled="true" onclick="setDevCfg()" >Записать</button>
   <hr>
+  Параметры сенсора&emsp;<b><label id="lblSensor">?</label></b>
 <table>
   <tr>
-    <th>Параметры сенсора:</th>
+    <th></th>
     <th>Температура</th>
     <th>Влажность</th>
   </tr>
   <tr>
-    <th><div id="txtSensor">?</div></th>
+    <th></th>
   </tr>
   <tr>
     <td>Поправочные коэффициенты</td>
-    <td><input size="8" type="text" id="inputTempK" maxlength="8"></td>
-    <td><input size="8" type="text" id="inputHumK" maxlength="8"></td>
+    <td><input size="8" type="text" id="inputTempK" maxlength="8" title="*0.01 = Коэффициент угла наклона (линейная функция) для расчета температуры"></td>
+    <td><input size="8" type="text" id="inputHumK" maxlength="8" title="*0.01 = Коэффициент угла наклона (линейная функция) для расчета влажности"></td>
   </tr>
   <tr>
     <td>Коррекция смещения</td>
-    <td><input size="8" type="text" id="inputTempZ" maxlength="8"></td>
-    <td><input size="8" type="text" id="inputHumZ" maxlength="8"></td>
+    <td><input size="8" type="text" id="inputTempZ" maxlength="8" title="*0.01C = Смещение нуля с поправочным значением для расчета температуры"></td>
+    <td><input size="8" type="text" id="inputHumZ" maxlength="8" title="*0.01% = Смещение нуля с поправочным значением для расчета влажности"></td>
   </tr>
 </table>
 <br>
@@ -1366,15 +1522,19 @@ window.onload = (event) => {
   Model: <input size="4" type="text" id="inputI2CMod" maxlength="4">
   Address: <input size="2" type="text" id="inputI2CAddr" maxlength="2">
   <br> -->
-  <button type="button"id="btnGetSens" onclick="GetSensCfg()" >Прочитать</button>
-  <button type="button"id="btnSetSens" onclick="SetSensCfg()" >Записать</button>
+  <button type="button"id="btnGetSens" disabled="true" onclick="getSensCfg()" >Прочитать</button>
+  <button type="button"id="btnSetSens" disabled="true" onclick="setSensCfg()" >Записать</button><br>
+  <button type="button" id="btnSetDevTime" onclick="SetDevTime()" >Установить время</button>
+  <button type="button" id="btnGetDevTime" onclick="GetDevTime()" >Получить время с устройства</button>  
 </div>
 
 <div id="tabOTA" class="tabcontent">
   <p>Файл прошивки:
-  <input type=file hidden id=inpFile>
-  <label id=lblFile>не выбран</label>
-  <button type=button onClick=getFile.simulate()>Выбрать</button>
+  <!--input type="file" hidden accept=".bin" id="inpFile"-->
+  <input type="file" hidden accept=".bin,application/octet-stream" id="inpFile">
+  <label id="lblFile">не выбран</label>
+  <button type="button" onClick="$('inpFile').click()">Выбрать</button>
+  <div hidden>URL: <input type="text" id="inputUrl"></div>
   <p>
 <hr>
 <button type="button"id="btnStartDFU" onclick="startDFU()" disabled="true" >Старт программирования</button>
@@ -1382,17 +1542,17 @@ window.onload = (event) => {
 
 <div id="tabFlash" class="tabcontent">
   <p>
-  <button type="button" id="btnReadFF" onclick="startReadFF()" disabled="true">Прочитать</button>
-  <button type="button" id="btnSave" disabled="true">Сохранить в файл</button>
+  <button type="button" id="btnReadFlash" onclick="readFlash()" disabled="true">Прочитать</button>
+  <button type="button" id="btnSaveFlash" disabled="true">Сохранить в файл</button>
   <p>
 </div>
 
 <div id="tabService" class="tabcontent">
   Чтение и запись памяти:<br>
   Адрес (hex): <input size="8" type="text" id="inputAddr" value="11000000" maxlength="8">
-  <button type="button" id="btnReadAddr"    onclick="infoReadAddr()" disabled="true">Прочитать</button>
+  <button type="button" id="btnReadAddr" onclick="infoReadAddr()" disabled="true">Прочитать</button>
   Данные (hex): <input size="32" type="text" id="inputData" value="?" maxlength="32">
-  <button type="button" id="btnSendData"    onclick="sendData()" disabled="true">Записать</button><hr>
+  <button type="button" id="btnSendData" onclick="sendData()" disabled="true">Записать</button><hr>
   <button type="button" id="btnSendCommand" onclick="sendCommand()" disabled="true">Команда</button>
   <input type="text" id="inpCmdData" value="55" size="40" maxlength="40"><hr>
 </div>

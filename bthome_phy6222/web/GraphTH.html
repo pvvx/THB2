@@ -373,7 +373,7 @@ select {
 				<li> GitHub </li>
 				<li><a href="https://github.com/pvvx/THB2">&#9432;pvvx</a></li>
 				<li> Live Data </li>
-				<li><a href="GraphPhy6.html">Graph TH</a></li>
+				<li><a href="GraphTH.html">Graph TH</a></li>
 				<li>Stored data</li>
 				<li><a href="GraphMemo.html">Memo Graph</a></li>
 				<li>Others & Flasher</li>
@@ -544,15 +544,6 @@ function WaitConnection() {
 		alert('Device not Start!');
 	}
 }
-function ResponsePkt(head, value) {
-	let ds = value.byteLength;
-	let s = 'msg: ';
-    for(let i=0; i < ds; i++) {
-		s+=' '+hex(value.getUint8(i),2);
-		if(i<ds-1) s+=',';
-	}
-	log(s);
-}	
 //--BLE---------------------------------------
 // Кэш объекта выбранного устройства
 let deviceCache = null;
