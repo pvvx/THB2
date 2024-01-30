@@ -1128,7 +1128,7 @@ function customBlkParse(value) {
 		addLog("Строка конфигурации: "+ bytesToHex(value.buffer));
 	} else if((blkId == 0xdb) && (len > 4)) {
 	// CMD_ID_MEM_RW Read/Write memory
-		len -= 4;
+		len -= (4 + 1);
 		let addr = value.getUint32(1,true);
 		let s = bytesToHex(value.buffer.slice(5), len);
 		$('inputData').value = s;
