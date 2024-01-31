@@ -137,7 +137,6 @@
 		| SERVICE_SCREEN \
 		| SERVICE_THS \
 		| SERVICE_KEY \
-		| SERVICE_HISTORY \
 )
 #else
 #define DEV_SERVICES (OTA_TYPE \

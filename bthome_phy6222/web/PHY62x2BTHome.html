@@ -878,17 +878,13 @@ function updateBegin() {
 function sendLastOTA() {
 	otaCharacteristic.readValue().then(value => {
 		if(value.byteLength >= 1 && value.getUint8(0) == 0xff) {
-			let s = "Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды";
-			showProgress(s);
-		  	addLog(s);
-/*  Сброс - отключен для теста
-			var data = "02ff";
-			return otaCharSend(data).then(_ => {
-				addLog("Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды");
+			return otaCharSend("02ff").then(_ => {
+				let s = "Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды";
+				showProgress(s);
+			  	addLog(s);
 			}).catch(function(err) {
-				updateFail(err);
+				updateFail("Ошибка передачи команды перезагрузки после OTA");
 			}); 
-*/
 		} else
            	showError("Ошибка ("+value.getUint8(0)+") на передаче блока "+blockNr+" OTA: "+s);
 	 }).catch(function(err) { updateFail(err); });
