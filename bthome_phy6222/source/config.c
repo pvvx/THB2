@@ -56,17 +56,9 @@ const cfg_t def_cfg = {
 		.averaging_measurements = 180 // 180*10 = 1800 sec, 30 min
 };
 
-/*
-uint32_t get_delta_time_rtc(uint32_t start_time_rtc) {
-	uint32_t new_time_rtc = clock_time_rtc();
-	if(new_time_rtc  < start_time_rtc)
-		new_time_rtc += 0x1000000; // + 512 sec
-	return  new_time_rtc - start_time_rtc;
-}
-*/
 void restore_utc_time_sec(void) {
 	if(clkt.utc_set_time_sec == 0) {
-		clkt.utc_time_add = AP_AON->SLEEP_R[2] + 10;
+		clkt.utc_time_add = (AP_AON->SLEEP_R[2] &((1<<15) - 1)) + 10;
 		clkt.utc_time_sec = AP_AON->SLEEP_R[3];
 		//if(clkt.utc_time_sec < 1704067200ul) clkt.utc_time_sec = 1704067200ul;
 	}
@@ -74,8 +66,8 @@ void restore_utc_time_sec(void) {
 }
 
 uint32_t get_utc_time_sec(void) {
-	// HAL_ENTER_CRITICAL_SECTION();
 	uint32_t new_time_tik;
+	HAL_ENTER_CRITICAL_SECTION();
 	do {
 		new_time_tik = AP_AON->RTCCNT;
 	} while(new_time_tik != AP_AON->RTCCNT);
@@ -88,7 +80,7 @@ uint32_t get_utc_time_sec(void) {
 	clkt.utc_time_add &= (1<<15) - 1;
 	AP_AON->SLEEP_R[2] = clkt.utc_time_add; // сохранить для восстановления часов после перезагрузки
 	AP_AON->SLEEP_R[3] = clkt.utc_time_sec; // сохранить для восстановления часов после перезагрузки
-	// HAL_EXIT_CRITICAL_SECTION();
+	HAL_EXIT_CRITICAL_SECTION();
 #if (DEV_SERVICES & SERVICE_TIME_ADJUST)
 	// TODO
 #endif

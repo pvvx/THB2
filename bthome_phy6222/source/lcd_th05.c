@@ -59,10 +59,12 @@ uint8_t display_out_buff[LCD_BUF_SIZE+1];
 
 const uint8_t lcd_init_cmd[]	=	{
 		// LCD controller initialize:
-		//0xC8, // Mode Set (MODE SET): Display enable, 1/3 Bias
-		0xD8, // Mode Set (MODE SET): Display enable, 1/3 Bias, power saving
+		0xea, // Set IC Operation(ICSET): Software Reset, Internal oscillator circuit
+		0xC8, // Mode Set (MODE SET): Display enable, 1/3 Bias, power saving
+		0xbc, // Display control (DISCTL): Power save mode 3, FRAME flip, Power save mode 1
 		0x80, // load data pointer
-		0xF0, // blink control 0xf2
+		0xf0, // blink control 0xf2
+		0xfc, // All pixel control (APCTL): Normal
 		0x60,
 		0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
 };

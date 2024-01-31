@@ -45,7 +45,7 @@
 
 // supported services by the device (bits)
 #define SERVICE_OTA			0x00000001	// есть функция OTA
-#define SERVICE_OTA_EXT		0x00000002	// есть расширенная функция OTA
+#define SERVICE_OTA_EXT		0x00000002	// пока нет: есть расширенная функция OTA
 #define SERVICE_PINCODE 	0x00000004	// пока нет: есть установка pin-code
 #define SERVICE_BINDKEY 	0x00000008	// пока нет: есть шифрование
 #define SERVICE_HISTORY 	0x00000010	// есть запись истории
@@ -61,13 +61,17 @@
 
 #define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
 #define OTA_TYPE_BOOT	SERVICE_OTA		// вариант для прошивки boot + OTA
-#define OTA_TYPE_APP	SERVICE_OTA_EXT	// пока не реализовано
+#define OTA_TYPE_APP	OTA_TYPE_NONE
 
 #ifndef OTA_TYPE
-#define OTA_TYPE	OTA_TYPE_NONE
+#define OTA_TYPE	OTA_TYPE_BOOT
 #endif
 
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEF_SOFTWARE_REVISION	{'B', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
+#else
 #define DEF_SOFTWARE_REVISION	{'V', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
+#endif
 
 #if DEVICE == DEVICE_THB2
 /* Model: THB2 */
@@ -214,7 +218,8 @@ extern adv_work_t adv_wrk;
 
 #define OTA_MODE_SELECT_REG 0x4000f034
 //#define OTA_MODE_SELECT_REG (AP_AON->RTCCC2) // [0x4000f034] == 0x55 -> OTA
-#define BOOT_FLG_OTA	0x55
+#define BOOT_FLG_OTA	0x55 // перезагрузка в FW Boot для OTA (ожидание соединения 80 сек)
+#define BOOT_FLG_FW0	0x33 // перезагрузка в FW Boot
 
 typedef struct _work_parm_t {
 #if (DEV_SERVICES & SERVICE_SCREEN)

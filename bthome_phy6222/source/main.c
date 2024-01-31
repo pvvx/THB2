@@ -319,17 +319,21 @@ int main(void) {
 #endif
 	wrk.boot_flg = (uint8_t)read_reg(OTA_MODE_SELECT_REG);
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
-    if (wrk.boot_flg != BOOT_FLG_OTA
 #if (DEV_SERVICES & SERVICE_KEY)
-    	&&  hal_gpio_read(GPIO_KEY)
+    if (hal_gpio_read(GPIO_KEY) == 0
+    	|| wrk.boot_flg == BOOT_FLG_OTA
+    	|| wrk.boot_flg == BOOT_FLG_FW0) {
+#else
+        if (wrk.boot_flg == BOOT_FLG_OTA
+        	|| wrk.boot_flg == BOOT_FLG_FW0) {
 #endif
-    ) {
+    	write_reg(OTA_MODE_SELECT_REG,0);
+    } else { // boot FW OTA
     	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
     	AP_PCR->CACHE_BYPASS = 1; // just bypass cache
     	startup_app();
-	} else
-		 write_reg(OTA_MODE_SELECT_REG,0);
-#endif
+	}
+#endif // OTA_TYPE == OTA_TYPE_BOOT
 
 	watchdog_config(WDG_2S);
 
