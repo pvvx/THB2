@@ -347,7 +347,7 @@ bStatus_t DevInfo_SetParameter( uint8 param, uint8 len, void* value )
 	{
 #if	SYSTEM_ID_ENABLE
 		case DEVINFO_SYSTEM_ID:
-		osal_memcpy(devInfoSystemId, value, len);
+		memcpy(devInfoSystemId, value, len);
 		break;
 #endif
 
@@ -380,55 +380,55 @@ bStatus_t DevInfo_GetParameter( uint8 param, void* value )
 	{
 	#if SYSTEM_ID_ENABLE
 		case DEVINFO_SYSTEM_ID:
-			osal_memcpy(value, devInfoSystemId, sizeof(devInfoSystemId));
+			memcpy(value, devInfoSystemId, sizeof(devInfoSystemId));
 		break;
 	#endif
 
 	#if	MODEL_NUMBER_STR_ENABLE
 		case DEVINFO_MODEL_NUMBER:
-			osal_memcpy(value, devInfoModelNumber, sizeof(devInfoModelNumber));
+			memcpy(value, devInfoModelNumber, sizeof(devInfoModelNumber));
 		break;
 	#endif
 
 	#if	SERIAL_NUMBER_STR_ENABLE
 		case DEVINFO_SERIAL_NUMBER:
-			osal_memcpy(value, devInfoSerialNumber, sizeof(devInfoSerialNumber));
+			memcpy(value, devInfoSerialNumber, sizeof(devInfoSerialNumber));
 		break;
 	#endif
 
 	#if	FIRMWARE_REVISION_ENABLE
 		case DEVINFO_FIRMWARE_REV:
-			osal_memcpy(value, devInfoFirmwareRev, sizeof(devInfoFirmwareRev));
+			memcpy(value, devInfoFirmwareRev, sizeof(devInfoFirmwareRev));
 		break;
 	#endif
 
 	#if	HARDWARE_REVISION_ENABLE
 		case DEVINFO_HARDWARE_REV:
-			osal_memcpy(value, devInfoHardwareRev, sizeof(devInfoHardwareRev));
+			memcpy(value, devInfoHardwareRev, sizeof(devInfoHardwareRev));
 		break;
 	#endif
 
 	#if	SOFTWARE_REVISION_ENABLE
 		case DEVINFO_SOFTWARE_REV:
-			osal_memcpy(value, devInfoSoftwareRev, sizeof(devInfoSoftwareRev));
+			memcpy(value, devInfoSoftwareRev, sizeof(devInfoSoftwareRev));
 		break;
 	#endif
 
 	#if	MANUFACTURE_NAME_STR_ENABLE
 		case DEVINFO_MANUFACTURER_NAME:
-			osal_memcpy(value, devInfoMfrName, sizeof(devInfoMfrName));
+			memcpy(value, devInfoMfrName, sizeof(devInfoMfrName));
 		break;
 	#endif
 
 	#if	IEEE_DATA_ENABLE
 		case DEVINFO_11073_CERT_DATA:
-			osal_memcpy(value, devInfo11073Cert, sizeof(devInfo11073Cert));
+			memcpy(value, devInfo11073Cert, sizeof(devInfo11073Cert));
 		break;
 	#endif
 
 	#if	PNP_ID_ENABLE
 		case DEVINFO_PNP_ID:
-			osal_memcpy(value, devInfoPnpId, sizeof(devInfoPnpId));
+			memcpy(value, devInfoPnpId, sizeof(devInfoPnpId));
 		break;
 	#endif
 
@@ -472,7 +472,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length
 			*pLen = MIN(maxLen, (sizeof(devInfoSystemId) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoSystemId[offset], *pLen);
+			memcpy(pValue, &devInfoSystemId[offset], *pLen);
 		}
 		break;
 	#endif
@@ -486,7 +486,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length (exclude null terminating character)
 			*pLen = MIN(maxLen, ((sizeof(devInfoModelNumber) - 1) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoModelNumber[offset], *pLen);
+			memcpy(pValue, &devInfoModelNumber[offset], *pLen);
 		}
 		break;
 	#endif
@@ -500,7 +500,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length (exclude null terminating character)
 			*pLen = MIN(maxLen, ((sizeof(devInfoSerialNumber) - 1) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoSerialNumber[offset], *pLen);
+			memcpy(pValue, &devInfoSerialNumber[offset], *pLen);
 		}
 		break;
 	#endif
@@ -514,7 +514,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length (exclude null terminating character)
 			*pLen = MIN(maxLen, ((sizeof(devInfoFirmwareRev) - 1) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoFirmwareRev[offset], *pLen);
+			memcpy(pValue, &devInfoFirmwareRev[offset], *pLen);
 		}
 		break;
 	#endif
@@ -528,7 +528,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length (exclude null terminating character)
 			*pLen = MIN(maxLen, ((sizeof(devInfoHardwareRev) - 1) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoHardwareRev[offset], *pLen);
+			memcpy(pValue, &devInfoHardwareRev[offset], *pLen);
 		}
 		break;
 	#endif
@@ -542,7 +542,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length (exclude null terminating character)
 			*pLen = MIN(maxLen, ((sizeof(devInfoSoftwareRev) - 1) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoSoftwareRev[offset], *pLen);
+			memcpy(pValue, &devInfoSoftwareRev[offset], *pLen);
 		}
 		break;
 	#endif
@@ -556,7 +556,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length (exclude null terminating character)
 			*pLen = MIN(maxLen, ((sizeof(devInfoMfrName) - 1) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoMfrName[offset], *pLen);
+			memcpy(pValue, &devInfoMfrName[offset], *pLen);
 		}
 		break;
 	#endif
@@ -570,7 +570,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length
 			*pLen = MIN(maxLen, (sizeof(devInfo11073Cert) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfo11073Cert[offset], *pLen);
+			memcpy(pValue, &devInfo11073Cert[offset], *pLen);
 		}
 		break;
 	#endif
@@ -584,7 +584,7 @@ static uint8 devInfo_ReadAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
 			// determine read length
 			*pLen = MIN(maxLen, (sizeof(devInfoPnpId) - offset));
 			// copy data
-			osal_memcpy(pValue, &devInfoPnpId[offset], *pLen);
+			memcpy(pValue, &devInfoPnpId[offset], *pLen);
 		}
 		break;
 	#endif

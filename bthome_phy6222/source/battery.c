@@ -6,7 +6,7 @@
 #include "config.h"
 #include "adc.h"
 #include "battery.h"
-#include "bleperipheral.h"
+#include "thb2_main.h"
 #include "pwrmgr.h"
 #include "jump_function.h"
 #include "sensor.h"

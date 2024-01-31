@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x08	// BCD
+#define APP_VERSION	0x09	// BCD
 #endif
 
 /*
@@ -40,7 +40,7 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB2
+#define DEVICE		DEVICE_TH05
 #endif
 
 // supported services by the device (bits)
@@ -59,12 +59,12 @@
 #define SERVICE_TIME_ADJUST 0x00001000	// пока нет
 #define SERVICE_HARD_CLOCK	0x00002000	// пока нет
 
-#define OTA_TYPE_NONE	0	// нет OTA
-#define OTA_TYPE_BOOT	(SERVICE_OTA | SERVICE_OTA_EXT)		// вариант для прошивки boot + OTA
-#define OTA_TYPE_APP	SERVICE_OTA_EXT	// переключение из APP на OTA + boot прошивку, пока не реализовано
+#define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
+#define OTA_TYPE_BOOT	SERVICE_OTA		// вариант для прошивки boot + OTA
+#define OTA_TYPE_APP	SERVICE_OTA_EXT	// не реализовано
 
 #ifndef OTA_TYPE
-#define OTA_TYPE	OTA_TYPE_BOOT
+#define OTA_TYPE	OTA_TYPE_NONE
 #endif
 
 #define DEF_SOFTWARE_REVISION	{'V', '0'+ (APP_VERSION >> 4), '.' , '0'+ (APP_VERSION & 0x0F), 0}
@@ -137,6 +137,7 @@
 		| SERVICE_SCREEN \
 		| SERVICE_THS \
 		| SERVICE_KEY \
+		| SERVICE_HISTORY \
 )
 #else
 #define DEV_SERVICES (OTA_TYPE \
@@ -196,9 +197,12 @@ typedef struct _cfg_t {
 	uint8_t reserved2;
 
 }cfg_t;
-
 extern cfg_t cfg;
 extern const cfg_t def_cfg;
+
+#define FLG_MEAS_NOTIFY		1	// включить Notify измерений
+#define FLG_SHOW_TIME		2   // включить показ часов на LCD
+
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;
@@ -207,8 +211,20 @@ typedef struct _adv_work_t {
 	uint8_t 	adv_con_count;
 	uint8_t		adv_batt;
 } adv_work_t;
-
 extern adv_work_t adv_wrk;
+
+#define OTA_MODE_SELECT_REG 0x4000f034
+//#define OTA_MODE_SELECT_REG (AP_AON->RTCCC2) // [0x4000f034] == 0x55 -> OTA
+#define BOOT_FLG_OTA	0x55
+
+typedef struct _work_parm_t {
+#if (DEV_SERVICES & SERVICE_SCREEN)
+	uint8_t lcd_count;
+#endif
+	uint8_t reboot; // reboot on disconnect
+	uint8_t boot_flg;
+} work_parm_t;
+extern work_parm_t wrk;
 
 // uint32_t rtc_get_counter(void); // tik 32768
 #if 1

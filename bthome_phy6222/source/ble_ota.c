@@ -96,8 +96,8 @@ static uint32_t ota_test_crc(void) {
 	unsigned char * faddr = (unsigned char *)(ota.program_offset + 4);
 	int len = ota.pkt_total-2;
 	uint8_t buf[16];
-	osal_memcpy(&buf[0], &ota.fw_value, 4);
-	osal_memcpy(&buf[4], faddr, 12);
+	memcpy(&buf[0], &ota.fw_value, 4);
+	memcpy(&buf[4], faddr, 12);
 	faddr += 12;
 	crc = get_crc32_16bytes(crc, buf);
 	while(len > 0) {
@@ -252,7 +252,7 @@ int ota_parser(unsigned char *pout, unsigned char *pmsg, unsigned int msg_size) 
 	if (err_flg != OTA_SUCCESS) {
 		ota.err_flag = err_flg;
 		// send/Notify?
-		osal_memcpy(pout, &ota, 20);
+		memcpy(pout, &ota, 20);
 		return 20;
 	}
 	return 0;
@@ -289,7 +289,7 @@ static uint32_t start_app(void) {
 							//&& info_seg.waddr < 0x11000000
 							//&& info_seg.waddr > 0x11020000
 							&& info_seg.size < (128*1024)) { // < 128k
-						osal_memcpy((void *)info_seg.waddr, (void *)info_seg.faddr, info_seg.size);
+						memcpy((void *)info_seg.waddr, (void *)info_seg.faddr, info_seg.size);
 					}
 					info_app.seg_count--;
 				}

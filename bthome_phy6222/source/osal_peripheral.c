@@ -8,6 +8,7 @@
 /**************************************************************************************************
 											  INCLUDES
  **************************************************************************************************/
+#include "config.h"
 #if (APP_CFG == 0)
 #include "OSAL.h"
 #include "OSAL_Tasks.h"
@@ -39,7 +40,7 @@
 #include "thb2_peripheral.h"
 
 /* Application */
-#include "bleperipheral.h"
+#include "thb2_main.h"
 #include "halperipheral.h"
 
 /*********************************************************************
@@ -104,7 +105,7 @@ void osalInitTasks( void )
 {
 	uint8 taskID = 0;
 	tasksEvents = (uint16*)osal_mem_alloc( sizeof( uint16 ) * tasksCnt);
-	osal_memset( tasksEvents, 0, (sizeof( uint16 ) * tasksCnt));
+	memset( tasksEvents, 0, (sizeof( uint16 ) * tasksCnt));
 	/* LL Task */
 	LL_Init( taskID++ );
 	/* HCI Task */

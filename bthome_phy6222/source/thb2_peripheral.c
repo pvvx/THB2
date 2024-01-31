@@ -197,7 +197,7 @@ bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void* pValue )
 	case GAPROLE_IRK:
 		if ( len == KEYLEN )
 		{
-			VOID osal_memcpy( gapRole_IRK, pValue, KEYLEN ) ;
+			VOID memcpy( gapRole_IRK, pValue, KEYLEN ) ;
 		}
 		else
 		{
@@ -209,7 +209,7 @@ bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void* pValue )
 	case GAPROLE_SRK:
 		if ( len == KEYLEN )
 		{
-			VOID osal_memcpy( gapRole_SRK, pValue, KEYLEN ) ;
+			VOID memcpy( gapRole_SRK, pValue, KEYLEN ) ;
 		}
 		else
 		{
@@ -280,7 +280,7 @@ bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void* pValue )
 		if ( len <= B_MAX_ADV_LEN )
 		{
 			VOID osal_memset( gapRole_AdvertData, 0, B_MAX_ADV_LEN );
-			VOID osal_memcpy( gapRole_AdvertData, pValue, len );
+			VOID memcpy( gapRole_AdvertData, pValue, len );
 			gapRole_AdvertDataLen = len;
 			// Update the advertising data
 			ret = GAP_UpdateAdvertisingData( gapRole_TaskID,
@@ -297,7 +297,7 @@ bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void* pValue )
 		if ( len <= B_MAX_ADV_LEN )
 		{
 			VOID osal_memset( gapRole_ScanRspData, 0, B_MAX_ADV_LEN );
-			VOID osal_memcpy( gapRole_ScanRspData, pValue, len );
+			VOID memcpy( gapRole_ScanRspData, pValue, len );
 			gapRole_ScanRspDataLen = len;
 			// Update the Response Data
 			ret = GAP_UpdateAdvertisingData( gapRole_TaskID,
@@ -337,7 +337,7 @@ bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void* pValue )
 	case GAPROLE_ADV_DIRECT_ADDR:
 		if ( len == B_ADDR_LEN )
 		{
-			VOID osal_memcpy( gapRole_AdvDirectAddr, pValue, B_ADDR_LEN ) ;
+			VOID memcpy( gapRole_AdvDirectAddr, pValue, B_ADDR_LEN ) ;
 		}
 		else
 		{
@@ -527,11 +527,11 @@ bStatus_t GAPRole_GetParameter( uint16 param, void* pValue )
 		break;
 
 	case GAPROLE_IRK:
-		VOID osal_memcpy( pValue, gapRole_IRK, KEYLEN ) ;
+		VOID memcpy( pValue, gapRole_IRK, KEYLEN ) ;
 		break;
 
 	case GAPROLE_SRK:
-		VOID osal_memcpy( pValue, gapRole_SRK, KEYLEN ) ;
+		VOID memcpy( pValue, gapRole_SRK, KEYLEN ) ;
 		break;
 
 	case GAPROLE_SIGNCOUNTER:
@@ -539,7 +539,7 @@ bStatus_t GAPRole_GetParameter( uint16 param, void* pValue )
 		break;
 
 	case GAPROLE_BD_ADDR:
-		VOID osal_memcpy( pValue, gapRole_bdAddr, B_ADDR_LEN ) ;
+		VOID memcpy( pValue, gapRole_bdAddr, B_ADDR_LEN ) ;
 		break;
 
 	case GAPROLE_ADVERT_ENABLED:
@@ -551,11 +551,11 @@ bStatus_t GAPRole_GetParameter( uint16 param, void* pValue )
 		break;
 
 	case GAPROLE_ADVERT_DATA:
-		VOID osal_memcpy( pValue, gapRole_AdvertData, gapRole_AdvertDataLen );
+		VOID memcpy( pValue, gapRole_AdvertData, gapRole_AdvertDataLen );
 		break;
 
 	case GAPROLE_SCAN_RSP_DATA:
-		VOID osal_memcpy( pValue, gapRole_ScanRspData, gapRole_ScanRspDataLen ) ;
+		VOID memcpy( pValue, gapRole_ScanRspData, gapRole_ScanRspDataLen ) ;
 		break;
 
 	case GAPROLE_ADV_EVENT_TYPE:
@@ -567,7 +567,7 @@ bStatus_t GAPRole_GetParameter( uint16 param, void* pValue )
 		break;
 
 	case GAPROLE_ADV_DIRECT_ADDR:
-		VOID osal_memcpy( pValue, gapRole_AdvDirectAddr, B_ADDR_LEN ) ;
+		VOID memcpy( pValue, gapRole_AdvDirectAddr, B_ADDR_LEN ) ;
 		break;
 
 	case GAPROLE_ADV_CHANNEL_MAP:
@@ -607,7 +607,7 @@ bStatus_t GAPRole_GetParameter( uint16 param, void* pValue )
 		break;
 
 	case GAPROLE_CONN_BD_ADDR:
-		VOID osal_memcpy( pValue, gapRole_ConnectedDevAddr, B_ADDR_LEN ) ;
+		VOID memcpy( pValue, gapRole_ConnectedDevAddr, B_ADDR_LEN ) ;
 		break;
 
 	case GAPROLE_CONN_INTERVAL:
@@ -803,7 +803,7 @@ uint16 GAPRole_ProcessEvent( uint8 task_id, uint16 events )
 			{
 				params.eventType = gapRole_AdvEventType;
 				params.initiatorAddrType = gapRole_AdvDirectType;
-				VOID osal_memcpy( params.initiatorAddr, gapRole_AdvDirectAddr, B_ADDR_LEN );
+				VOID memcpy( params.initiatorAddr, gapRole_AdvDirectAddr, B_ADDR_LEN );
 			}
 
 			params.channelMap = gapRole_AdvChanMap;
@@ -1039,7 +1039,7 @@ static void gapRole_ProcessGAPMsg( gapEventHdr_t* pMsg )
 			//	 VOID osal_snv_write( BLE_NVID_IRK, KEYLEN, gapRole_IRK );
 			//	 VOID osal_snv_write( BLE_NVID_CSRK, KEYLEN, gapRole_SRK );
 			// Save off the information
-			VOID osal_memcpy( gapRole_bdAddr, pPkt->devAddr, B_ADDR_LEN );
+			VOID memcpy( gapRole_bdAddr, pPkt->devAddr, B_ADDR_LEN );
 			gapRole_state = GAPROLE_STARTED;
 
 			// Update the advertising data
@@ -1159,7 +1159,7 @@ static void gapRole_ProcessGAPMsg( gapEventHdr_t* pMsg )
 
 		if ( pPkt->hdr.status == SUCCESS )
 		{
-			VOID osal_memcpy( gapRole_ConnectedDevAddr, pPkt->devAddr, B_ADDR_LEN );
+			VOID memcpy( gapRole_ConnectedDevAddr, pPkt->devAddr, B_ADDR_LEN );
 			gapRole_ConnectionHandle = pPkt->connectionHandle;
 			gapRole_ConnectionInterval = pPkt->connInterval;
 			gapRole_ConnectionLatency = pPkt->connLatency;
@@ -1707,7 +1707,7 @@ bStatus_t GAPRole_extAdv_SetParameter(uint8 adv_handler, uint16 param, uint16 le
 		if (len <= GAP_MAX_EXT_ADV_DATA_LENGTH)
 		{
 			VOID osal_memset(para->advData, 0, GAP_MAX_EXT_ADV_DATA_LENGTH);
-			VOID osal_memcpy(para->advData, pValue, len);
+			VOID memcpy(para->advData, pValue, len);
 			para->advDataLen = len;
 		}
 		else
@@ -1721,7 +1721,7 @@ bStatus_t GAPRole_extAdv_SetParameter(uint8 adv_handler, uint16 param, uint16 le
 		if (len <= GAP_MAX_EXT_ADV_DATA_LENGTH)
 		{
 			VOID osal_memset(para->scanRspData, 0, GAP_MAX_EXT_ADV_DATA_LENGTH);
-			VOID osal_memcpy(para->scanRspData, pValue, len);
+			VOID memcpy(para->scanRspData, pValue, len);
 			para->scanRspLen = len;
 		}
 		else
@@ -1759,7 +1759,7 @@ bStatus_t GAPRole_extAdv_SetParameter(uint8 adv_handler, uint16 param, uint16 le
 
 	case GAP_PEER_ADDR:
 		if (len == 6)
-			osal_memcpy(para->peerAddress,pValue,6);
+			memcpy(para->peerAddress,pValue,6);
 		else
 			ret = bleInvalidRange;
 
@@ -1775,7 +1775,7 @@ bStatus_t GAPRole_extAdv_SetParameter(uint8 adv_handler, uint16 param, uint16 le
 
 	case GAP_OWN_RANDOM_ADDR:
 		if (len == 6)
-			osal_memcpy(&(gapRole_ExtAdv_RandomAddr[adv_handler][0]),pValue,6);
+			memcpy(&(gapRole_ExtAdv_RandomAddr[adv_handler][0]),pValue,6);
 		else
 			ret = bleInvalidRange;
 

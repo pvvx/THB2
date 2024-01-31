@@ -26,7 +26,7 @@
 #include "gapbondmgr.h"
 #include "pwrmgr.h"
 #include "gpio.h"
-#include "bleperipheral.h"
+#include "thb2_main.h"
 #include "ll.h"
 #include "ll_hw_drv.h"
 #include "ll_def.h"
@@ -89,9 +89,7 @@ perStatsByChan_t g_perStatsByChanTest;
  * LOCAL VARIABLES
  */
 
-adv_work_t adv_wrk;
-
-uint8	simpleBLEPeripheral_TaskID;	  // Task ID for internal task/event processing
+uint8_t	simpleBLEPeripheral_TaskID;	  // Task ID for internal task/event processing
 
 static	gaprole_States_t	gapProfileState	=	GAPROLE_INIT;
 
@@ -100,8 +98,8 @@ static	gaprole_States_t	gapProfileState	=	GAPROLE_INIT;
  */
 static void simpleBLEPeripheral_ProcessOSALMsg( osal_event_hdr_t *pMsg );
 static void peripheralStateNotificationCB( gaprole_States_t newState );
-//static void simpleProfileChangeCB( uint8 paramID );
-static void peripheralStateReadRssiCB( int8 rssi );
+//static void simpleProfileChangeCB( uint8_t paramID );
+static void peripheralStateReadRssiCB( int8_t rssi );
 
 const char* hex_ascii = { "0123456789ABCDEF" };
 uint8_t * str_bin2hex(uint8_t *d, uint8_t *s, int len) {
@@ -113,35 +111,49 @@ uint8_t * str_bin2hex(uint8_t *d, uint8_t *s, int len) {
 }
 
 // GAP - SCAN RSP data (max size = 31 bytes)
-static void set_def_name(uint8_t * mac)
+void set_def_name(void)
 {
-	uint8 * p = gapRole_ScanRspData;
+	uint8_t * pmac = ownPublicAddr;
+	uint8_t * p = gapRole_ScanRspData;
 	gapRole_ScanRspDataLen = sizeof(DEF_MODEL_NUMBER_STR) + 8;
 	*p++ = sizeof(DEF_MODEL_NUMBER_STR) + 7;
 	*p++ = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
-	osal_memcpy(p, devInfoModelNumber, sizeof(DEF_MODEL_NUMBER_STR)-1);
+	memcpy(p, devInfoModelNumber, sizeof(DEF_MODEL_NUMBER_STR)-1);
 	p += sizeof(DEF_MODEL_NUMBER_STR) - 1;
 	*p++ = '-';
-	p = str_bin2hex(p, mac+2, 1);
-	p = str_bin2hex(p, mac+1, 1);
-	str_bin2hex(p, mac, 1);
+	p = str_bin2hex(p, pmac+2, 1);
+	p = str_bin2hex(p, pmac+1, 1);
+	str_bin2hex(p, pmac, 1);
+	flash_write_cfg(NULL, EEP_ID_DVN, 0);
+}
+
+void set_dev_name(void)
+{
+	uint8_t * p = gapRole_ScanRspData;
+	int len = flash_read_cfg(&p[2], EEP_ID_DVN, B_MAX_ADV_LEN - 2);
+	if(len > 0) {
+		*p++ = (uint8_t)len + 1;
+		*p++ = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
+	} else
+		set_def_name();
 }
 
 static void set_mac(void)
 {
-	extern uint8 ownPublicAddr[LL_DEVICE_ADDR_LEN];
-	if (read_chip_mAddr(ownPublicAddr) != CHIP_ID_VALID) {
-		if(flash_read_cfg(ownPublicAddr, EEP_ID_MAC, LL_DEVICE_ADDR_LEN) != LL_DEVICE_ADDR_LEN) {
+	//extern uint8_t ownPublicAddr[LL_DEVICE_ADDR_LEN];
+	if(flash_read_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN) != MAC_LEN) {
+		if (read_chip_mAddr(ownPublicAddr) != CHIP_ID_VALID) {
 			LL_Rand(ownPublicAddr,3);
 			// Tuya mac[0:3]
 			ownPublicAddr[3] = 0x8d;
 			ownPublicAddr[4] = 0x1f;
 			ownPublicAddr[5] = 0x38;
-			flash_write_cfg(ownPublicAddr, EEP_ID_MAC, LL_DEVICE_ADDR_LEN);
 		}
+		flash_write_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN);
 	}
-	set_def_name(ownPublicAddr);
-	// TODO: pGlobal_config[MAC_ADDRESS_LOC]
+	pGlobal_config[MAC_ADDRESS_LOC] = (uint32_t)ownPublicAddr;
+	// device name
+	set_dev_name();
 }
 
 static void set_serial_number(void)
@@ -164,11 +176,11 @@ static void set_serial_number(void)
 }
 
 extern gapPeriConnectParams_t periConnParameters;
-extern uint16 gapParameters[];
-static void set_adv_interval(uint16 advInt);
+extern uint16_t gapParameters[];
+static void set_adv_interval(uint16_t advInt);
 
 // Set new advertising interval
-static void set_new_adv_interval(uint16 advInt)
+static void set_new_adv_interval(uint16_t advInt)
 {
 	set_adv_interval(advInt);
 	GAP_EndDiscoverable( gapRole_TaskID );
@@ -177,7 +189,7 @@ static void set_new_adv_interval(uint16 advInt)
 	osal_set_event( gapRole_TaskID, START_ADVERTISING_EVT );
 }
 // Set advertising interval
-static void set_adv_interval(uint16 advInt)
+static void set_adv_interval(uint16_t advInt)
 {
 #ifdef __GCC
 	gapParameters[TGAP_LIM_DISC_ADV_INT_MIN] = advInt;
@@ -196,9 +208,9 @@ static void set_adv_interval(uint16 advInt)
 
 static void adv_measure(void) {
 	if(gapRole_AdvEnabled) {
-		uint32_t tmp = get_utc_time_sec();
-		if(tmp - adv_wrk.measure_batt_tik >= cfg.batt_interval) {
-			adv_wrk.measure_batt_tik = tmp;
+		get_utc_time_sec(); // счет UTC timestamp
+		if(clkt.utc_time_tik - adv_wrk.measure_batt_tik >= ((uint32_t)cfg.batt_interval << 15)) {
+			adv_wrk.measure_batt_tik = clkt.utc_time_tik;
 			batt_start_measure();
 #if ((DEV_SERVICES & SERVICE_THS) == 0)
 			adv_wrk.adv_batt = 1;
@@ -249,6 +261,11 @@ static void adv_measure(void) {
 #endif	// (DEV_SERVICES & SERVICE_THS)
 		if(adv_wrk.adv_con_count) {
 			if(--adv_wrk.adv_con_count == 0) {
+#if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
+				if (wrk.boot_flg == BOOT_FLG_OTA) {
+					hal_system_soft_reset();
+				}
+#endif
 				set_new_adv_interval(cfg.advertising_interval * 100);
 			}
 		}
@@ -320,7 +337,7 @@ static void init_app_gpio(void)
  * GAPROLE ADVERTISING
  */
 void gatrole_advert_enable(bool enable) {
-	uint8 oldAdvEnabled = gapRole_AdvEnabled;
+	uint8_t oldAdvEnabled = gapRole_AdvEnabled;
 	gapRole_AdvEnabled = enable;
 
 	if ( (oldAdvEnabled) && (gapRole_AdvEnabled == FALSE) )
@@ -380,7 +397,7 @@ static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs =
  *
  * @return	none
  */
-void SimpleBLEPeripheral_Init( uint8 task_id )
+void SimpleBLEPeripheral_Init( uint8_t task_id )
 {
 	simpleBLEPeripheral_TaskID = task_id;
 
@@ -429,10 +446,9 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 
 	// Set advertising interval
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
-	if (read_reg(OTA_MODE_SELECT_REG) == 0x55) {
-		write_reg(OTA_MODE_SELECT_REG, 0);
+	if (wrk.boot_flg == BOOT_FLG_OTA) {
 		adv_wrk.adv_con_count = 60000/DEF_OTA_ADV_INERVAL_MS; // 60 sec
-		set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
+		set_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
 	} else
 #endif
 	set_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
@@ -441,16 +457,16 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 #if (DEF_GAPBOND_MGR_ENABLE==1)
 	// Setup the GAP Bond Manager, add 2017-11-15
 	{
-		uint32 passkey = DEFAULT_PASSCODE;
-		uint8 pairMode = GAPBOND_PAIRING_MODE_WAIT_FOR_REQ;
-		uint8 mitm = TRUE;
-		uint8 ioCap = GAPBOND_IO_CAP_NO_INPUT_NO_OUTPUT;
-		uint8 bonding = TRUE;
-		GAPBondMgr_SetParameter( GAPBOND_DEFAULT_PASSCODE, sizeof ( uint32 ), &passkey );
-		GAPBondMgr_SetParameter( GAPBOND_PAIRING_MODE, sizeof ( uint8 ), &pairMode );
-		GAPBondMgr_SetParameter( GAPBOND_MITM_PROTECTION, sizeof ( uint8 ), &mitm );
-		GAPBondMgr_SetParameter( GAPBOND_IO_CAPABILITIES, sizeof ( uint8 ), &ioCap );
-		GAPBondMgr_SetParameter( GAPBOND_BONDING_ENABLED, sizeof ( uint8 ), &bonding );
+		uint32_t passkey = DEFAULT_PASSCODE;
+		uint8_t pairMode = GAPBOND_PAIRING_MODE_WAIT_FOR_REQ;
+		uint8_t mitm = TRUE;
+		uint8_t ioCap = GAPBOND_IO_CAP_NO_INPUT_NO_OUTPUT;
+		uint8_t bonding = TRUE;
+		GAPBondMgr_SetParameter( GAPBOND_DEFAULT_PASSCODE, sizeof ( uint32_t ), &passkey );
+		GAPBondMgr_SetParameter( GAPBOND_PAIRING_MODE, sizeof ( uint8_t ), &pairMode );
+		GAPBondMgr_SetParameter( GAPBOND_MITM_PROTECTION, sizeof ( uint8_t ), &mitm );
+		GAPBondMgr_SetParameter( GAPBOND_IO_CAPABILITIES, sizeof ( uint8_t ), &ioCap );
+		GAPBondMgr_SetParameter( GAPBOND_BONDING_ENABLED, sizeof ( uint8_t ), &bonding );
 	}
 #endif
 	// Initialize GATT attributes
@@ -465,7 +481,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
 
 #if (1)
 #if 0 // CODED PHY not work?
-	deviceFeatureSet.featureSet[1] |= (uint8)(
+	deviceFeatureSet.featureSet[1] |= (uint8_t)(
 			LL_FEATURE_2M_PHY
 			| LL_FEATURE_CODED_PHY
 			| LL_FEATURE_CSA2);
@@ -514,7 +530,7 @@ void SimpleBLEPeripheral_Init( uint8 task_id )
  *
  * @return	events not processed
  */
-uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
+uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 {
 	VOID task_id; // OSAL required parameter that isn't used in this function
 	if ( events & ADV_BROADCAST_EVT) {
@@ -525,7 +541,7 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 	}
 
 	if ( events & SYS_EVENT_MSG ) {
-		uint8 *pMsg;
+		uint8_t *pMsg;
 
 		if ( (pMsg = osal_msg_receive( simpleBLEPeripheral_TaskID )) != NULL )
 		{
@@ -548,10 +564,10 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 	}
 	if( events & TIMER_BATT_EVT) {
 		LOG("TIMER_EVT\n");
+		get_utc_time_sec(); // счет UTC timestamp
 #if (DEV_SERVICES & SERVICE_THS)
-		uint32_t tmp = get_utc_time_sec();
-		if(tmp - adv_wrk.measure_batt_tik >= cfg.batt_interval) {
-			adv_wrk.measure_batt_tik = tmp;
+		if(clkt.utc_time_tik - adv_wrk.measure_batt_tik >= ((uint32_t)cfg.batt_interval << 15)) {
+			adv_wrk.measure_batt_tik = clkt.utc_time_tik;
 			batt_start_measure();
 		}
 		read_sensor();
@@ -565,8 +581,9 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 #endif
 		// TH Notify
 		TH_NotifyLevel();
-#else
-		get_utc_time_sec();
+		if(cfg.flg & FLG_MEAS_NOTIFY)
+			measure_notify();
+#else // no SERVICE_THS
 		batt_start_measure();
 #endif // (DEV_SERVICES & SERVICE_THS)
 		// return unprocessed events
@@ -578,6 +595,8 @@ uint16 BLEPeripheral_ProcessEvent( uint8 task_id, uint16 events )
 		if(!gapRole_AdvEnabled) {
 			BattNotifyLevel();
 #if ((DEV_SERVICES & SERVICE_THS)==0)
+			if(cfg.flg & FLG_MEAS_NOTIFY)
+				measure_notify();
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			chow_measure();
 #endif
@@ -662,7 +681,7 @@ static void simpleBLEPeripheral_ProcessOSALMsg( osal_event_hdr_t *pMsg )
  *
  * @return	none
  */
-static void peripheralStateReadRssiCB( int8	 rssi )
+static void peripheralStateReadRssiCB( int8_t	 rssi )
 {
 	(void)rssi;
 }
@@ -726,6 +745,10 @@ static void peripheralStateReadRssiCB( int8	 rssi )
 			show_ble_symbol(0);
 			update_lcd();
 #endif
+			if(wrk.reboot) {
+				write_reg(OTA_MODE_SELECT_REG, wrk.reboot);
+				hal_system_soft_reset();
+			}
 		break;
 
 		case GAPROLE_WAITING_AFTER_TIMEOUT:

@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v0.4</title>
+<title>PHY62x2 BTHome v0.5</title>
 <style type="text/css">
 /* basic sytles */
 
@@ -321,7 +321,9 @@ var devnm = {};
 
 
 var startTime = 0,
-	isConnected = false;
+	isConnected = false,
+	flg_memo_act = false
+	flg_memo_cnt = 0;
 
 var ota = {
 	fwArray: null,
@@ -580,8 +582,18 @@ function onDisconnected() {
 }
 
 function startDFU() {
-	addLog("Старт программирования...");
-	updateBegin();
+	if(otaCharacteristic != null && ota.ind.version == 1 && (devsrs.services & 1) == 1) {
+		addLog("Старт программирования...");
+		updateBegin();
+	} else {
+		addLog("Переключение на BootLoader...");
+		if(cmdCharacteristic != null) {
+			cmdCharacteristic.writeValue(new Uint8Array([0x72,0x55])).then(_ => {
+				console.log('Send reboot to bootloader - ok');
+				reconnect();
+			}).catch(error => { addLog(error); });
+		} 
+	}
 }
 
 function addLog(logTXT) {
@@ -1017,6 +1029,7 @@ function customBlkParse(value) {
 		devsrs.services = value.getUint32(8, true);
 		addLog("Dev info # hw: "+hex(devsrs.hw_version,4)+", sw: "+hex(devsrs.sw_version,4)+", services: "+hex(devsrs.services,8)+", sd: "+hex(devsrs.dev_spec_data, 4));
 	} else if(blkId == 0x35){
+		if(flg_memo_act) {
 			if(len >= 12) {
 				let cnt = value.getUint16(1, true);
 				let tc = value.getUint32(3, true);
@@ -1024,29 +1037,37 @@ function customBlkParse(value) {
 				let hm = value.getUint16(9, true) / 100.0;
 				let vb = value.getUint16(11, true);
 				let dt = new Date(tc*1000);
-				console.log(((dt.toISOString().slice(0, -1)).replace('T',' ')).replace('.000','')+' # Батарея: '+vb+' мВ , Температура: '+tm+'°C, Влажность: '+hm+'%, Счетчик: '+cnt);
+				addLog(((dt.toISOString().slice(0, -1)).replace('T',' ')).replace('.000','')+' # Батарея: '+vb+' мВ , Температура: '+tm+'°C, Влажность: '+hm+'%, Счетчик: '+cnt);
+				flg_memo_cnt = cnt;
 			} else if(len == 3) {
 				let flg = value.getUint16(1, true);
-				console.log('Последний блок: '+flg);
+				console.log('Memo End: '+flg);
+				if(flg_memo_cnt == 0)
+					addLog('Пока нет истории!');										
 				flg_memo_act = false;
 			} else if(len == 2) {
 				addLog('Нет сервиса записи истории!');
-			} else
+				flg_memo_act = false;
+			} else {
 				console.log('blk: ' + dump8(value, value.byteLength));
-	} else if(blkId == 0x33 && len >= 8) {
-		let vbat = value.getUint16(1, true);
+				flg_memo_act = false;
+			}
+		}
+	} else if(blkId == 0x33 && len > 9) {
+		let count = value.getUint16(1, true);
 		let temp = value.getInt16(3, true) / 100.0;
 		let humi = value.getInt16(5, true) / 100.0;
-		let count = value.getUint16(7, true);
+		let vbat = value.getUint16(7, true);
+		let pbat = value.getUint8(9);
 		let flg = 0;
 		let rds_count = 0;
-		if(len > 8) {
+		let s = 'Vbat: '+vbat+' мВ '+pbat+'%, Температура: '+temp.toFixed(2)+'°C, Влажность: '+humi.toFixed(2)+'%, ID: '+count;
+		if(len > 12) {
 			flg = value.getUint8(9);
-			if(len > 12)
-				rds_count = value.getUint32(10, true);
+			rds_count = value.getUint32(10, true);
+		   s += ', счетчик срабатываний: '+ rds_count+', флаги: 0x'+hex(flg,2)+':r'+(flg&1)+'/t'+((flg>>1)&1);
 		}
-		let	s = 'Vbat: '+vbat+' мВ, Температура: '+temp.toFixed(2)+'°C, Влажность: '+humi.toFixed(2)+'%, ID: '+count+', счетчик срабатываний: '+ rds_count+', флаги: 0x'+hex(flg,2)+':r'+(flg&1)+'/t'+((flg>>1)&1);
-		//$("tempHumiData").innerHTML = s;
+		//TODO: $("tempHumiData").innerHTML = s;
 		addLog(s);
 	} else if((blkId == 0x25 || blkId == 0x26) && (len > 12)) {
 	// CMD_ID_CFS Get/Set sensor config
@@ -1077,6 +1098,8 @@ function customBlkParse(value) {
 	} else if((blkId == 0x55 || blkId == 0x56) && (len > 12)) {
 	//	CMD_ID_CFG Get/Set device config
 	    devcfg.flg = value.getUint32(1, true);
+	    // bit0 - measure notify enable
+	    // bit1 - lcd chow time enable
 	    devcfg.rf_tx_power = value.getUint8(5);
 	    devcfg.advertising_interval = value.getUint8(6);
 	    devcfg.connect_latency = value.getUint8(7);
@@ -1182,10 +1205,27 @@ function customBlkParse(value) {
 		devnm.name = new TextDecoder("utf-8").decode(value.buffer.slice(1));
 		//if($("dev_name"))
 		//	$("dev_name").value = dnm.name;
-		addLog("Имя устройства: ["+devnm.name+"]");
+		addLog("Имя устройства: '"+devnm.name+"'");
+	} else if(blkId == 0x10 && len >= 7) {
+		let mac = new Uint8Array(6);
+		mac[0] = value.getUint8(6);
+		mac[1] = value.getUint8(5);
+		mac[2] = value.getUint8(4);
+		mac[3] = value.getUint8(3);
+		mac[4] = value.getUint8(2);
+		mac[5] = value.getUint8(1);
+		addLog("MAC устройства: "+ bytesToHex(mac));
 	} else {
 		console.log('blk: ' + dump8(value, value.byteLength));
 		addLog('Ответ на команду (' + hex(blkId,2) + '): ' + bytesToHex(value.buffer.slice(1)));
+	}
+}
+function getMemo(num) {
+	if(cmdCharacteristic != null) {
+		//addLog("getSensCfg...");
+		flg_memo_act = true;
+		flg_memo_cnt = 0;
+		cmdCharacteristic.writeValue(new Uint8Array([0x35, num&0xff, (num>>8)&0xff])).catch(error => { console.log(error); addLog("getMemo() error!"); });
 	}
 }
 
@@ -1205,8 +1245,10 @@ function SetDevTime() {
 }
 
 function GetDevTime() {
-	// addLog("Получить ремя от утройства...");
-	cmdCharacteristic.writeValue(new Uint8Array([0x23])).then(_ => { console.log('Send GetDevTime ok');	});
+	if(cmdCharacteristic != null) {
+		// addLog("Получить ремя от утройства...");
+		cmdCharacteristic.writeValue(new Uint8Array([0x23])).then(_ => { console.log('Send GetDevTime ok');	});
+    }
 }
 
 function getDevCfg() {
@@ -1423,7 +1465,7 @@ window.onload = function() {
 </script>
 <h2>PHY62x2-BTHome <a href="https://github.com/pvvx/THB2"><small>&#9432;</small></a></h2>
 <label for="inpNamePrefix">Префикс названия устройств(а)</label><br>
-<input type="text" id="inpNamePrefix" value="" placeholder="THB, BT, TH">
+<input type="text" id="inpNamePrefix" value="" placeholder="THB, BT">
 <hr>
 <label id="lblStatus">Состояние: не подключено</label>
 <br><br><hr>
@@ -1555,6 +1597,7 @@ window.onload = function() {
   <button type="button" id="btnSendData" onclick="sendData()" disabled="true">Записать</button><hr>
   <button type="button" id="btnSendCommand" onclick="sendCommand()" disabled="true">Команда</button>
   <input type="text" id="inpCmdData" value="55" size="40" maxlength="40"><hr>
+  <button type="button" id="btnGetMemo" onclick="getMemo(50)" title="Последние 50 замеров">Тест чтения истории</button>  
 </div>
 <hr>
 <button type="button" onclick="clearLog()">Очистить лог</button><br>

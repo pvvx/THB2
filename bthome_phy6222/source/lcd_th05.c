@@ -231,14 +231,10 @@ void chow_measure(void) {
 	update_lcd();
 }
 
-struct {
-//	uint32_t chow_tik;
-	uint8_t count;
-} lcd;
-
+/* flg != 0 -> chow_measure */
 void chow_lcd(int flg) {
-	if(cfg.flg & 1) {
-		if(lcd.count++ & 1)
+	if(cfg.flg & FLG_SHOW_TIME) {
+		if(wrk.lcd_count++ & 1)
 			chow_clock();
 		else
 			chow_measure();

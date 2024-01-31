@@ -316,19 +316,20 @@ int main(void) {
 
 #if 0 // defined ( __GNUC__ ) // -> *.ld
 	extern const uint32_t *const jump_table_base[];
-	osal_memcpy((void*) 0x1fff0000, (void*) jump_table_base, 1024);
+	memcpy((void*) 0x1fff0000, (void*) jump_table_base, 1024);
 #endif
-
+	wrk.boot_flg = (uint8_t)read_reg(OTA_MODE_SELECT_REG);
+	write_reg(OTA_MODE_SELECT_REG, 0);
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
-    if (read_reg(OTA_MODE_SELECT_REG) != 0x55
+    if (wrk.boot_flg != BOOT_FLG_OTA
 #if (DEV_SERVICES & SERVICE_KEY)
-    		&&  hal_gpio_read(GPIO_KEY)
+    	&&  hal_gpio_read(GPIO_KEY)
 #endif
     ) {
     	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
     	AP_PCR->CACHE_BYPASS = 1; // just bypass cache
     	startup_app();
-	}//  else write_reg(OTA_MODE_SELECT_REG, 0);
+	}
 #endif
 
 	watchdog_config(WDG_2S);

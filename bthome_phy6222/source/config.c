@@ -22,7 +22,7 @@
 #include "gapbondmgr.h"
 #include "pwrmgr.h"
 #include "gpio.h"
-#include "bleperipheral.h"
+#include "thb2_main.h"
 #include "ll.h"
 #include "ll_hw_drv.h"
 #include "ll_def.h"
@@ -42,17 +42,18 @@
 extern gapPeriConnectParams_t periConnParameters;
 
 clock_time_t clkt;
-
 cfg_t cfg;
+work_parm_t wrk;
+adv_work_t adv_wrk;
 
 const cfg_t def_cfg = {
-		.flg = 0,
+		.flg = 1,
 		.rf_tx_power = RF_PHY_TX_POWER_0DBM,
 		.advertising_interval = 80, // 80 * 62.5 = 5000 ms
 		.measure_interval = 2,  // 5 * 2 = 10 sec
 		.batt_interval = 60, // 60 sec
 		.connect_latency = 29,	// 30*30 = 900 ms
-		.averaging_measurements = 2 // 180*10 = 1800 sec, 30 min
+		.averaging_measurements = 180 // 180*10 = 1800 sec, 30 min
 };
 
 /*
@@ -85,8 +86,8 @@ uint32_t get_utc_time_sec(void) {
 	clkt.utc_time_tik = new_time_tik;
 	clkt.utc_time_sec += clkt.utc_time_add >> 15; // div 32768
 	clkt.utc_time_add &= (1<<15) - 1;
-	AP_AON->SLEEP_R[2] = clkt.utc_time_add; // сохранить
-	AP_AON->SLEEP_R[3] = clkt.utc_time_sec; // сохранить
+	AP_AON->SLEEP_R[2] = clkt.utc_time_add; // сохранить для восстановления часов после перезагрузки
+	AP_AON->SLEEP_R[3] = clkt.utc_time_sec; // сохранить для восстановления часов после перезагрузки
 	// HAL_EXIT_CRITICAL_SECTION();
 #if (DEV_SERVICES & SERVICE_TIME_ADJUST)
 	// TODO
@@ -117,13 +118,14 @@ void test_config(void) {
 
 void load_eep_config(void) {
 	if(!flash_supported_eep_ver(0, APP_VERSION)) {
-		osal_memcpy(&cfg, &def_cfg, sizeof(cfg));
+		memcpy(&cfg, &def_cfg, sizeof(cfg));
+		memset(&thsensor_cfg.coef, 0, sizeof(thsensor_cfg.coef));
 	} else {
 		if (flash_read_cfg(&cfg, EEP_ID_CFG, sizeof(cfg)) != sizeof(cfg))
-			osal_memcpy(&cfg, &def_cfg, sizeof(cfg));
+			memcpy(&cfg, &def_cfg, sizeof(cfg));
 #if (DEV_SERVICES & SERVICE_THS)
 		if(flash_read_cfg(&thsensor_cfg.coef, EEP_ID_CFS, sizeof(thsensor_cfg.coef)) != sizeof(thsensor_cfg.coef)) {
-			osal_memset(&thsensor_cfg.coef, 0, sizeof(thsensor_cfg.coef));
+			memset(&thsensor_cfg.coef, 0, sizeof(thsensor_cfg.coef));
 		}
 #endif
 	}

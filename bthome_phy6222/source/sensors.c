@@ -83,6 +83,7 @@ int read_sensor_ahtxx(void) {
 			measured_data.humi = 0;
 		else if (measured_data.humi > 9999)
 			measured_data.humi = 9999;
+		measured_data.count++;
 		return 0;
 	}
 	deinit_i2c();
@@ -154,7 +155,7 @@ __ATTR_SECTION_XIP__ void init_sensor(void) {
 			thsensor_cfg.i2c_addr = 0;
 	}
 	if(thsensor_cfg.coef.temp_k == 0 && ptabinit) {
-		osal_memcpy(&thsensor_cfg.coef, ptabinit, sizeof(thsensor_cfg.coef));
+		memcpy(&thsensor_cfg.coef, ptabinit, sizeof(thsensor_cfg.coef));
 	}
 	deinit_i2c();
 }

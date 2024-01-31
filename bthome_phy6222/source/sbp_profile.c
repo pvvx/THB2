@@ -20,13 +20,14 @@
 #include "gapbondmgr.h"
 //#include "log.h"
 #include "thb2_peripheral.h"
-#include "bleperipheral.h"
+#include "thb2_main.h"
 #include "sbp_profile.h"
 #include "cmd_parser.h"
 #include "ble_ota.h"
 #include "logger.h"
 #include "hci.h"
 #include "lcd_th05.h"
+#include "sensor.h"
 
 /*********************************************************************
  * MACROS
@@ -311,13 +312,13 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 #if OTA_TYPE
 			case SIMPLEPROFILE_CHAR1_UUID:
 				*pLen = 20;
-				osal_memcpy( pValue, &ota, *pLen );
+				memcpy( pValue, &ota, *pLen );
 				LOG("Read_UUID1:\n");
 				break;
 #endif
 			case SIMPLEPROFILE_CHAR2_UUID:
 				*pLen = sizeof(dev_id);
-				osal_memcpy( pValue, &dev_id, *pLen);
+				memcpy( pValue, &dev_id, *pLen);
 				LOG("Read_UUID2:\n");
 				break;
 			default:
@@ -377,7 +378,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 
 	            //Write the value
 	            if ( status == SUCCESS) {
-	            	osal_memcpy( pAttr->pValue, pValue, len );
+	            	memcpy( pAttr->pValue, pValue, len );
 	            	ota_in_len = len;
 					LOG("OTA receive data = 0x ");
 					LOG_DUMP_BYTE(pAttr->pValue, len);
@@ -397,7 +398,7 @@ static bStatus_t simpleProfile_ReadAttrCB( uint16_t connHandle, gattAttribute_t 
 					status = ATT_ERR_ATTR_NOT_LONG;
 				// Write the value
 				if ( status == SUCCESS ) {
-					osal_memcpy(pAttr->pValue, pValue, len );
+					memcpy(pAttr->pValue, pValue, len );
 					cmd_in_len = len;
 					LOG("CMD receive data = 0x ");
 					LOG_DUMP_BYTE(pAttr->pValue, len);
@@ -464,6 +465,30 @@ void new_ota_data(void) {
 	}
 }
 #endif
+
+static void measureNotifyCB( linkDBItem_t* pLinkItem )
+{
+	if ( pLinkItem->stateFlags & LINK_CONNECTED )
+	{
+		uint16 value = GATTServApp_ReadCharCfg( pLinkItem->connectionHandle,
+				simpleProfileChar2Config );
+
+		if ( value & GATT_CLIENT_CFG_NOTIFY )
+		{
+			attHandleValueNoti_t noti;
+			noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;;
+			noti.len = send_len_measured_data + 1;
+			noti.value[0] = CMD_ID_MEASURE;
+			memcpy(&noti.value[1], &measured_data, send_len_measured_data);
+			GATT_Notification( pLinkItem->connectionHandle, &noti, FALSE );
+		}
+	}
+}
+
+void measure_notify(void) {
+	// Execute linkDB callback to send notification
+	linkDB_PerformFunc( measureNotifyCB );
+}
 
 #if (DEV_SERVICES & SERVICE_HISTORY)
 void wrk_notify(void) {

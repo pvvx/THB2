@@ -79,6 +79,7 @@ extern bStatus_t SimpleProfile_AddService( uint32_t services );
 void new_cmd_data(void);
 void new_ota_data(void);
 void wrk_notify(void);
+void measure_notify(void);
 
 #ifdef __cplusplus
 }
