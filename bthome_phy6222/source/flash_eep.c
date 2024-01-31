@@ -408,7 +408,6 @@ signed short flash_read_cfg(void *ptr, unsigned short id, unsigned short maxsize
 			if (faddr >= FMEM_ERROR_MAX) {
 				if (maxsize != 0 && ptr != NULL)
 					_flash_read(faddr + fobj_head_size, mMIN(fobj.n.size, maxsize), ptr);
-
 #if CONFIG_DEBUG_LOG > 3
 				DBG_FEEP_INFO("read ok, faddr: %p, size: %d\n", faddr,  fobj.n.size);
 #endif

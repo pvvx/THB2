@@ -516,6 +516,6 @@ void wrk_notify(void) {
 			}
     	}
     } else
-		osal_start_timerEx(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT, 30);
+		osal_start_timerEx(simpleBLEPeripheral_TaskID, WRK_NOTIFY_EVT, (DEFAULT_DESIRED_MIN_CONN_INTERVAL *125)/100);
 }
 #endif

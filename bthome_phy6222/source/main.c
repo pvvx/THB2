@@ -305,7 +305,6 @@ static void hal_init(void) {
 	hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
 	hal_gpio_init();
 	LOG_INIT();
-	//hal_fs_init(0x1103C000, 2);
 	hal_adc_init();
 }
 
@@ -319,7 +318,6 @@ int main(void) {
 	memcpy((void*) 0x1fff0000, (void*) jump_table_base, 1024);
 #endif
 	wrk.boot_flg = (uint8_t)read_reg(OTA_MODE_SELECT_REG);
-	write_reg(OTA_MODE_SELECT_REG, 0);
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
     if (wrk.boot_flg != BOOT_FLG_OTA
 #if (DEV_SERVICES & SERVICE_KEY)
@@ -329,7 +327,8 @@ int main(void) {
     	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
     	AP_PCR->CACHE_BYPASS = 1; // just bypass cache
     	startup_app();
-	}
+	} else
+		 write_reg(OTA_MODE_SELECT_REG,0);
 #endif
 
 	watchdog_config(WDG_2S);
