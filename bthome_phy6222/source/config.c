@@ -70,7 +70,7 @@ void restore_utc_time_sec(void) {
 		clkt.utc_time_sec = AP_AON->SLEEP_R[3];
 		//if(clkt.utc_time_sec < 1704067200ul) clkt.utc_time_sec = 1704067200ul;
 	}
-	clkt.utc_time_tik = clock_time_rtc() & 0xffffff;
+	clkt.utc_time_tik = clock_time_rtc();
 }
 
 uint32_t get_utc_time_sec(void) {
