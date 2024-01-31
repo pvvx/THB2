@@ -1,1 +1,1 @@
-python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_BTH01_v08.hex
+python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_BTH01_v09.hex
