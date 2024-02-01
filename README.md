@@ -35,6 +35,8 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 | RX | TX1 |
 | RTS | RESET |
 
+Название контактов на устройстве смотреть в [THB2](https://pvvx.github.io/THB2), [BTH01](https://pvvx.github.io/BTH01/), [TH-05](https://pvvx.github.io/TH-05). 
+
 2. Запустить:
 ```
 python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_xxx_vxx.hex
