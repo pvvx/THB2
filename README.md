@@ -26,6 +26,15 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 Прошить устройство програмой Boot-OTA возможно через USB-COM адаптер с выходами на 3.3В:
 
 1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
+
+| Адаптер | Устройство |
+|---|---|
+| GND | -Vbat |
+| +3.3В | +Vbat |
+| TX | RX1 |
+| RX | TX1 |
+| RTS | RESET |
+
 2. Запустить:
 ```
 python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_xxx_vxx.hex
