@@ -40,6 +40,7 @@ const uint8_t display_numbers[] = {
 		0b011110100, // E
 		0b001110100  // F
 };
+#define LCD_SYM_b  0b011100110 // "b"
 #define LCD_SYM_H  0b001100111 // "H"
 #define LCD_SYM_h  0b001100110 // "h"
 #define LCD_SYM_i  0b000100000 // "i"
@@ -47,7 +48,9 @@ const uint8_t display_numbers[] = {
 #define LCD_SYM_o  0b010100110 // "o"
 #define LCD_SYM_t  0b011100100 // "t"
 #define LCD_SYM_0  0b011110011 // "0"
-#define LCD_SYM_a  0b011110110 // 'a'
+#define LCD_SYM_A  0b001110111 // "A"
+#define LCD_SYM_a  0b011110110 // "a"
+#define LCD_SYM_P  0b001110101 // "P"
 
 uint8_t lcd_i2c_addr; // = 0x3E
 
@@ -196,10 +199,19 @@ void show_small_number(int16_t number, bool percent) {
 }
 
 void lcd_show_version(void) {
-	show_big_number_x10(APP_VERSION);
 #if OTA_TYPE
-	display_buff[0] = LCD_SYM_o;
+	display_buff[0] = LCD_SYM_b;
+	display_buff[1] = LCD_SYM_o;
+	display_buff[2] = LCD_SYM_t;
+#else
+	display_buff[0] = LCD_SYM_A;
+	display_buff[1] = LCD_SYM_P;
+	display_buff[2] = LCD_SYM_P;
 #endif
+	display_buff[3] &= BIT(6); // bat
+	display_buff[4] &= BIT(3); // connect
+	display_buff[4] |= display_numbers[(APP_VERSION>>4) & 0x0f];
+	display_buff[5] = display_numbers[APP_VERSION & 0x0f];
 	update_lcd();
 }
 

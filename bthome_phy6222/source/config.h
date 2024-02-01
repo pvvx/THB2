@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x09	// BCD
+#define APP_VERSION	0x10	// BCD
 #endif
 
 /*
