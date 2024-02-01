@@ -1,116 +1,132 @@
+/*******************************************************************************
+    Filename:       patch_ext_adv.c, updated base on ll.c
+    Revised:
+    Revision:
+
+    Description:    This file contains the Link Layer (LL) API for the Bluetooth
+                  Low Energy (BLE) Controller. It provides the defines, types,
+                  and functions for all supported Bluetooth Low Energy (BLE)
+                  commands.
+
+                  This API is based on the Bluetooth Core Specification,
+                  V4.0.0, Vol. 6.
+
+ SDK_LICENSE
+
+*******************************************************************************/
+//#define DEBUG_LL
+
+/*******************************************************************************
+    INCLUDES
+*/
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include "ll_buf.h"
 #include "ll.h"
-#include "rf_phy_driver.h"
-#include "global_config.h"
-#include "jump_function.h"
-#include "pwrmgr.h"
-#include "uart.h"
-#include "ll_sleep.h"
-#include "ll_debug.h"
-#include "ll.h"
-#include "bus_dev.h"
+#include "ll_def.h"
+#include "ll_common.h"
 #include "ll_hw_drv.h"
-#include "gpio.h"
-#include "ll_enc.h"
-#include "OSAL_Clock.h"
+#include "OSAL.h"
+#include "OSAL_PwrMgr.h"
 #include "osal_bufmgr.h"
-#include "OSAL_Memory.h"
-#include "log.h"
-#include "hci.h"
-#include "hci_tl.h"
-#include "version.h"
-#include "flash.h"
-#include "gatt.h"
-#include "att.h"
-#include "error.h"
-#include "clock.h"
+#include "bus_dev.h"
+#include "jump_function.h"
+#include "global_config.h"
+#include "ll_debug.h"
+#include "ll_enc.h"
 #include "rf_phy_driver.h"
+#include "time.h"
+
+// DEFINES
+// #define OWN_PUBLIC_ADDR_POS      0x11004000
+#define LL_HW_MODE_STX           0x00
+#define LL_HW_MODE_SRX           0x01
+#define LL_HW_MODE_TRX           0x02
+#define LL_HW_MODE_RTX           0x03
+#define LL_HW_MODE_TRLP          0x04
+#define LL_HW_MODE_RTLP          0x05
 
 extern uint32 g_timer4_irq_pending_time;
+extern uint8  llSecondaryState;
+
+extern uint8 isTimer1Running(void);
+extern uint8 isTimer4Running(void);
+extern int   clear_timer_int(AP_TIM_TypeDef* TIMx);
+extern void  clear_timer(AP_TIM_TypeDef* TIMx);
+
+//------------------------------------------------------------------------------------
+//extern rom function
+//
+extern uint8   ll_processExtAdvIRQ(uint32_t  irq_status);
+extern uint8   ll_processPrdAdvIRQ(uint32_t  irq_status);
+extern uint8   ll_processExtScanIRQ(uint32_t irq_status);
+extern uint8   ll_processExtInitIRQ(uint32_t irq_status);
+extern uint8   ll_processPrdScanIRQ(uint32_t irq_status);
+extern uint8   ll_processBasicIRQ(uint32_t   irq_status);
+
+// global configuration in SRAM, it could be change by application
+// ================== VARIABLES  ==================================
+extern uint32    global_config[];
 
 
-void LL_IRQHandler2(void)
+// patch.c
+extern uint32 ISR_entry_time;
 
-{
-    char ret;
-    uint irq_status;
-    int iVar2;
+extern uint32  read_ll_adv_remainder_time(void);
+extern uint8_t ll_hw_read_rfifo1(uint8_t* rxPkt, uint16_t* pktLen, uint32_t* pktFoot0, uint32_t* pktFoot1);
+// ll.c
+extern uint32   g_interAuxPduDuration;
 
-    ISR_entry_time = read_current_fine_time();
-    ll_debug_output(DEBUG_ISR_ENTRY);
-    irq_status = ll_hw_get_irq_status();
+// FUNCTIONS
+extern uint32 llWaitingIrq;
+extern uint8  ll_hw_get_tr_mode(void);
+extern int    ll_hw_get_rfifo_depth(void);
 
-    if ((irq_status & LIRQ_MD) == 0) { // only process IRQ of MODE DONE
-        ll_hw_clr_irq(); // clear irq status
-        return;
-    }
-    llWaitingIrq = FALSE;
-    if (llTaskState == LL_TASK_EXTENDED_ADV) {
-        ret = ll_processExtAdvIRQ1(irq_status);
-    } else if (llTaskState == LL_TASK_EXTENDED_SCAN) {
-        ret = ll_processExtScanIRQ(irq_status);
-    } else if (llTaskState == LL_TASK_EXTENDED_INIT) {
-        ret = ll_processExtInitIRQ(irq_status);
-    } else if (llTaskState == LL_TASK_PERIODIC_ADV) {
-        ret = ll_processPrdAdvIRQ(irq_status);
-    } else(llTaskState == LL_TASK_PERIODIC_SCAN) {
-        ret = ll_processPrdScanIRQ();
-    } else {
-        ll_processBasicIRQ(irq_status);
-        ret = FALSE;
-    }
-    if (ret != TRUE) {
+// ll_hwItf.c
+/*******************************************************************************
+    CONSTANTS
+*/
+// Master Sleep Clock Accurracy, in PPM
+// Note: Worst case range value is assumed.
+extern const uint16 SCA[] ;		//= {500, 250, 150, 100, 75, 50, 30, 20};
+extern uint8 ownPublicAddr[];   // index 0..5 is LSO..MSB
+extern uint8 ownRandomAddr[];
+//
+extern volatile uint8_t g_same_rf_channel_flag;
 
-        // ================ Post ISR process: secondary pending state process
-        // conn-adv case 2: other ISR, there is pending secondary advertise event, make it happen
-        if (llSecondaryState == LL_SEC_STATE_ADV_PENDING) {
-            if (llSecAdvAllow()) // for multi-connection case, it is possible still no enough time for adv
-            {
-                llSetupSecAdvEvt();
-                llSecondaryState = LL_SEC_STATE_ADV;
-            }
-        }
-        // there is pending scan event, make it happen, note that it may stay pending if there is no enough idle time
-        else if (llSecondaryState == LL_SEC_STATE_SCAN_PENDING) {
-            // trigger scan
-            llSetupSecScan(scanInfo.nextScanChan);
-        }
-        // there is pending init event, make it happen, note that it may stay pending if there is no enough idle time
-        else if (llSecondaryState == LL_SEC_STATE_INIT_PENDING) {
-            // trigger init
-            llSetupSecInit(initInfo.nextScanChan);
-        }
-        ll_debug_output(DEBUG_ISR_EXIT);
-    }
-}
+//  ====== RPA
+extern uint8    g_currentLocalRpa[LL_DEVICE_ADDR_LEN];
+extern uint8    g_currentPeerRpa[LL_DEVICE_ADDR_LEN];
+extern uint8    g_currentPeerAddrType;
+extern uint8    g_currentLocalAddrType;
+
+void ll_hw_tx2rx_timing_config(uint8 pkt);
+void ll_hw_trx_settle_config(uint8 pkt);
 
 
-void TIM4_IRQHandler(void)
+// =======  A2 multi-connection ========================
+extern struct buf_tx_desc g_tx_adv_buf;
+extern struct buf_tx_desc g_tx_ext_adv_buf;
+extern struct buf_tx_desc tx_scanRsp_desc;
 
-{
-    HAL_ENTER_CRITICAL_SECTION();
-    
-    if (AP_TIM4->status & 0x1) {
-        g_timer4_irq_pending_time = AP_TIM4->CurrentCount - AP_TIM4->LoadCount;
-        clear_timer_int(AP_TIM4);
-        clear_timer(AP_TIM4);
-        if (g_currentTimerTask == LL_TASK_EXTENDED_ADV) {
-            LL_extAdvTimerExpProcess();
-        } else if (g_currentTimerTask == LL_TASK_PERIODIC_ADV) {
-            LL_prdAdvTimerExpProcess();
-        } else if (g_currentTimerTask == LL_TASK_EXTENDED_SCAN) {
-            LL_extScanTimerExpProcess();
-        } else if (g_currentTimerTask == LL_TASK_EXTENDED_INIT) {
-            llSetupExtInit();
-        } else if (g_currentTimerTask == LL_TASK_PERIODIC_SCAN) {
-            LL_prdScanTimerExpProcess();
-        }
-    }
+extern struct buf_rx_desc g_rx_adv_buf;
 
-    HAL_EXIT_CRITICAL_SECTION();
-}
+extern syncInfo_t   syncInfo;
+
+// RF path compensation, to be move to rf_phy_driver.c ?
+extern int16  g_rfTxPathCompensation;
+extern int16  g_rfRxPathCompensation;
+
+//   EXTERNAL FUNCTIONS
+void llWaitUs(uint32_t wtTime);
+
+void llPrdAdvDecideNextChn(extAdvInfo_t* pAdvInfo, periodicAdvInfo_t* pPrdAdv);
+void llSetupSyncInfo(extAdvInfo_t* pAdvInfo, periodicAdvInfo_t* pPrdAdv);
 
 
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// New
+uint16_t extscanrsp_offset;
 
 void ll_adv_scheduler0(void)
 
@@ -120,8 +136,6 @@ void ll_adv_scheduler0(void)
     uint8   minIndexAux, minIndexPri;
     uint8   done = FALSE;
     int     i;
-    uint32  minAuxPduTime, minPriPduTime;
-    uint8   minIndexAux, minIndexPri;
 
     llAdvScheduleInfo_t* p_scheduler;
     extAdvInfo_t*  pAdvInfo;
@@ -200,13 +214,14 @@ void ll_adv_scheduler0(void)
     // compare the minimum AUX channel remainder time & minimum Primary channel PDU remainder time,
     // AUX channel PDU could add some pre-emphesis here
     uint32  auxPduEmphesis = pGlobal_config[LL_EXT_ADV_INTER_PRI_CHN_INT] * 3;                           // add 03-31
-    
-    if ((minAuxPduTime != LL_INVALID_TIME) ||
-     && (minAuxPduTime < minPriPduTime + auxPduEmphesis))   // next schedule task is aux PDU
-     {
+
+    if ( (minAuxPduTime != LL_INVALID_TIME) &&
+         (minAuxPduTime < (minPriPduTime + auxPduEmphesis)) ) // next schedule task is aux PDU
+    {
         ll_ext_adv_schedule_next_event(minAuxPduTime - delta);
         g_currentExtAdv   = minIndexAux;
-	} else   // next schedule task is pri PDU
+	}
+	else // next schedule task is pri PDU
 	{        
         ll_ext_adv_schedule_next_event(minPriPduTime - delta);
         g_currentExtAdv   = minIndexPri;
@@ -217,47 +232,44 @@ void ll_adv_scheduler0(void)
 }
 
 
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-void ll_add_adv_task0(undefined * pExtAdv)
+void ll_add_adv_task0(extAdvInfo_t * pExtAdv)
 
 {
-    undefined * puVar1;
-    int isLegacy;
-    uint uVar2;
-    uint i;
-    uint uVar4;
-    undefined * puVar5;
+    int i, spare;
+    llAdvScheduleInfo_t* p_scheduler = NULL, *p_current_scheduler;
+    uint32  remainder;
+    uint8   chanNumber, temp;
 
-    isLegacy = ll_isLegacyAdv();
+    uint8 isLegacy = ll_isLegacyAdv(pExtAdv);
+    
     temp = pExtAdv->parameter.priAdvChnMap;
     chanNumber = (temp & 0x01) + ((temp & 0x02) >> 1) + ((temp & 0x04) >> 2);
     // init new Ext adv event context
     pExtAdv->currentChn = ((temp & ((~temp) + 1)) >> 1) + 37;       // calculate 1st adv channel
-    pExtAdv->adv_event_counter = 0;
-    pExtAdv->currentAdvOffset = 0;
+    pExtAdv->adv_event_counter  = 0;
+    pExtAdv->currentAdvOffset   = 0;
     pExtAdv->adv_event_duration = 0;
-    puVar1 = _g_pAdvSchInfo;
 
     // ======== case 1: the 1st adv task
     if (g_currentExtAdv == LL_INVALID_ADV_SET_HANDLE)     //    if (!isTimer4Running())
     {
-        g_schExtAdvNum = 1;
+        g_schExtAdvNum  = 1;
         g_currentExtAdv = 0;          // scheduler index = 0
         p_current_scheduler = &g_pAdvSchInfo[g_currentExtAdv];
         
         if (isLegacy)            // Legacy Adv PDU has no aux PDU
-        && 
         {
-        
-        if (!isLegacy && 
-            ( pExtAdv->data.advertisingDataLength
-           || (pExtAdv->advEventProperties & LE_ADV_PROP_SCAN_BITMASK)
-           || (pExtAdv->advEventProperties & LE_ADV_PROP_CONN_BITMASK) ) ) {
-            ll_allocAuxAdvTimeSlot(g_currentExtAdv);
-        } else {
             g_pAdvSchInfo[g_currentExtAdv].auxPduRemainder = LL_INVALID_TIME;
-        }
+		}
+		else            
+		{
+			if ( pExtAdv->data.advertisingDataLength ||
+                (pExtAdv->parameter.advEventProperties & LE_ADV_PROP_SCAN_BITMASK) ||
+                (pExtAdv->parameter.advEventProperties & LE_ADV_PROP_CONN_BITMASK) )
+	            ll_allocAuxAdvTimeSlot(g_currentExtAdv); // g_currentExtAdv == 0
+	        else
+	            g_pAdvSchInfo[g_currentExtAdv].auxPduRemainder = LL_INVALID_TIME;
+		}
         
 //      LOG("[%d]  ", g_pAdvSchInfo[i].auxPduRemainder);
 
@@ -265,8 +277,10 @@ void ll_add_adv_task0(undefined * pExtAdv)
         {
             g_currentAdvTimer = pGlobal_config[LL_CONN_TASK_DURATION];
         }
-        else if (isTimer1Running()
-	        && ((remainder = read_LL_remainder_time()) <= pGlobal_config[LL_EXT_ADV_TASK_DURATION]))     // timer1 for connection or legacy adv
+        else
+        {
+        	if ( isTimer1Running() &&
+                 ((remainder = read_LL_remainder_time()) < pGlobal_config[LL_EXT_ADV_TASK_DURATION]) )     // timer1 for connection or legacy adv
             {
                 g_currentAdvTimer = pGlobal_config[LL_CONN_TASK_DURATION] + remainder;
             }
@@ -279,12 +293,13 @@ void ll_add_adv_task0(undefined * pExtAdv)
 		                                p_current_scheduler->auxPduRemainder : p_current_scheduler->pAdvInfo->primary_advertising_interval;
                 
                 g_timerExpiryTick = read_current_fine_time();
-            // invoke set up ext adv function
+	            // invoke set up ext adv function
                 llSetupExtAdvEvent(pExtAdv);
             }
         }
         
-        
+        //ll_ext_adv_schedule_next_event(g_currentAdvTimer);
+        //g_timerExpiryTick = read_current_fine_time();  // fake timer expiry tick
         p_current_scheduler->pAdvInfo = pExtAdv;
         p_current_scheduler->adv_handler = pExtAdv->advHandle;
         p_current_scheduler->nextEventRemainder = p_current_scheduler->pAdvInfo->primary_advertising_interval;  // add some random delay between 0-10ms?
@@ -332,30 +347,17 @@ void ll_add_adv_task0(undefined * pExtAdv)
     }
     
     // case 2.2: no enough time, start new adv after current one
-    if (g_currentExtAdv < spare) {
-        i = spare - g_currentExtAdv;
-    } else {
-        i = g_extAdvNumber + spare - g_currentExtAdv;
-    }
+
     // add new adv to adv scheduler list, not change current adv task
-    p_scheduler->nextEventRemainder = p_current_scheduler[g_currentExtAdv].nextEventRemainder + (g_advSlotPeriodic >> 2) * i;
+    p_scheduler->nextEventRemainder = p_current_scheduler[g_currentExtAdv].nextEventRemainder
+    								+ (g_advSlotPeriodic >> 2)
+    								* (spare > g_currentExtAdv ? 
+    								   spare - g_currentExtAdv :
+    								   g_extAdvNumber + spare - g_currentExtAdv);
     p_scheduler->adv_handler = pExtAdv->advHandle;
     p_scheduler->pAdvInfo    = pExtAdv;
     return;
 }
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-void ll_delete_adv_task0(uint8 index)
-
-{
-    uint32  T1, T2, delta, remainder, elapse_time;
-    uint32  minAuxPduTime, minPriPduTime;
-    uint8   minIndexAux, minIndexPri;
-    int i;
-//  LOG("=== adv task % deleted \r\n", index);
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
 void ll_delete_adv_task0(uint8 index)
 
@@ -380,8 +382,8 @@ void ll_delete_adv_task0(uint8 index)
     }
 
     // current awaiting adv is disable, and there are more than 1 task
-    if (index == g_currentExtAdv) &&
-    	isTimer4Running())
+    if ( (index == g_currentExtAdv) &&
+    	  isTimer4Running())
    	{
         remainder = read_ll_adv_remainder_time();
         T1 = read_current_fine_time();
@@ -412,27 +414,25 @@ void ll_delete_adv_task0(uint8 index)
 
         // start new timer
         T2  = read_current_fine_time();
-        g_pAdvSchInfo = LL_TIME_DELTA(T1, T2);
+        delta = LL_TIME_DELTA(T1, T2);
 
         if (minAuxPduTime < minPriPduTime)   // next schedule task is aux PDU
         {
-            ll_ext_adv_schedule_next_event(minAuxPduTime - elapse_time - g_pAdvSchInfo);
+            ll_ext_adv_schedule_next_event(minAuxPduTime - elapse_time - delta);
             g_currentExtAdv = minIndexAux;
         }
         else   // next schedule task is pri PDU
         {
-            ll_ext_adv_schedule_next_event(minPriPduTime - elapse_time - g_pAdvSchInfo);
+            ll_ext_adv_schedule_next_event(minPriPduTime - elapse_time - delta);
             g_currentExtAdv = minIndexPri;
         }
 
         // update the scheduler list
-        ll_updateExtAdvRemainderTime(elapse_time + g_pAdvSchInfo);
+        ll_updateExtAdvRemainderTime(elapse_time + delta);
     }
 }
 
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint8 llSetupExtAdvEvent0(void * pAdvInfo)
+uint8 llSetupExtAdvEvent0(extAdvInfo_t * pAdvInfo)
 
 {
     uint8 ch_idx, pktFmt, auxPduIndFlag = FALSE;
@@ -518,11 +518,9 @@ uint8 llSetupExtAdvEvent0(void * pAdvInfo)
         ll_hw_trx_settle_config(g_rfPhyPktFmt);
         ll_hw_set_trx();
         if ((g_rfPhyPktFmt == PKT_FMT_BLE1M) || (g_rfPhyPktFmt == PKT_FMT_BLE2M))
-            tout = 500;
+	        ll_hw_set_rx_timeout(500);
         else
-            tout = 3000;
-
-        ll_hw_set_rx_timeout(tout);
+	        ll_hw_set_rx_timeout(3000);
     }
     else
     {
@@ -563,21 +561,18 @@ void llSetupAdvExtIndPDU0(extAdvInfo_t*  pAdvInfo, periodicAdvInfo_t* pPrdAdv)
 
     // adv PDU header
     g_tx_ext_adv_buf.txheader = 0;
-    ownAddrType = pAdvInfo->parameter.ownAddrType;
-	if ((ownAddrType == LL_DEV_ADDR_TYPE_RPA_PUBLIC) ||
-		(ownAddrType == LL_DEV_ADDR_TYPE_RPA_RANDOM))
-	{
-		if ((adv_param.ownAddr[5] >> 6) == 1)
-		{
-			ownAddrType = LL_DEV_ADDR_TYPE_RANDOM;
-		}
-		else
-			ownAddrType &= LL_DEV_ADDR_TYPE_RANDOM;
-	}		
 	// PDU type, 4 bits
 	SET_BITS(g_tx_ext_adv_buf.txheader, ADV_EXT_TYPE, PDU_TYPE_SHIFT, PDU_TYPE_MASK);
 	// RFU, ChSel, TxAdd, RxAdd
-	SET_BITS(g_tx_ext_adv_buf.txheader, ownAddrType, TX_ADD_SHIFT, TX_ADD_MASK | RX_ADD_MASK);
+	if ((pAdvInfo->parameter.ownAddrType == LL_DEV_ADDR_TYPE_RPA_PUBLIC) ||
+		(pAdvInfo->parameter.ownAddrType == LL_DEV_ADDR_TYPE_RPA_RANDOM))
+	{
+	
+		if ((adv_param.ownAddr[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR)
+            SET_BITS(g_tx_adv_buf.txheader, LL_DEV_ADDR_TYPE_RANDOM, TX_ADD_SHIFT, TX_ADD_MASK);
+	}
+	else // This will cutoff ownAddrType high bit
+        SET_BITS(g_tx_adv_buf.txheader, pAdvInfo->parameter.ownAddrType, TX_ADD_SHIFT, TX_ADD_MASK);
 
     if (pGlobal_config[LL_SWITCH] & CONN_CSA2_ALLOW)
         SET_BITS(g_tx_adv_buf.txheader, 1, CHSEL_SHIFT, CHSEL_MASK);
@@ -593,7 +588,7 @@ void llSetupAdvExtIndPDU0(extAdvInfo_t*  pAdvInfo, periodicAdvInfo_t* pPrdAdv)
 	     (pAdvInfo->data.advertisingDataLength == 0) &&
 	     (advMode == LL_EXT_ADV_MODE_NOCONN_NOSC) )
     {
-    	extHeaderFlag |= LE_EXT_HDR_ADVA_PRESENT_BITMASK
+    	extHeaderFlag |= LE_EXT_HDR_ADVA_PRESENT_BITMASK;
 	    extHdrLength += 6;
 		if (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_DIRECT_BITMASK)
 		{
@@ -693,7 +688,7 @@ void llSetupAdvExtIndPDU0(extAdvInfo_t*  pAdvInfo, periodicAdvInfo_t* pPrdAdv)
             number = (temp & 0x0001) +
                      ((temp & 0x0002) >> 1) +
                      ((temp & 0x0004) >> 2);
-            // the interval between chan 37<->38, 38<->39 is 5000us, primary adv -> aux adv chn is 1500us
+            // the interval between chan 37<->38, 38<->39 is 5000us, primary adv->aux adv chn is 1500us
             offset_unit = 0;    // 30us, for aux offset < 245700us
             aux_offset = (number * pGlobal_config[LL_EXT_ADV_INTER_PRI_CHN_INT] + g_interAuxPduDuration) / 30;
         }
@@ -711,24 +706,20 @@ void llSetupAdvExtIndPDU0(extAdvInfo_t*  pAdvInfo, periodicAdvInfo_t* pPrdAdv)
         offset += 3;
     }
 
-    if (extHeaderFlagLE_EXT_HDR_TX_PWR_PRESENT_BITMASK)
+    if (extHeaderFlag & LE_EXT_HDR_TX_PWR_PRESENT_BITMASK)
     {
-        short tx_power_10 = pAdvInfo->tx_power * 10 + g_rfTxPathCompensation;
-        if (tx_power_10 < -1270)
-        	tx_power_10 = -1270;
-        else if (tx_power_10 > 1270)
-            tx_power_10 = 1270;
+        short radio_pwr = pAdvInfo->tx_power * 10 + g_rfTxPathCompensation;
+        if (radio_pwr < -1270)
+        	radio_pwr = -1270;
+        else if (radio_pwr > 1270)
+            radio_pwr = 1270;
 
-        tx_power = tx_power_10 / 10;
-        g_tx_ext_adv_buf.data[offset] = tx_power;
+        g_tx_ext_adv_buf.data[offset] = radio_pwr / 10;;
     }
-    pAdvInfo -> currentAdvOffset = 0;
+    pAdvInfo->currentAdvOffset = 0;
 
 }
 
-
-/* WARNING: Unable to use type for symbol temp_rf_fmtg_rfPhyPktFmt */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
 void LL_slave_conn_event1(void)
 
@@ -737,10 +728,7 @@ void LL_slave_conn_event1(void)
     uint32_t      tx_num, rx_num;
     llConnState_t* connPtr;
 
-
-    llConnState_t* connPtr;
-??    g_ll_conn_ctx.timerExpiryTick = read_current_fine_time();                     // A2 multiconnection
-??    g_ll_conn_ctx.scheduleInfo[0].remainder = read_current_fine_time();                     // A2 multiconnection
+    g_ll_conn_ctx.timerExpiryTick = read_current_fine_time();                     // A2 multiconnection
 //  hal_gpio_write(GPIO_P14, 1);
     connPtr = &conn_param[g_ll_conn_ctx.currentConn];
     // time critical process, disable interrupt
@@ -777,7 +765,7 @@ void LL_slave_conn_event1(void)
     if ( (connPtr->llRfPhyPktFmt == PKT_FMT_BLR125K) ||
          (connPtr->llRfPhyPktFmt == PKT_FMT_BLR500K) )
 	    ll_hw_set_rx_timeout(350);
-    else {
+    else
 	    ll_hw_set_rx_timeout(88);
 
     set_max_length(0xff);
@@ -806,7 +794,6 @@ void LL_slave_conn_event1(void)
         else
             ll_hw_set_rx_timeout_1st(pGlobal_config[LL_HW_RTLP_1ST_TIMEOUT] + pGlobal_config[SLAVE_CONN_DELAY] * 2 + connPtr->timerDrift * 2 );
     }
-
     
     // configure loop timeout
     // considering the dle case
@@ -832,7 +819,7 @@ void LL_slave_conn_event1(void)
                   1,                         // ll_mdRx
                   ll_rdCntIni);              // rdCntIni
     
-    temp_rf_fmt = g_rfPhyPktFmt;
+    uint8 temp_rf_fmt = g_rfPhyPktFmt;
     g_rfPhyPktFmt = connPtr->llRfPhyPktFmt;
     ll_hw_go();
     llWaitingIrq = 1;
@@ -844,13 +831,1095 @@ void LL_slave_conn_event1(void)
     ll_debug_output(DEBUG_LL_HW_SET_RTLP);
 }
 
+
+void llSetupAuxAdvIndPDU1(extAdvInfo_t * pAdvInfo, periodicAdvInfo_t * pPrdAdv)
+
+{
+    uint8 advMode, extHeaderFlag, length, extHdrLength, advDataLen;
+    uint8 offset = 0;
+//  uint32 T2, elapse_time;
+
+    // set AdvMode
+    if (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_CONN_BITMASK)
+        advMode = LL_EXT_ADV_MODE_CONN;
+    else if (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_SCAN_BITMASK)
+        advMode = LL_EXT_ADV_MODE_SC;
+    else
+        advMode = LL_EXT_ADV_MODE_NOCONN_NOSC;
+
+    length = 0;
+    // adv PDU header
+    g_tx_ext_adv_buf.txheader = 0;
     
+    // PDU type, 4 bits
+    SET_BITS(g_tx_ext_adv_buf.txheader, ADV_EXT_TYPE, PDU_TYPE_SHIFT, PDU_TYPE_MASK);
+    // 
+    SET_BITS(g_tx_ext_adv_buf.txheader, pAdvInfo->parameter.ownAddrType, TX_ADD_SHIFT, TX_ADD_MASK);
+
+    if (pGlobal_config[LL_SWITCH] & CONN_CSA2_ALLOW)
+        SET_BITS(g_tx_adv_buf.txheader, 1, CHSEL_SHIFT, CHSEL_MASK);
+
+    extHdrLength = 0;
+    // == step 1. decide what fields should be present in extended header
+    // extended header
+    extHeaderFlag = 0;
+    extHdrLength ++;
+
+    // CTEInfo(1 octets), not present for AUX_ADV_IND
+
+    extHeaderFlag |= LE_EXT_HDR_ADI_PRESENT_BITMASK;
+    extHdrLength += 2;
+
+    if (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_DIRECT_BITMASK)
+    {
+        extHeaderFlag |= LE_EXT_HDR_TARGETA_PRESENT_BITMASK;
+        extHdrLength += 6;
+    }
+
+//  if (advMode != LL_EXT_ADV_MODE_NOCONN_NOSC)           // This field is C4 for LL_EXT_ADV_MODE_NOCONN_NOSC, we will not send AdvA in EXT_ADV_IND, so it is mandatory here
+//  {
+    extHeaderFlag |= LE_EXT_HDR_ADVA_PRESENT_BITMASK;
+    extHdrLength += 6;
+//  }
+
+    if (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_TX_POWER_BITMASK)
+    {
+        extHeaderFlag |= LE_EXT_HDR_TX_PWR_PRESENT_BITMASK;
+        extHdrLength ++;
+    }
+
+    if (pAdvInfo->isPeriodic == TRUE)
+    {
+        extHeaderFlag |= LE_EXT_HDR_SYNC_INFO_PRESENT_BITMASK;
+        extHdrLength += 18;
+    }
+
+    if (pAdvInfo->data.dataComplete == TRUE)
+    {
+        if (advMode == LL_EXT_ADV_MODE_NOCONN_NOSC
+                && (pAdvInfo->isPeriodic == FALSE)
+                && (pAdvInfo->data.advertisingDataLength > (255 - 1 - extHdrLength)))
+        {
+            extHeaderFlag |= LE_EXT_HDR_AUX_PTR_PRESENT_BITMASK;
+            extHdrLength += 3;
+            // maximum payload length = 255: header len (= 1), ext header len(extHdrLength), adv data(advDataLen)
+            advDataLen = (255 - 1) - extHdrLength;       // adv data length. TODO: check spec
+        }
+        else
+        {
+			// put all adv data in field "Adv Data"
+            advDataLen = (255 - 1) - extHdrLength;
+            if (advDataLen > pAdvInfo->data.advertisingDataLength)
+               advDataLen = pAdvInfo->data.advertisingDataLength;
+        }    
+    }
+    else         // update 04-13, consider update adv data case
+        advDataLen = 0;
+    
+    length = 1 + extHdrLength + advDataLen;    // 1: extended header len(6bits) + advMode(2bit)
+    // Length
+    SET_BITS(g_tx_ext_adv_buf.txheader, length, LENGTH_SHIFT, LENGTH_MASK);
+    
+    SET_BITS(g_tx_ext_adv_buf.txheader, pAdvInfo->parameter.ownAddrType, TX_ADD_SHIFT, TX_ADD_MASK);
+    
+    // === step 2.  fill AUX_ADV_IND PDU
+    // Extended header length + AdvMode(1 octet)
+    g_tx_ext_adv_buf.data[offset] = ((advMode & 0x3) << 6) | (extHdrLength & 0x3F);
+    offset ++;
+    g_tx_ext_adv_buf.data[offset] = extHeaderFlag;
+    offset ++;
+    
+    // AdvA (6 octets)
+    if (extHeaderFlag & LE_EXT_HDR_ADVA_PRESENT_BITMASK)
+    {
+        if ( (pAdvInfo->parameter.ownAddrType == LL_DEV_ADDR_TYPE_RANDOM) && 
+        	 (pAdvInfo->parameter.isOwnRandomAddressSet == TRUE) )
+            memcpy(&g_tx_ext_adv_buf.data[offset], pAdvInfo->parameter.ownRandomAddress, LL_DEVICE_ADDR_LEN);
+        else    // public address
+            memcpy(&g_tx_ext_adv_buf.data[offset], ownPublicAddr, LL_DEVICE_ADDR_LEN);
+
+        offset += LL_DEVICE_ADDR_LEN;
+    }
+
+    // TargetA(6 octets)
+    if (extHeaderFlag & LE_EXT_HDR_TARGETA_PRESENT_BITMASK)
+    {
+        memcpy(&g_tx_ext_adv_buf.data[offset], pAdvInfo->parameter.peerAddress, LL_DEVICE_ADDR_LEN);
+        offset += LL_DEVICE_ADDR_LEN;
+    }
+
+    // CTEInfo(1 octets), not present for AUX_ADV_IND
+    if (extHeaderFlag & LE_EXT_HDR_CTE_INFO_PRESENT_BITMASK)
+    {
+        // offset += 1;
+    }
+
+    // AdvDataInfo(ADI)(2 octets)
+    if (extHeaderFlag & LE_EXT_HDR_ADI_PRESENT_BITMASK)
+    {
+        uint16 adi;
+        adi = ((pAdvInfo->parameter.advertisingSID & 0x0F) << 12) | (pAdvInfo->data.DIDInfo & 0x0FFF);
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&adi, 2);
+        offset += 2;
+    }
+
+    // AuxPtr(3 octets)
+    if (extHeaderFlag & LE_EXT_HDR_AUX_PTR_PRESENT_BITMASK)
+    {
+        uint8   chn_idx, ca, offset_unit, aux_phy;
+        uint16  aux_offset;
+        uint32  temp = 0;
+//        if (pAdvInfo->isPeriodic == FALSE)   // no periodic adv case
+//        {
+        chn_idx = llGetNextAuxAdvChn(pAdvInfo->currentChn);
+        ca      = 0;        // 50-500ppm
+        offset_unit = 0;    // 30us, for aux offset < 245700us
+        aux_phy = pAdvInfo->parameter.secondaryAdvPHY - 1;             // HCI & LL using different enum
+        aux_offset = g_interAuxPduDuration / 30;
+        pAdvInfo->currentChn = chn_idx;
+//        }
+//      else     // AUX_PTR field is not required for periodic adv AUX_ADV_IND
+//      {
+//      }
+        temp |= (chn_idx & LL_AUX_PTR_CHN_IDX_MASK) << LL_AUX_PTR_CHN_IDX_SHIFT;
+        temp |= (ca & LL_AUX_PTR_CA_MASK) << LL_AUX_PTR_CA_SHIFT;
+        temp |= (offset_unit & LL_AUX_PTR_OFFSET_UNIT_MASK) << LL_AUX_PTR_OFFSET_UNIT_SHIFT;
+        temp |= (aux_offset & LL_AUX_PTR_AUX_OFFSET_MASK) << LL_AUX_PTR_AUX_OFFSET_SHIFT;
+        temp |= (aux_phy & LL_AUX_PTR_AUX_PHY_MASK) << LL_AUX_PTR_AUX_PHY_SHIFT;
+        temp &= 0x00FFFFFF;
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&temp, 3);
+        offset += 3;
+    }
+    else if (pAdvInfo->isPeriodic == FALSE)   // only applicable to extended adv case
+    {
+        // no more aux PDU, update next channel number
+        int i = 0;
+
+        while ((i < 3) && !(pAdvInfo->parameter.priAdvChnMap & (1 << i))) i ++;
+
+        pAdvInfo->currentChn = LL_ADV_CHAN_FIRST + i;
+    }
+    else    // periodic adv case
+    {
+        llPrdAdvDecideNextChn(pAdvInfo, pPrdAdv);
+    }
+
+    // SyncInfo(18 octets)
+    if (extHeaderFlag & LE_EXT_HDR_SYNC_INFO_PRESENT_BITMASK)
+    {
+        // TODO
+        llSetupSyncInfo(pAdvInfo, pPrdAdv);
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&syncInfo, 18);
+        offset += 18;
+    }
+
+    // TxPower(1 octets)
+    if (extHeaderFlag & LE_EXT_HDR_TX_PWR_PRESENT_BITMASK)    // Tx power is optional, could we only filled it in AUX_ADV_IND?
+    {
+        int16  radio_pwr;
+        radio_pwr = pAdvInfo->tx_power * 10 + g_rfTxPathCompensation;
+
+        if (radio_pwr > 1270)   radio_pwr = 1270;
+
+        else if (radio_pwr < -1270)  radio_pwr = -1270;
+
+        g_tx_ext_adv_buf.data[offset] = (uint8)(radio_pwr / 10);
+        offset += 1;
+    }
+
+    // ACAD(varies), not present
+
+    // copy adv data
+    if (pAdvInfo->isPeriodic == FALSE)
+    {
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&pAdvInfo->data.advertisingData[pAdvInfo->currentAdvOffset], advDataLen);
+        pAdvInfo->currentAdvOffset += advDataLen;
+    }
+}
+
+
+void llSetupAuxChainIndPDU1(extAdvInfo_t * pAdvInfo, periodicAdvInfo_t * pPrdAdv)
+
+{
+    uint8 advMode, extHeaderFlag, length, extHdrLength, advDataLen;
+    uint8 offset = 0;
+    // set AdvMode
+    advMode = 0;
+    length = 0;
+    // adv PDU header
+    g_tx_ext_adv_buf.txheader = 0;
+    // PDU type, 4 bits
+    SET_BITS(g_tx_ext_adv_buf.txheader, ADV_EXT_TYPE, PDU_TYPE_SHIFT, PDU_TYPE_MASK);
+    // RFU, ChSel, TxAdd, RxAdd
+    SET_BITS(g_tx_ext_adv_buf.txheader, pAdvInfo->parameter.ownAddrType, TX_ADD_SHIFT, TX_ADD_MASK);
+    extHdrLength = 0;
+    // extended header
+    extHeaderFlag = 0;
+    extHdrLength ++;
+
+    // 2020-02-10 add for Connectionless CTE Info
+    // CTEInfo field is C5: Optional
+    if( pPrdAdv->PrdCTEInfo.enable == LL_CTE_ENABLE )
+    {
+        if( pPrdAdv->PrdCTEInfo.CTE_Count > pPrdAdv->PrdCTEInfo.CTE_Count_Idx )
+        {
+            extHeaderFlag |= LE_EXT_HDR_CTE_INFO_PRESENT_BITMASK;
+            extHdrLength ++;
+        }
+    }
+
+    // ADI field is C3, it is present in our implementation
+    if (pAdvInfo->isPeriodic == FALSE)
+    {
+        extHeaderFlag |= LE_EXT_HDR_ADI_PRESENT_BITMASK;
+        extHdrLength += 2;
+    }
+    
+// comment out because for periodic adv, tx pwr field is in AUX_SYNC_IND. for extended adv, txPwr field in AUX_ADV_IND
+//  if (((pAdvInfo->isPeriodic == FALSE) && (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_TX_POWER_BITMASK))
+//    || ((pAdvInfo->isPeriodic == TRUE) && (pPrdAdv->adv_event_properties & LE_ADV_PROP_TX_POWER_BITMASK)))
+//  {
+//      extHeaderFlag |= LE_EXT_HDR_TX_PWR_PRESENT_BITMASK;
+//      extHdrLength ++;
+//  }
+
+    // if Adv Data could not be sent completely in this PDU, need AuxPtr
+    if (pAdvInfo->isPeriodic == FALSE)
+    {
+        if ( extscanrsp_offset && 
+        	(extscanrsp_offset < pAdvInfo->scanRspMaxLength) )
+			advDataLen = pAdvInfo->scanRspMaxLength - extscanrsp_offset;
+		else
+	        if (pAdvInfo->data.dataComplete == TRUE)
+                advDataLen = pAdvInfo->data.advertisingDataLength - pAdvInfo->currentAdvOffset;  // put all remain adv data in field "Adv Data"
+		else            
+			// update 04-13, adv data may be reconfigured during advertising, include no data in such case
+        	advDataLen = 0;
+    }
+    else
+    {
+        if (pAdvInfo->data.dataComplete == TRUE)
+            advDataLen = pAdvInfo->data.advertisingDataLength - pAdvInfo->currentAdvOffset;  // put all remain adv data in field "Adv Data"
+		else            
+			// update 04-13, adv data may be reconfigured during advertising, include no data in such case
+        	advDataLen = 0;
+	}
+	// TODO Check this condition more precise
+	if ( advDataLen > (255 - 1 - extHdrLength) )
+	{
+		extHeaderFlag |= LE_EXT_HDR_AUX_PTR_PRESENT_BITMASK;
+        extHdrLength += 3;
+        // maximum payload length = 255, header len = 1, ADI len = 2, AUX_PTR len = 2
+        advDataLen = 255 - 1 - extHdrLength;;
+	}
+
+    length = 1 + extHdrLength + advDataLen;   // 1: extended header len(6bits) + advMode(2bit)
+    // Length
+    SET_BITS(g_tx_ext_adv_buf.txheader, length, LENGTH_SHIFT, LENGTH_MASK);
+    // fill extended header
+    offset = 0;
+    // Extended header length + AdvMode(1 octet)
+    g_tx_ext_adv_buf.data[offset] = ((advMode & 0x3) << 6) | (extHdrLength & 0x3F);
+    offset ++;
+    g_tx_ext_adv_buf.data[offset] = extHeaderFlag;
+    offset ++;
+
+    // CTEInfo(1 octets), not present for AUX_ADV_IND
+    if (extHeaderFlag & LE_EXT_HDR_CTE_INFO_PRESENT_BITMASK)
+    {
+        //LOG("\n SyC \n");
+        g_tx_ext_adv_buf.data[offset] = (   ( pPrdAdv->PrdCTEInfo.CTE_Type << 6 ) | \
+                                            ( pPrdAdv->PrdCTEInfo.CTE_Length));
+        pPrdAdv->PrdCTEInfo.CTE_Count_Idx ++;
+        offset += 1;
+    }
+
+    // AdvDataInfo(ADI)(2 octets)
+    if (extHeaderFlag & LE_EXT_HDR_ADI_PRESENT_BITMASK)
+    {
+        uint16 adi;
+        adi = ((pAdvInfo->parameter.advertisingSID & 0x0F) << 12) | (pAdvInfo->data.DIDInfo & 0x0FFF);
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&adi, 2);
+        offset += 2;
+    }
+
+    // AuxPtr(3 octets)
+    if (extHeaderFlag & LE_EXT_HDR_AUX_PTR_PRESENT_BITMASK)
+    {
+        uint8   chn_idx, ca, offset_unit, aux_phy;
+        uint16  aux_offset;
+        uint32  temp = 0;
+        chn_idx = llGetNextAuxAdvChn(pAdvInfo->currentChn);
+        ca      = 0;        // 50-500ppm
+        offset_unit = 0;    // 30us, for aux offset < 245700us
+        aux_phy = pAdvInfo->parameter.secondaryAdvPHY - 1;     // HCI & LL using different enum
+        aux_offset = g_interAuxPduDuration / 30;
+        temp |= (chn_idx & LL_AUX_PTR_CHN_IDX_MASK) << LL_AUX_PTR_CHN_IDX_SHIFT;
+        temp |= (ca & LL_AUX_PTR_CA_MASK) << LL_AUX_PTR_CA_SHIFT;
+        temp |= (offset_unit & LL_AUX_PTR_OFFSET_UNIT_MASK) << LL_AUX_PTR_OFFSET_UNIT_SHIFT;
+        temp |= (aux_offset & LL_AUX_PTR_AUX_OFFSET_MASK) << LL_AUX_PTR_AUX_OFFSET_SHIFT;
+        temp |= (aux_phy & LL_AUX_PTR_AUX_PHY_MASK) << LL_AUX_PTR_AUX_PHY_SHIFT;
+        temp &= 0x00FFFFFF;
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&temp, 3);
+        pAdvInfo->currentChn = chn_idx;        // save secondary channel index
+        pPrdAdv->currentChn = chn_idx;
+        offset += 3;
+    }
+    else
+    {
+        // no more aux PDU, update next channel number
+        if (pAdvInfo->isPeriodic == FALSE)
+        {
+            int i = 0;
+
+            while ((i < 3) && !(pAdvInfo->parameter.priAdvChnMap & (1 << i))) i ++;
+
+            pAdvInfo->currentChn = LL_ADV_CHAN_FIRST + i;
+        }
+        else    // periodic adv case
+        {
+            llPrdAdvDecideNextChn(pAdvInfo, pPrdAdv);
+        }
+    }
+    
+    // ACAD(varies), not present
+
+    // copy adv data
+    if (pAdvInfo->isPeriodic == 0) {
+
+        if (!extscanrsp_offset || (extscanrsp_offset > pAdvInfo->scanRspMaxLength))
+        {
+            memcpy(&g_tx_ext_adv_buf.data[offset], pAdvInfo->data.advertisingData + pAdvInfo->currentAdvOffset, advDataLen);
+            pAdvInfo->currentAdvOffset = pAdvInfo->currentAdvOffset + advDataLen;
+        }
+        else
+        {
+            memcpy(&g_tx_ext_adv_buf.data[offset], pAdvInfo->scanRspData + extscanrsp_offset, advDataLen);
+            if (pAdvInfo->scanRspMaxLength == (extscanrsp_offset + advDataLen))
+                extscanrsp_offset = 0;
+            else            
+	            extscanrsp_offset += advDataLen;
+        }
+    }
+    else    // periodic adv case
+    {
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&pPrdAdv->data.advertisingData[pPrdAdv->currentAdvOffset], advDataLen);
+        pPrdAdv->currentAdvOffset += advDataLen;
+
+        // if finish broad current periodic adv event, revert the read pointer of adv data
+        if (pPrdAdv->currentAdvOffset == pPrdAdv->data.advertisingDataLength)
+        {
+            // 2020-02-10 add logic for CTE info
+            if( pPrdAdv->PrdCTEInfo.enable == LL_CTE_ENABLE )
+            {
+                if( pPrdAdv->PrdCTEInfo.CTE_Count_Idx >= pPrdAdv->PrdCTEInfo.CTE_Count )
+                {
+                    // already send all CTE info, then reset pPrdAdv->currentAdvOffset
+                    pPrdAdv->currentAdvOffset = 0;
+                    pPrdAdv->PrdCTEInfo.CTE_Count_Idx = 0;
+                    // length set to zero means stop CTE
+                    ll_hw_set_cte_txSupp( CTE_SUPP_LEN_SET | 0x0 );
+                }
+            }
+            else
+            {
+                // 2020-02-21 bug fix: If CTE is not enabled, then
+                // subsequent packets will not be sent
+                pPrdAdv->currentAdvOffset = 0;
+            }
+        }
+    }
+}
+
+void llSetupAuxScanRspPDU1(extAdvInfo_t * pAdvInfo)
+
+{
+    uint8 advMode, extHeaderFlag, length, extHdrLength, advDataLen;
+    uint8 offset = 0;
+    // set AdvMode
+    advMode = 0;
+    length = 0;
+
+    // adv PDU header
+    g_tx_ext_adv_buf.txheader = 0;
+    // PDU type, 4 bits
+    SET_BITS(g_tx_ext_adv_buf.txheader, ADV_EXT_TYPE, PDU_TYPE_SHIFT, PDU_TYPE_MASK);
+    // RFU, ChSel, TxAdd, RxAdd
+	if ((pAdvInfo->parameter.ownAddrType == LL_DEV_ADDR_TYPE_RPA_PUBLIC) ||
+		(pAdvInfo->parameter.ownAddrType == LL_DEV_ADDR_TYPE_RPA_RANDOM))
+	{
+		if ((adv_param.ownAddr[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR)
+            SET_BITS(g_tx_adv_buf.txheader, LL_DEV_ADDR_TYPE_RANDOM, TX_ADD_SHIFT, TX_ADD_MASK);
+	}
+	else // This will cutoff ownAddrType high bit
+        SET_BITS(g_tx_adv_buf.txheader, pAdvInfo->parameter.ownAddrType, TX_ADD_SHIFT, TX_ADD_MASK);
+
+    extHdrLength = 0;
+    // extended header
+    extHeaderFlag = 0;          // for AUX_SYNC_IND PDU: CTE info, AuxPtr, Tx power, ACAD, Adv Data are optional, other fields are absent
+    extHdrLength ++;
+
+    extHeaderFlag |= LE_EXT_HDR_ADVA_PRESENT_BITMASK;
+    extHdrLength += 6;
+    
+    extHeaderFlag |= LE_EXT_HDR_ADI_PRESENT_BITMASK;
+    extHdrLength += 2;
+    
+    advDataLen = pAdvInfo->scanRspMaxLength - extscanrsp_offset;
+    if (advDataLen > 100)
+    {
+        extHeaderFlag |= LE_EXT_HDR_AUX_PTR_PRESENT_BITMASK;
+        extHdrLength += 3;
+        advDataLen = 100;
+    }
+    
+    length = 1 + extHdrLength + advDataLen;   // 1: extended header len(6bits) + advMode(2bit)
+    // Length
+    SET_BITS(g_tx_ext_adv_buf.txheader, length, LENGTH_SHIFT, LENGTH_MASK);
+    // fill extended header
+    offset = 0;
+    // Extended header length + AdvMode(1 octet)
+    g_tx_ext_adv_buf.data[offset] = ((advMode & 0x3) << 6) | (extHdrLength & 0x3F);
+    offset ++;
+    g_tx_ext_adv_buf.data[offset] = extHeaderFlag;
+    offset ++;
+    
+    // AdvA (6 octets)
+    if (extHeaderFlag & LE_EXT_HDR_ADVA_PRESENT_BITMASK)
+    {
+        if ( (g_currentLocalAddrType == LL_DEV_ADDR_TYPE_RANDOM) &&
+        	 (pAdvInfo->parameter.isOwnRandomAddressSet == TRUE) )
+            memcpy(&g_tx_ext_adv_buf.data[offset], pAdvInfo->parameter.ownRandomAddress, LL_DEVICE_ADDR_LEN);
+        else    // public address
+            memcpy(&g_tx_ext_adv_buf.data[offset], adv_param.ownAddr, LL_DEVICE_ADDR_LEN);
+
+        offset += LL_DEVICE_ADDR_LEN;
+    }
+
+    // AdvDataInfo(ADI)(2 octets)
+    if (extHeaderFlag & LE_EXT_HDR_ADI_PRESENT_BITMASK)
+    {
+        uint16 adi;
+        adi = ((pAdvInfo->parameter.advertisingSID & 0x0F) << 12) | (pAdvInfo->data.DIDInfo & 0x0FFF);
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&adi, 2);
+        offset += 2;
+    }
+
+    // AuxPtr(3 octets)
+    if (extHeaderFlag & LE_EXT_HDR_AUX_PTR_PRESENT_BITMASK)
+    {
+        uint8   chn_idx, ca, offset_unit, aux_phy;
+        uint16  aux_offset;
+        uint32  temp = 0;
+        chn_idx = llGetNextAuxAdvChn(pAdvInfo->currentChn);
+        ca      = 0;        // 50-500ppm
+        offset_unit = 0;    // 30us, for aux offset < 245700us
+        aux_phy = pAdvInfo->parameter.secondaryAdvPHY - 1;     // HCI & LL using different enum
+        aux_offset = g_interAuxPduDuration / 30;
+        temp |= (chn_idx & LL_AUX_PTR_CHN_IDX_MASK) << LL_AUX_PTR_CHN_IDX_SHIFT;
+        temp |= (ca & LL_AUX_PTR_CA_MASK) << LL_AUX_PTR_CA_SHIFT;
+        temp |= (offset_unit & LL_AUX_PTR_OFFSET_UNIT_MASK) << LL_AUX_PTR_OFFSET_UNIT_SHIFT;
+        temp |= (aux_offset & LL_AUX_PTR_AUX_OFFSET_MASK) << LL_AUX_PTR_AUX_OFFSET_SHIFT;
+        temp |= (aux_phy & LL_AUX_PTR_AUX_PHY_MASK) << LL_AUX_PTR_AUX_PHY_SHIFT;
+        temp &= 0x00FFFFFF;
+        memcpy(&g_tx_ext_adv_buf.data[offset], (uint8*)&temp, 3);
+        pAdvInfo->currentChn = chn_idx;        // save secondary channel index
+        offset += 3;
+    }
+    
+    // copy adv data
+    memcpy(&g_tx_ext_adv_buf.data[offset], pAdvInfo->scanRspData + extscanrsp_offset, advDataLen);
+    
+    if (pAdvInfo->scanRspMaxLength == (extscanrsp_offset + advDataLen))
+        extscanrsp_offset = 0;
+    else
+	    extscanrsp_offset += advDataLen;
+}
+
+void ll_hw_trx_settle_bb(uint8_t phyPktFmt, uint8_t delay)
+
+{
+    if (phyPktFmt == PKT_FMT_BLE1M)
+        ll_hw_set_trx_settle(delay, pGlobal_config[LL_HW_AFE_DELAY], pGlobal_config[LL_HW_PLL_DELAY]);
+	else if (phyPktFmt == PKT_FMT_BLE1M)
+        ll_hw_set_trx_settle(delay, pGlobal_config[LL_HW_AFE_DELAY_2MPHY], pGlobal_config[LL_HW_PLL_DELAY_2MPHY]);
+	else if (phyPktFmt == PKT_FMT_BLR500K)
+        ll_hw_set_trx_settle(delay, pGlobal_config[LL_HW_AFE_DELAY_500KPHY], pGlobal_config[LL_HW_PLL_DELAY_500KPHY]);
+	else // (phyPktFmt == PKT_FMT_BLR500K)
+        ll_hw_set_trx_settle(delay, pGlobal_config[LL_HW_AFE_DELAY_125KPHY], pGlobal_config[LL_HW_PLL_DELAY_125KPHY]);
+
+}
+
+int8 ll_processExtAdvIRQ1(uint32_t irq_status)
+
+{
+    uint8         mode;
+    extAdvInfo_t*  pAdvInfo;
+    uint32_t      T2, delay;
+    pAdvInfo = g_pAdvSchInfo[g_currentExtAdv].pAdvInfo;
+
+    if (pAdvInfo == NULL)
+        return FALSE;
+
+    HAL_ENTER_CRITICAL_SECTION();
+    mode = ll_hw_get_tr_mode();
+    
+    if (ll_isLegacyAdv(pAdvInfo))
+    {
+        // process legacy Adv
+        uint8_t  packet_len, pdu_type, txAdd;
+        uint8_t*  peerAddr, *ownAddr;
+        uint8_t  bWlRlCheckOk = TRUE;
+        uint16_t pktLen;
+        uint32_t pktFoot0, pktFoot1;
+        int      calibra_time;                 // this parameter will be provided by global_config
+        ll_debug_output(DEBUG_LL_HW_TRX);
+        // read packet
+        packet_len = ll_hw_read_rfifo1((uint8_t*)(&(g_rx_adv_buf.rxheader)),
+                                       &pktLen,
+                                       &pktFoot0,
+                                       &pktFoot1);
+
+        if (ll_hw_get_rfifo_depth() > 0)
+        {
+            g_pmCounters.ll_rfifo_read_err++;
+            packet_len = 0;
+            pktLen     = 0;
+        }
+
+        // check receive pdu type
+        pdu_type = g_rx_adv_buf.rxheader & PDU_TYPE_MASK;
+        txAdd    = (g_rx_adv_buf.rxheader & TX_ADD_MASK) >> TX_ADD_SHIFT;    // adv PDU header, bit 6: TxAdd, 0 - public, 1 - random
+
+        if ( (pAdvInfo->parameter.ownAddrType == LL_DEV_ADDR_TYPE_RANDOM)
+          && (pAdvInfo->parameter.isOwnRandomAddressSet == TRUE) )
+            ownAddr = pAdvInfo->parameter.ownRandomAddress;
+        else
+            ownAddr = ownPublicAddr;
+
+        if ( (packet_len > 0)                       // any better checking rule for rx anything?
+          && (pdu_type == ADV_SCAN_REQ)
+          && ((pAdvInfo->parameter.advEventProperties == LL_EXT_ADV_PROP_ADV_IND)
+            ||(pAdvInfo->parameter.advEventProperties == LL_EXT_ADV_PROP_ADV_SCAN_IND)) )
+        {
+            // 1. scan req
+            g_pmCounters.ll_recv_scan_req_cnt ++;
+
+            // check AdvA
+            if (g_rx_adv_buf.data[6]  != ownAddr[0]
+                    || g_rx_adv_buf.data[7]  != ownAddr[1]
+                    || g_rx_adv_buf.data[8]  != ownAddr[2]
+                    || g_rx_adv_buf.data[9]  != ownAddr[3]
+                    || g_rx_adv_buf.data[10] != ownAddr[4]
+                    || g_rx_adv_buf.data[11] != ownAddr[5])
+            {
+            }
+            else
+            {
+                uint8_t  rpaListIndex;
+                peerAddr = &g_rx_adv_buf.data[0];      // ScanA
+
+                // Resolving list checking
+                if ( (g_llRlEnable == TRUE)
+                  && (txAdd == LL_DEV_ADDR_TYPE_RANDOM)
+                  && ((g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR) )
+                {
+                    rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
+
+                    if (rpaListIndex < LL_RESOLVINGLIST_ENTRY_NUM)
+                    {
+                        peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
+                    }
+                    else
+                        bWlRlCheckOk = FALSE;
+                }
+
+                // check white list
+                if ( (pGlobal_config[LL_SWITCH] & LL_WHITELIST_ALLOW)
+                  && ((adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_SCAN_REQ)
+                   || (adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_ALL_REQ))
+                   && (bWlRlCheckOk == TRUE) )
+                {
+                    // check white list
+                    bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
+                }
+                
+                if (bWlRlCheckOk == FALSE)   // if not in white list, do nothing
+                {
+                    g_pmCounters.ll_filter_scan_req_cnt ++;
+                }
+                else
+                {
+                    g_pmCounters.ll_rx_peer_cnt++;
+                    uint8 retScanRspFilter = 1;
+
+                    if(LL_PLUS_ScanRequestFilterCBack)
+                    {
+                        retScanRspFilter = 1; //LL_PLUS_ScanRequestFilterCBack();
+                    }
+                    if(retScanRspFilter)
+                    {
+                        // send scan rsp
+                        ll_hw_set_stx();             // set LL HW as single Tx mode
+                        g_same_rf_channel_flag = TRUE;
+                        // calculate the delay
+                        T2 = read_current_fine_time();
+                        delay = (T2 > ISR_entry_time) ? (T2 - ISR_entry_time) : (BASE_TIME_UNITS - ISR_entry_time + T2);
+                        calibra_time = pGlobal_config[SCAN_RSP_DELAY];            // consider rx_done to ISR time, SW delay after read_current_fine_time(), func read_current_fine_time() delay ...
+                        delay = 118 - delay - calibra_time;                       // IFS = 150us, Tx tail -> Rx done time: about 32us
+                        ll_hw_set_trx_settle(delay,                               // set BB delay, about 80us in 16MHz HCLK
+                                             pGlobal_config[LL_HW_AFE_DELAY],
+                                             pGlobal_config[LL_HW_PLL_DELAY]);        //RxAFE,PLL
+                        ll_hw_go();
+                        llWaitingIrq = TRUE;
+                        g_same_rf_channel_flag = FALSE;
+                        // reset Rx/Tx FIFO
+                        ll_hw_rst_rfifo();
+                        ll_hw_rst_tfifo();
+                        //write Tx FIFO
+                        ll_hw_write_tfifo((uint8*)&(tx_scanRsp_desc.txheader),
+                                          ((tx_scanRsp_desc.txheader & 0xff00) >> 8) + 2);   // payload length + header length(2)
+                        ll_debug_output(DEBUG_LL_HW_SET_STX);
+                        g_pmCounters.ll_send_scan_rsp_cnt ++;
+	                }
+                }
+            }
+        }
+        else if (pdu_type == ADV_CONN_REQ
+                 && (pAdvInfo->parameter.advEventProperties == LL_EXT_ADV_PROP_ADV_IND
+                     || pAdvInfo->parameter.advEventProperties == LL_EXT_ADV_PROP_ADV_LDC_ADV
+                     || pAdvInfo->parameter.advEventProperties == LL_EXT_ADV_PROP_ADV_HDC_ADV))
+        {
+            // 2. connect req
+            g_pmCounters.ll_recv_conn_req_cnt ++;
+
+            // check AdvA
+            if (g_rx_adv_buf.data[6]  != ownAddr[0]
+                    || g_rx_adv_buf.data[7]  != ownAddr[1]
+                    || g_rx_adv_buf.data[8]  != ownAddr[2]
+                    || g_rx_adv_buf.data[9]  != ownAddr[3]
+                    || g_rx_adv_buf.data[10] != ownAddr[4]
+                    || g_rx_adv_buf.data[11] != ownAddr[5])
+            {
+                // nothing to do
+            }
+            else
+            {
+                uint8_t  rpaListIndex;
+                peerAddr = &g_rx_adv_buf.data[0];        // initA
+
+                // Resolving list checking
+                if ( (g_llRlEnable == TRUE)
+                  && (txAdd == LL_DEV_ADDR_TYPE_RANDOM)
+                  && ((g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR) )
+                {
+                    rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
+
+                    if (rpaListIndex < LL_RESOLVINGLIST_ENTRY_NUM)
+                    {
+                        peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
+                    }
+                    else
+                        bWlRlCheckOk = FALSE;
+                }
+                
+                // check white list
+                if ( (pGlobal_config[LL_SWITCH] & LL_WHITELIST_ALLOW)
+                  && (llState == LL_STATE_ADV_UNDIRECTED)
+                  && ((adv_param.wlPolicy == LL_ADV_WL_POLICY_WL_CONNECT_REQ)
+                   || (adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_ALL_REQ))
+                  && (bWlRlCheckOk == TRUE) )
+                {
+                    // check white list
+                    bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
+                }
+                
+                // fixed bug 2018-09-25, LL/CON/ADV/BV-04-C, for direct adv, initA should equal peer Addr
+                if (llState == LL_STATE_ADV_DIRECTED)
+                {
+                    if ( (txAdd != peerInfo.peerAddrType)
+			          || (peerAddr[0]  != peerInfo.peerAddr[0])
+			          || (peerAddr[1]  != peerInfo.peerAddr[1])
+			          || (peerAddr[2]  != peerInfo.peerAddr[2])
+			          || (peerAddr[3]  != peerInfo.peerAddr[3])
+			          || (peerAddr[4]  != peerInfo.peerAddr[4])
+			          || (peerAddr[5]  != peerInfo.peerAddr[5]) )
+                    {
+                        // not match, check next
+                        bWlRlCheckOk = FALSE;
+                    }
+                }    
+
+                if (bWlRlCheckOk == FALSE)   // if not in white list, do nothing
+                {
+                    g_pmCounters.ll_filter_conn_req_cnt ++;
+                }
+                else
+                {
+                    // increment statistics counter
+                    g_pmCounters.ll_rx_peer_cnt++;
+                    // bug fixed 2018-01-23, peerAddrType should read TxAdd
+                    peerInfo.peerAddrType = (g_rx_adv_buf.rxheader & TX_ADD_MASK) >> TX_ADD_SHIFT;    // adv PDU header, bit 6: TxAdd, 0 - public, 1 - random
+                    osal_memcpy( peerInfo.peerAddr, g_rx_adv_buf.data, 6);
+                    move_to_slave_function();    // move to slave role for connection state
+                    // add 04-01, set adv inactive, and it will be remove from the scheduler when invoke ll_adv_scheduler()
+                    pAdvInfo->active = FALSE;
+                    LL_AdvSetTerminatedCback(LL_STATUS_SUCCESS,
+                                             pAdvInfo->advHandle,
+                                             adv_param.connId,
+                                             pAdvInfo->adv_event_counter);
+                }
+            }
+        }
+    }
+    else if (mode == LL_HW_MODE_TRX  &&
+             (irq_status & LIRQ_COK))
+    {
+        // TRX mode, receives AUX_SCAN_REQ or AUX_CONNECT_REQ
+        uint8_t  packet_len, pdu_type, txAdd;
+        uint8_t* peerAddr;
+        uint8_t  bWlRlCheckOk = TRUE;
+        uint16_t pktLen;
+        uint32_t pktFoot0, pktFoot1;
+        int      calibra_time;                 // this parameter will be provided by global_config
+        uint8*   ownAddr;
+
+        ll_debug_output(DEBUG_LL_HW_TRX);
+        // read packet
+        packet_len = ll_hw_read_rfifo1((uint8_t*)(&(g_rx_adv_buf.rxheader)),
+                                       &pktLen,
+                                       &pktFoot0,
+                                       &pktFoot1);
+
+        if(ll_hw_get_rfifo_depth() > 0)
+        {
+            g_pmCounters.ll_rfifo_read_err++;
+            packet_len = 0;
+            pktLen     = 0;
+        }
+
+        // check receive pdu type
+        pdu_type = g_rx_adv_buf.rxheader & PDU_TYPE_MASK;
+        txAdd    = (g_rx_adv_buf.rxheader & TX_ADD_MASK) >> TX_ADD_SHIFT;    // adv PDU header, bit 6: TxAdd, 0 - public, 1 - random
+
+        if ( (pAdvInfo->parameter.ownAddrType == LL_DEV_ADDR_TYPE_RANDOM)
+         &&  (pAdvInfo->parameter.isOwnRandomAddressSet == TRUE) )
+            ownAddr = pAdvInfo->parameter.ownRandomAddress;
+        else if (g_currentLocalAddrType == LL_DEV_ADDR_TYPE_RPA_RANDOM)
+            ownAddr = g_currentLocalRpa;
+        else
+            ownAddr = ownPublicAddr;
+
+        if ( (packet_len > 0)
+          && (pdu_type == ADV_AUX_SCAN_REQ)
+          && ((pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_CONN_BITMASK)
+           || (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_SCAN_BITMASK)) )
+        {
+            // 1. scan req
+            g_pmCounters.ll_recv_scan_req_cnt ++;
+
+            // check AdvA
+            if ( (g_rx_adv_buf.data[6]  != ownAddr[0])
+              || (g_rx_adv_buf.data[7]  != ownAddr[1])
+              || (g_rx_adv_buf.data[8]  != ownAddr[2])
+              || (g_rx_adv_buf.data[9]  != ownAddr[3])
+              || (g_rx_adv_buf.data[10] != ownAddr[4])
+              || (g_rx_adv_buf.data[11] != ownAddr[5]) )
+            {
+            }
+            else
+            {
+                uint8_t  rpaListIndex;
+                peerAddr = &g_rx_adv_buf.data[0];      // ScanA
+
+                // Resolving list checking
+                if ( (g_llRlEnable == TRUE)
+                 &&  (txAdd == LL_DEV_ADDR_TYPE_RANDOM)
+                 &&  ((g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR) )
+                {
+                    rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
+
+                    if (rpaListIndex < LL_RESOLVINGLIST_ENTRY_NUM)
+                    {
+                        peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
+                    }
+                    else
+                        bWlRlCheckOk = FALSE;
+                }
+
+                // check white list
+                if ( (pGlobal_config[LL_SWITCH] & LL_WHITELIST_ALLOW)
+                  && ((adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_SCAN_REQ)
+                   || (adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_ALL_REQ))
+                  && (bWlRlCheckOk == TRUE) )
+                {
+                    // check white list
+                    bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
+                }
+
+                if (bWlRlCheckOk == FALSE)   // if not in white list, do nothing
+                {
+                    g_pmCounters.ll_filter_scan_req_cnt ++;
+                }
+                else
+                {
+                    g_pmCounters.ll_rx_peer_cnt++;
+                    llSetupAuxScanRspPDU(pAdvInfo);
+                    // send scan rsp
+                    ll_hw_set_stx();             // set LL HW as single Tx mode
+                    g_same_rf_channel_flag = TRUE;
+                    // calculate the delay
+                    T2 = read_current_fine_time();
+                    delay = (T2 > ISR_entry_time) ? (T2 - ISR_entry_time) : (BASE_TIME_UNITS - ISR_entry_time + T2);
+                    
+                    if (g_rfPhyPktFmt == PKT_FMT_BLE1M)
+                    {
+                    	calibra_time = pGlobal_config[EXT_ADV_AUXSCANRSP_DELAY_1MPHY];
+                    	delay = 118 - (delay + calibra_time); // IFS = 150us, Tx tail -> Rx done time: about 32us
+                    }
+                    else if (g_rfPhyPktFmt == PKT_FMT_BLE2M)
+                    {
+                    	calibra_time = pGlobal_config[EXT_ADV_AUXSCANRSP_DELAY_2MPHY];
+   	                    delay = 132 - (delay + calibra_time);
+                    }
+                    else
+                    { // PKT_FMT_BLR125K
+                    	calibra_time = pGlobal_config[EXT_ADV_AUXSCANRSP_DELAY_125KPHY];
+                    	delay = 118 - (delay + calibra_time);
+                    }
+		            ll_hw_trx_settle_bb(g_rfPhyPktFmt, delay);
+                    ll_hw_go();
+                    llWaitingIrq = TRUE;
+                    g_same_rf_channel_flag = FALSE;
+                    // reset Rx/Tx FIFO
+                    ll_hw_rst_rfifo();
+                    ll_hw_rst_tfifo();
+                    //write Tx FIFO
+                    // =================== TODO: change the buffer to ext adv set
+                    ll_hw_write_tfifo((uint8*)&(g_tx_ext_adv_buf.txheader),
+                                      ((g_tx_ext_adv_buf.txheader & 0xff00) >> 8) + 2);   // payload length + header length(2)
+                    ll_debug_output(DEBUG_LL_HW_SET_STX);
+                    g_pmCounters.ll_send_scan_rsp_cnt ++;
+                }
+            }
+        }
+        else if ( (pdu_type == ADV_CONN_REQ)
+               && (pAdvInfo->parameter.advEventProperties & LE_ADV_PROP_CONN_BITMASK) )
+        {
+            // 2. connect req
+	        // ??? g_auxconnreq_ISR_entry_time = ISR_entry_time;
+            g_pmCounters.ll_recv_conn_req_cnt ++;
+
+            // check AdvA
+            if (g_rx_adv_buf.data[6]  != ownAddr[0]
+                    || g_rx_adv_buf.data[7]  != ownAddr[1]
+                    || g_rx_adv_buf.data[8]  != ownAddr[2]
+                    || g_rx_adv_buf.data[9]  != ownAddr[3]
+                    || g_rx_adv_buf.data[10] != ownAddr[4]
+                    || g_rx_adv_buf.data[11] != ownAddr[5])
+            {
+                // nothing to do
+            }
+            else
+            {
+                uint8_t  rpaListIndex;
+                peerAddr = &g_rx_adv_buf.data[0];      // ScanA
+
+                // Resolving list checking
+                if ( (g_llRlEnable == TRUE)
+                 &&  (txAdd == LL_DEV_ADDR_TYPE_RANDOM)
+                 &&  ((g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR) )
+                {
+                    rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
+
+                    if (rpaListIndex < LL_RESOLVINGLIST_ENTRY_NUM)
+                    {
+                        peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
+                    }
+                    else
+                        bWlRlCheckOk = FALSE;
+                }
+
+                // check white list
+                if ( (pGlobal_config[LL_SWITCH] & LL_WHITELIST_ALLOW)
+                  && ((adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_SCAN_REQ)
+                   || (adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_ALL_REQ))
+                  && (bWlRlCheckOk == TRUE) )
+                {
+                    // check white list
+                    bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
+                }
+
+                if (bWlRlCheckOk == FALSE)   // if not in white list, do nothing
+                {
+                    g_pmCounters.ll_filter_conn_req_cnt ++;
+                }
+                else
+                {
+                    // increment statistics counter
+                    g_pmCounters.ll_rx_peer_cnt++;
+//==============
+                    llSetupAuxConnectRspPDU(pAdvInfo);
+			        if (llWaitingIrq == 0)
+			        {
+		                // send scan rsp
+		                ll_hw_set_stx();             // set LL HW as single Tx mode
+		                g_same_rf_channel_flag = TRUE;
+		                // calculate the delay
+		                T2 = read_current_fine_time();
+		                delay = (T2 > ISR_entry_time) ? (T2 - ISR_entry_time) : (BASE_TIME_UNITS - ISR_entry_time + T2);
+
+		                if (g_rfPhyPktFmt == PKT_FMT_BLE1M)
+		                {
+		                	calibra_time = pGlobal_config[EXT_ADV_AUXCONNRSP_DELAY_1MPHY];
+		                	delay = 118 - (delay + calibra_time); // IFS = 150us, Tx tail -> Rx done time: about 32us
+		                }
+		                else if (g_rfPhyPktFmt == PKT_FMT_BLE2M)
+		                {
+		                	calibra_time = pGlobal_config[EXT_ADV_AUXCONNRSP_DELAY_2MPHY];
+	   	                    delay = 132 - (delay + calibra_time);
+		                }
+		                else
+		                { // PKT_FMT_BLR125K
+		                	calibra_time = pGlobal_config[EXT_ADV_AUXCONNRSP_DELAY_125KPHY];
+		                	delay = 118 - (delay + calibra_time);
+		                }
+						ll_hw_trx_settle_bb(g_rfPhyPktFmt, delay);
+						ll_hw_go();
+						llWaitingIrq = TRUE;
+		                g_same_rf_channel_flag = FALSE;
+		                // reset Rx/Tx FIFO
+		                ll_hw_rst_rfifo();
+		                ll_hw_rst_tfifo();
+		                //write Tx FIFO
+		                ll_hw_write_tfifo((uint8*)&(g_tx_adv_buf.txheader),
+		                                  ((g_tx_adv_buf.txheader & 0xff00) >> 8) + 2);   // payload length + header length(2)
+		                ll_debug_output(DEBUG_LL_HW_SET_STX);
+		                g_pmCounters.ll_send_conn_rsp_cnt ++;
+//==============
+		                // bug fixed 2018-01-23, peerAddrType should read TxAdd
+		                peerInfo.peerAddrType = (g_rx_adv_buf.rxheader & TX_ADD_MASK) >> TX_ADD_SHIFT;    // adv PDU header, bit 6: TxAdd, 0 - public, 1 - random
+		                osal_memcpy( peerInfo.peerAddr, g_rx_adv_buf.data, 6);
+		                move_to_slave_function3();    // move to slave role for connection state
+		                // add 04-01, set adv inactive, and it will be remove from the scheduler when invoke ll_adv_scheduler()
+		                pAdvInfo->active = FALSE;
+		                LL_AdvSetTerminatedCback(LL_STATUS_SUCCESS,
+		                                         pAdvInfo->advHandle,
+		                                         adv_param.connId,
+		                                         pAdvInfo->adv_event_counter);
+		            }
+	            }
+    	    }
+        }
+    }
+    else if (mode == LL_HW_MODE_STX )
+    {
+    }
+		                
+//  // update scheduler list
+//  ll_adv_scheduler();
+
+    if (!llWaitingIrq)
+    {
+        // update scheduler list  // update 04-01, consider sending aux_scan_rsp/aux_conn_rsp case, will invoke scheduler after STX IRQ
+        ll_adv_scheduler();
+        ll_hw_clr_irq();
+        llTaskState = LL_TASK_OTHERS;
+    }
+
+    HAL_EXIT_CRITICAL_SECTION();
+    return TRUE;
+}
+
+
+   
+void LL_IRQHandler2(void)
+
+{
+    char ret;
+    uint irq_status;
+
+    ISR_entry_time = read_current_fine_time();
+    ll_debug_output(DEBUG_ISR_ENTRY);
+    irq_status = ll_hw_get_irq_status();
+
+    if ((irq_status & LIRQ_MD) == 0) { // only process IRQ of MODE DONE
+        ll_hw_clr_irq(); // clear irq status
+        return;
+    }
+    llWaitingIrq = FALSE;
+    if (llTaskState == LL_TASK_EXTENDED_ADV) {
+        ret = ll_processExtAdvIRQ1(irq_status);
+    } else if (llTaskState == LL_TASK_EXTENDED_SCAN) {
+        ret = ll_processExtScanIRQ(irq_status);
+    } else if (llTaskState == LL_TASK_EXTENDED_INIT) {
+        ret = ll_processExtInitIRQ(irq_status);
+    } else if (llTaskState == LL_TASK_PERIODIC_ADV) {
+        ret = ll_processPrdAdvIRQ(irq_status);
+    } else if (llTaskState == LL_TASK_PERIODIC_SCAN) {
+        ret = ll_processPrdScanIRQ(irq_status);
+    } else {
+        ll_processBasicIRQ(irq_status);
+        ret = FALSE;
+    }
+    if (ret != TRUE) {
+        // ================ Post ISR process: secondary pending state process
+        // conn-adv case 2: other ISR, there is pending secondary advertise event, make it happen
+        if (llSecondaryState == LL_SEC_STATE_ADV_PENDING)
+        {
+            if (llSecAdvAllow()) // for multi-connection case, it is possible still no enough time for adv
+            {
+                llSetupSecAdvEvt();
+                llSecondaryState = LL_SEC_STATE_ADV;
+            }
+        }
+        // there is pending scan event, make it happen, note that it may stay pending if there is no enough idle time
+        else if (llSecondaryState == LL_SEC_STATE_SCAN_PENDING)
+        {
+            // trigger scan
+            llSetupSecScan(scanInfo.nextScanChan);
+        }
+        // there is pending init event, make it happen, note that it may stay pending if there is no enough idle time
+        else if (llSecondaryState == LL_SEC_STATE_INIT_PENDING)
+        {
+            // trigger init
+            llSetupSecInit(initInfo.nextScanChan);
+        }
+        ll_debug_output(DEBUG_ISR_EXIT);
+    }
+}
+
+
+void TIM4_IRQHandler(void)
+
+{
+    HAL_ENTER_CRITICAL_SECTION();
+    
+    if (AP_TIM4->status & 0x1) {
+        g_timer4_irq_pending_time = AP_TIM4->CurrentCount - AP_TIM4->LoadCount;
+        clear_timer_int(AP_TIM4);
+        clear_timer(AP_TIM4);
+        if (g_currentTimerTask == LL_TASK_EXTENDED_ADV) {
+            LL_extAdvTimerExpProcess();
+        } else if (g_currentTimerTask == LL_TASK_PERIODIC_ADV) {
+            LL_prdAdvTimerExpProcess();
+        } else if (g_currentTimerTask == LL_TASK_EXTENDED_SCAN) {
+            LL_extScanTimerExpProcess();
+        } else if (g_currentTimerTask == LL_TASK_EXTENDED_INIT) {
+            llSetupExtInit();
+        } else if (g_currentTimerTask == LL_TASK_PERIODIC_SCAN) {
+            LL_prdScanTimerExpProcess();
+        }
+    }
+
+    HAL_EXIT_CRITICAL_SECTION();
+}
+
 void LL_IRQHandler3(void)
 
 {
     char ret;
     uint irq_status;
-    int iVar1;
 
     ISR_entry_time = read_current_fine_time();
     ll_debug_output(DEBUG_ISR_ENTRY);
@@ -862,29 +1931,33 @@ void LL_IRQHandler3(void)
     }
     llWaitingIrq = 0;
     if (llTaskState == LL_TASK_EXTENDED_ADV) {
-        ret = ll_processExtAdvIRQ();
+        ret = ll_processExtAdvIRQ(irq_status);
     } else if (llTaskState == LL_TASK_EXTENDED_SCAN) {
-        ret = ll_processExtScanIRQ1();
+        ret = ll_processExtScanIRQ1(irq_status);
     } else if (llTaskState == LL_TASK_EXTENDED_INIT) {
-        ret = ll_processExtInitIRQ1();
+        ret = ll_processExtInitIRQ1(irq_status);
     } else if (llTaskState == LL_TASK_PERIODIC_ADV) {
         ret = ll_processPrdAdvIRQ(irq_status);
     } else if (llTaskState == LL_TASK_PERIODIC_SCAN) {
-        ret = ll_processPrdScanIRQ();
+        ret = ll_processPrdScanIRQ(irq_status);
     } else {
         ll_processBasicIRQ(irq_status);
         ret = FALSE;
     }
     if (ret != TRUE) {
-        if (llSecondaryState == LL_SEC_STATE_ADV_PENDING) {
-            if (llSecAdvAllow()) {
+        if (llSecondaryState == LL_SEC_STATE_ADV_PENDING)
+        {
+            if (llSecAdvAllow())
+            {
                 llSetupSecAdvEvt();
                 llSecondaryState = LL_SEC_STATE_ADV;
             }
         }
-        else if (llSecondaryState == LL_SEC_STATE_SCAN_PENDING) {
+        else if (llSecondaryState == LL_SEC_STATE_SCAN_PENDING)
+        {
             llSetupSecScan(scanInfo.nextScanChan);
-        } else if (llSecondaryState == LL_SEC_STATE_INIT_PENDING) {
+        } else if (llSecondaryState == LL_SEC_STATE_INIT_PENDING)
+        {
             llSetupSecInit(initInfo.nextScanChan);
         }
         ll_debug_output(DEBUG_ISR_EXIT);
