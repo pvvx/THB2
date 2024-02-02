@@ -91,6 +91,7 @@ void test_config(void) {
 	if (cfg.rf_tx_power > RF_PHY_TX_POWER_EXTRA_MAX)
 		cfg.rf_tx_power = RF_PHY_TX_POWER_EXTRA_MAX;
 	g_rfPhyTxPower = cfg.rf_tx_power;
+	rf_phy_set_txPower(g_rfPhyTxPower);
 
 	gapRole_MinConnInterval = periConnParameters.intervalMin = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
 	gapRole_MaxConnInterval = periConnParameters.intervalMax = DEFAULT_DESIRED_MAX_CONN_INTERVAL;

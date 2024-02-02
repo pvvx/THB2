@@ -1429,7 +1429,7 @@ function setDevCfg() {
 	if(cmdCharacteristic != null) {
 		// addLog("setDevCfg...");
 	    devcfg.flg = parseInt($('inputFlag').value)&0xffffffff; // пока нет
-		devcfg.rf_tx_power = parseInt($('inputTxPwr').value)&0x3f; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
+		devcfg.rf_tx_power = parseInt($('inputTxPwr').value) & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inputLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
 			connect_latency = 0;
@@ -1695,17 +1695,6 @@ function ShowGrf(temp, humi) {
 </div>
 
 <div id="tabConfig" class="tabcontent">
-  Параметры связи<br>
-  <!--
-  Флаг: <input size="8" type="text" id="inputFlag" maxlength="8">
-  Tx Power: <input size="8" type="text" id="inputTxPwr" maxlength="8">
-  Conn. Latency: <input size="8" type="text" id="inputLat" maxlength="8">
-  <br>
-  Интервал рекламы: <input size="8" type="text" id="inputAdvInt" maxlength="8">
-  Интервал измерений: <input size="8" type="text" id="inputMeasInt" maxlength="8">
-  Интервал опроса батареи: <input size="8" type="text" id="inputMeasBat" maxlength="8">
-  Интервал усреднения: <input size="8" type="text" id="inputAverInt" maxlength="8">
-  <br> -->
 <table>
   <tr>
     <th>Флаг</th>
@@ -1713,9 +1702,8 @@ function ShowGrf(temp, humi) {
     <th>Conn. Latency</th>
   </tr>
   <tr align="center">
-    //<td><input size="8" type="text" id="inputFlag" maxlength="8" title="Пока не заданы, будут отдельными checkbox" ></td>
     <td><input size="8" type="text" id="inputFlag" maxlength="8" title="Пока не заданы, будут отдельными checkbox" ></td>
-    <td><input size="4" type="text" id="inputTxPwr" maxlength="4" title="Нелинейное значение - 0..31: -20..+0 дБм, 63: +5 дБм"></td>
+    <td><input size="4" type="text" id="inputTxPwr" maxlength="4" title="Нелинейное значение - 0..31: -20..+0 дБм, 63: +5 дБм ?"></td>
     <td><input size="4" type="text" id="inputLat" maxlength="4" title="Connect latency, Итоговый интервал = 30 * (Connect latency + 1) мс"></td>
   </tr>
 </table>
