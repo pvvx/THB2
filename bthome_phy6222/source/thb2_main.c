@@ -38,7 +38,7 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "battery.h"
 #include "sbp_profile.h"
 #include "ble_ota.h"

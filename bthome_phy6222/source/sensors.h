@@ -1,5 +1,5 @@
 /*
-	sensor.h
+	sensors.h
 	Author: pvvx
 */
 
@@ -66,7 +66,7 @@
 #define CHT8215_CFG_CONSEC_FQ	0x0006
 #define CHT8215_CFG_ATM			0x0001
 
-#define CHT8315_MID	0x5959
+#define CHT8215_MID	0x5959
 #define CHT8215_VID	0x1582
 
 /* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/BTH01/CHT8305.pdf */

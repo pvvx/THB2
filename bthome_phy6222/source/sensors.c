@@ -4,7 +4,7 @@
 */
 
 #include "config.h"
-#include "sensor.h"
+#include "sensors.h"
 
 measured_data_t measured_data;
 

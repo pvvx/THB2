@@ -12,7 +12,7 @@
 #include "gpio.h"
 #include "rom_sym_def.h"
 #include "dev_i2c.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "lcd_th05.h"
 #include "thb2_peripheral.h"
 
