@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v0.7</title>
+<title>PHY62x2 BTHome v0.8</title>
 <style type="text/css">
 /* basic sytles */
 
@@ -1268,16 +1268,7 @@ function customBlkParse(value) {
 		devcfg.batt_interval = value.getUint8(10);
 		devcfg.averaging_measurements = value.getUint8(11);
 	    devcfg.reserved2 = value.getUint8(12);
-
-		$('inputFlag').value  = devcfg.flg; // пока нет
-		$('inputTxPwr').value = devcfg.rf_tx_power; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
-		$('inputLat').value   = (devcfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
-
-		$('inputAdvInt').value  = devcfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
-		$('inputMeasInt').value = devcfg.measure_interval; // *devcfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
-		$('inputAverInt').value = devcfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
-		$('inputBatInt').value  = devcfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
-
+	    ChowConfig();
 		console.log("Dev config # flg: "+hex(devcfg.flg,8)+", tx: "+devcfg.rf_tx_power+", adi: "+devcfg.advertising_interval+", cly: "+devcfg.connect_latency+", msi: "+devcfg.measure_interval+", bti: "+devcfg.batt_interval+", avi: "+devcfg.averaging_measurements);
 		addLog("Строка конфигурации: "+ bytesToHex(value.buffer));
 	} else if((blkId == 0xdb) && (len > 4)) {
@@ -1368,7 +1359,7 @@ function customBlkParse(value) {
 		//if($("dev_name"))
 		//	$("dev_name").value = dnm.name;
 		addLog("Имя устройства: '"+devnm.name+"'");
-	} else if(blkId == 0x10 && len >= 7) {
+	} else if(blkId == 0x10 && len > 6) {
 		let mac = new Uint8Array(6);
 		mac[0] = value.getUint8(6);
 		mac[1] = value.getUint8(5);
@@ -1376,7 +1367,9 @@ function customBlkParse(value) {
 		mac[3] = value.getUint8(3);
 		mac[4] = value.getUint8(2);
 		mac[5] = value.getUint8(1);
-		addLog("MAC устройства: "+ bytesToHex(mac));
+		let mac_txt = bytesToHex(mac);
+		$("inpDevMAC").value = mac_txt;
+		addLog("MAC устройства: "+ mac_txt);
 	} else {
 		console.log('blk: ' + dump8(value, value.byteLength));
 		addLog('Ответ на команду (' + hex(blkId,2) + '): ' + bytesToHex(value.buffer.slice(1)));
@@ -1425,11 +1418,34 @@ function getSensCfg() {
 		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("getSensCfg() error!"); });
 	}
 }
+
+function ChowConfig() {
+	$('chbCfgFlgNotify').checked = devcfg.flg & 1 != 0;
+	if((devsrs.services & 0x00000020) != 0) {
+		$('chbCfgFlgClock').enabled = true;
+		$('chbCfgFlgClock').checked = devcfg.flg & 2 != 0;
+	} else {
+		$('chbCfgFlgClock').enabled = false;
+		$('chbCfgFlgClock').checked = false;
+	}
+	let rfm = 31;
+	el = $('selRfTxPwr');
+	for(let n = 0; n < el.options.length; n++) if(el.options[n].value >= devcfg.rf_tx_power) rfm = el.options[n].value;
+	el.value = rfm;
+	$('inputLat').value   = (devcfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
+	$('inputAdvInt').value  = devcfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
+	$('inputMeasInt').value = devcfg.measure_interval; // *devcfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
+	$('inputAverInt').value = devcfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
+	$('inputBatInt').value  = devcfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
+}
+
 function setDevCfg() {
 	if(cmdCharacteristic != null) {
 		// addLog("setDevCfg...");
-	    devcfg.flg = parseInt($('inputFlag').value)&0xffffffff; // пока нет
-		devcfg.rf_tx_power = parseInt($('inputTxPwr').value) & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
+	    devcfg.flg = 0 
+	    	| $('chbCfgFlgNotify').checked
+	    	| $('chbCfgFlgClock').checked;
+		devcfg.rf_tx_power = $('selRfTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inputLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
 			connect_latency = 0;
@@ -1494,6 +1510,48 @@ function setSensCfg() {
 		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("setSensCfg() error!"); });
 	}
 }
+
+function getDevMAC() {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x10])).catch(error => { console.log(error); addLog("getMAC() error!"); });
+	}
+}
+
+function setDevMAC() {
+	if(cmdCharacteristic != null) {
+		let el = $("inpDevMAC").value;
+		let len = el.length;
+		if(len == 12) {
+			let mac = hexToBytes(el);
+			len = mac.length;
+			if(len == 6 || len == 8) {
+				let blk = new Uint8Array(len+2);
+				blk[0] = 0x10;
+				blk[1] = mac[5];
+				blk[2] = mac[4];
+				blk[3] = mac[3];
+				blk[4] = mac[2];
+				blk[5] = mac[1];
+				blk[6] = mac[0];
+				if(len == 8) {
+					blk[7] = mac[7];
+					blk[8] = mac[6];
+				}
+				console.log("Send cmd New MAC ("+dump(blk, blk.length)+")...");
+				cmdCharacteristic.writeValue(blk).then(_ => {
+					s = "Передача нового MAC: "+dump(mac, 6);
+					if(len == 8)
+						s += " RAND:" +dump(mac.slice(6), 2);
+					addLog(s+" ok");
+				});
+				return;
+			}
+		}
+		addLog("Строка MAC должна быть 6 байт в HEX виде!")
+		return;
+	}
+}
+
 
 function readFile(file) {
 
@@ -1607,6 +1665,8 @@ window.onload = (event) => {
 	selectConfigTab();
 }
 
+window.onresize = (event) => { if(window.innerWidth > 400) $('divDygraph').style.width = (window.innerWidth-40) + 'px';}
+
 window.onload = function() {
 
     document.querySelector("#inpFile").addEventListener("change", function() {
@@ -1622,6 +1682,8 @@ window.onload = function() {
     showState("Не подключено");
 
     disableControls(true);
+
+	if(window.innerWidth > 400) $('divDygraph').style.width = (window.innerWidth-40) + 'px';
 };
 
 // Буфер входящих данных
@@ -1663,7 +1725,7 @@ function ShowGrf(temp, humi) {
 //# sourceMappingURL=dygraph.min.js.map
 </script>
 <h2>PHY62x2 BTHome <a href="https://github.com/pvvx/THB2"><small>&#9432;</small></a></h2>
-<label for="inpNamePrefix">Префикс названия устройств(а)</label><br>
+<label for="inpNamePrefix">Префикс названия устройств(а)</label>
 <input type="text" id="inpNamePrefix" value="" placeholder="THB, BT, TH">
 <hr>
 <label id="lblStatus"></label>
@@ -1702,8 +1764,20 @@ function ShowGrf(temp, humi) {
     <th>Conn. Latency</th>
   </tr>
   <tr align="center">
-    <td><input size="8" type="text" id="inputFlag" maxlength="8" title="Пока не заданы, будут отдельными checkbox" ></td>
-    <td><input size="4" type="text" id="inputTxPwr" maxlength="4" title="Нелинейное значение - 0..31: -20..+0 дБм, 63: +5 дБм ?"></td>
+    <td>
+    Notify измерений <input type="checkbox" id="chbCfgFlgNotify"><br>
+    Показ часов <input type="checkbox" id="chbCfgFlgClock">
+    </td>
+    <td>
+	<select id="selRfTxPwr">
+	<option value="63">+5 дБм</option>
+	<option value="31" selected>+0 дБм</option>
+	<option value="23">-5 дБм</option>
+	<option value="15">-10 дБм</option>
+	<option value="7">-15 дБм</option>
+	<option value="0">-20 дБм</option>
+	</select>
+	</td>
     <td><input size="4" type="text" id="inputLat" maxlength="4" title="Connect latency, Итоговый интервал = 30 * (Connect latency + 1) мс"></td>
   </tr>
 </table>
@@ -1809,8 +1883,17 @@ function ShowGrf(temp, humi) {
 <table>
   <tr>
 	<td style="width:100px;">Команда:</td>
-	<td><button type="button" id="btnSendCommand" onclick="sendCommand()" style="width:120px;">Выполнить</button></td>
 	<td><input type="text" id="inpCmdData" value="55" maxlength="16"></td>
+	<td><button type="button" id="btnSendCommand" onclick="sendCommand()" style="width:120px;">Выполнить</button></td>
+  </tr>
+</table>
+<hr>
+<table>
+  <tr>
+	<!--- <td style="width:100px;">MAC:</td> --->
+	<td><button type="button" id="btnGetDevMAC" onclick="getDevMAC()" style="width:120px;">Прочитать MAC</button></td>
+	<td><input type="text" id="inpDevMAC" value="?" maxlength="16"></td>
+	<td><button type="button" id="btnSetDevMAC" onclick="setDevMAC()" style="width:120px;">Записать MAC</button></td>
   </tr>
 </table>
 </div>
