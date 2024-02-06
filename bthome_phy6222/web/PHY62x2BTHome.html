@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v0.8</title>
+<title>PHY62x2 BTHome v0.9</title>
 <style type="text/css">
 /* basic sytles */
 
@@ -454,6 +454,7 @@ var devinfo = {};
 var devsrs = {};
 var devcfg = {};
 var devcfs = {};
+var devtrg = {};
 var devtime = {};
 var devnm = {};
 
@@ -721,7 +722,6 @@ function disableControls(state)
 	$('btnSetDev').disabled = state;
 	$('btnGetSens').disabled = state;
 	$('btnSetSens').disabled = state;
-	$('btnGetDevTime').disabled = state;
 	$('btnSetDevTime').disabled = state;
 
 	$('btnReadAddr').disabled = state;
@@ -1180,6 +1180,15 @@ function customBlkParse(value) {
 		devsrs.sw_version = value.getUint16(4, true);
 		devsrs.dev_spec_data = value.getUint16(6, true);
 		devsrs.services = value.getUint32(8, true);
+		if((devsrs.services & 0x00000020) != 0) {
+			$("tbComfort").disabled = false;
+		} else {
+			$("tbComfort").disabled = true;
+		}
+		if((devsrs.services & 0x00004000) != 0)
+			$("tbTrigger").disabled = false;
+		else
+			$("tbTrigger").disabled = true;
 		addLog("Dev info # hw: "+hex(devsrs.hw_version,4)+", sw: "+hex(devsrs.sw_version,4)+", services: "+hex(devsrs.services,8)+", sd: "+hex(devsrs.dev_spec_data, 4));
 	} else if(blkId == 0x35){
 		if(flg_memo_act) {
@@ -1347,6 +1356,37 @@ function customBlkParse(value) {
 				}
 			}
 		}
+	} else if((blkId == 0x44) && (len > 8)) {
+		if(len != 9) {
+			devtrg.temp_min = value.getInt16(1, true);
+			devtrg.temp_max = value.getInt16(3, true);
+			devtrg.humi_min = value.getInt16(5, true);
+			devtrg.humi_max = value.getInt16(7, true);
+			if($("tbComfort").disabled == false && (devsrs.services & 0x00000020) != 0) { // SERVICE_SCREEN
+				$("inputTempMin").value = (devtrg.temp_min/100.0).toFixed(2);
+				$("inputTempMax").value = (devtrg.temp_max/100.0).toFixed(2);
+				$("inputHumiMin").value = (devtrg.humi_min/100.0).toFixed(2);
+				$("inputHumiMax").value = (devtrg.humi_max/100.0).toFixed(2);
+			}
+		}
+		let x = 0;
+		if(len == 10) x = 1;
+		else if(len >= 18) x = 9;
+		if(x > 0) {
+			devtrg.temp_threshold = value.getInt16(x, true);
+			devtrg.humi_threshold = value.getInt16(x+2, true);
+			devtrg.temp_hysteresis = value.getInt16(x+4, true);
+			devtrg.humi_hysteresis = value.getInt16(x+6, true);
+			devtrg.flg = value.getUint8(x+8);
+			if($("tbTrigger").disabled == false && (devsrs.services & 0x00004000) != 0) { // SERVICE_TH_TRG
+				$("chbInvOut").checked = (devtrg.flg & 1) != 0;
+				$("inputTempThr").value = (devtrg.temp_threshold/100.0).toFixed(2);
+				$("inputHumiThr").value = (devtrg.humi_threshold/100.0).toFixed(2);
+				$("inputTempHsr").value = (devtrg.temp_hysteresis/100.0).toFixed(2);
+				$("inputHumiHsr").value = (devtrg.humi_hysteresis/100.0).toFixed(2);
+			}
+		}
+		addLog("Строка настроек триггера: "+ bytesToHex(value.buffer));
 	} else if(blkId == 0x20 && len >= 8) {
 		devcmf.tmp_lo = value.getInt16(1, true); // temp lo
 		devcmf.tmp_hi = value.getInt16(3, true); // temp hi
@@ -1420,14 +1460,10 @@ function getSensCfg() {
 }
 
 function ChowConfig() {
-	$('chbCfgFlgNotify').checked = devcfg.flg & 1 != 0;
-	if((devsrs.services & 0x00000020) != 0) {
-		$('chbCfgFlgClock').enabled = true;
-		$('chbCfgFlgClock').checked = devcfg.flg & 2 != 0;
-	} else {
-		$('chbCfgFlgClock').enabled = false;
-		$('chbCfgFlgClock').checked = false;
-	}
+	$('chbCfgFlgNotify').checked = (devcfg.flg & 1) != 0;
+	$('chbCfgFlgClock').checked = (devcfg.flg & 2) != 0;
+	$('chbCfgFlgSmiley').checked = (devcfg.flg & 4) != 0;
+	$('chbCfgFlgTrg').checked = (devcfg.flg & 8) != 0;
 	let rfm = 31;
 	el = $('selRfTxPwr');
 	for(let n = 0; n < el.options.length; n++) if(el.options[n].value >= devcfg.rf_tx_power) rfm = el.options[n].value;
@@ -1442,9 +1478,10 @@ function ChowConfig() {
 function setDevCfg() {
 	if(cmdCharacteristic != null) {
 		// addLog("setDevCfg...");
-	    devcfg.flg = 0 
-	    	| $('chbCfgFlgNotify').checked
-	    	| $('chbCfgFlgClock').checked;
+	    devcfg.flg = ($('chbCfgFlgNotify').checked) ? 1 : 0;
+	    devcfg.flg |= ($('chbCfgFlgClock').checked) ? 2 : 0;
+	    devcfg.flg |= ($('chbCfgFlgSmiley').checked) ? 4 : 0;
+	    devcfg.flg |= ($('chbCfgFlgTrg').checked) ? 8 : 0;
 		devcfg.rf_tx_power = $('selRfTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inputLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
@@ -1552,6 +1589,56 @@ function setDevMAC() {
 	}
 }
 
+function getTrgCfg() {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x44])).catch(error => { console.log(error); addLog("getTrgCfg() error!"); });
+	}
+}
+
+function setTrgCfg() {
+	if(cmdCharacteristic != null) {
+		let len = 0;
+		if((devsrs.services & 0x00000020) != 0)	len = 8;
+		if((devsrs.services & 0x00004000) != 0)	len += 9;
+		if(len > 0) {
+			let blk = new Uint8Array(len + 1);
+			blk[0] = 0x44;
+			let idx = 0;
+			if(len != 9) {
+			    devtrg.temp_min = Math.round($("inputTempMin").value * 100);
+			    devtrg.temp_max = Math.round($("inputTempMax").value * 100);
+			    devtrg.humi_min = Math.round($("inputHumiMin").value * 100);
+			    devtrg.humi_max = Math.round($("inputHumiMax").value * 100);
+				blk[1] = devtrg.temp_min & 0xff;
+				blk[2] = (devtrg.temp_min >> 8) & 0xff;
+				blk[3] = devtrg.temp_max & 0xff;
+				blk[4] = (devtrg.temp_max >> 8) & 0xff;
+				blk[5] = devtrg.humi_min & 0xff;
+				blk[6] = (devtrg.humi_min >> 8) & 0xff;
+				blk[7] = devtrg.humi_max & 0xff;
+				blk[8] = (devtrg.humi_max >> 8) & 0xff;
+				idx = 9;
+			}
+			if(len > 8) {
+				devtrg.temp_threshold = Math.round($("inputTempThr").value * 100);
+				devtrg.humi_threshold = Math.round($("inputHumiThr").value * 100);
+				devtrg.temp_hysteresis = Math.round($("inputTempHsr").value * 100);
+				devtrg.humi_hysteresis = Math.round($("inputHumiHsr").value * 100);
+				devtrg.flg = ($("chbInvOut").checked)? 1: 0;
+				blk[idx+0] = devtrg.temp_threshold & 0xff;
+				blk[idx+1] = (devtrg.temp_threshold >> 8) & 0xff;
+				blk[idx+2] = devtrg.humi_threshold & 0xff;
+				blk[idx+3] = (devtrg.humi_threshold >> 8) & 0xff;
+				blk[idx+4] = devtrg.temp_hysteresis & 0xff;
+				blk[idx+5] = (devtrg.temp_hysteresis >> 8) & 0xff;
+				blk[idx+6] = devtrg.humi_hysteresis & 0xff;
+				blk[idx+7] = (devtrg.humi_hysteresis >> 8) & 0xff;
+				blk[idx+8] = devtrg.flg & 0xff;
+			}
+			cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setTrgCfg() error!"); });
+		}
+	}
+}
 
 function readFile(file) {
 
@@ -1766,7 +1853,9 @@ function ShowGrf(temp, humi) {
   <tr align="center">
     <td>
     Notify измерений <input type="checkbox" id="chbCfgFlgNotify"><br>
-    Показ часов <input type="checkbox" id="chbCfgFlgClock">
+    Показ часов <input type="checkbox" id="chbCfgFlgClock"><br>
+    Показывать Смайлик <input type="checkbox" id="chbCfgFlgSmiley"><br>
+    Показывать Триггер <input type="checkbox" id="chbCfgFlgTrg">
     </td>
     <td>
 	<select id="selRfTxPwr">
@@ -1825,7 +1914,6 @@ function ShowGrf(temp, humi) {
   </tr>
 </table>
 <br>
-
 <!--
   Поправочные коэффициенты:
   Температуры: <input size="8" type="text" id="inputTempK" maxlength="8">
@@ -1843,7 +1931,29 @@ function ShowGrf(temp, humi) {
 <button type="button"id="btnGetSens" onclick="getSensCfg()">Прочитать</button>
 <button type="button"id="btnSetSens" onclick="setSensCfg()">Записать</button><br>
 <hr>
-<button type="button" id="btnGetDevTime" onclick="getDevTime()">Время устройства</button>  
+<table id="tbComfort" disabled="true">
+  <tr>
+    <td>Комфорт: </td>
+    <td>Температура от <input size="4" type="text" id="inputTempMin" maxlength="4" title="Минимальная температура">
+    до <input size="4" type="text" id="inputTempMax" maxlength="4" title="Максимальная температура"> °C,</td>
+    <td>Влажность  от <input size="4" type="text" id="inputHumiMin" maxlength="4" title="Минимальная влажность">
+    до <input size="4" type="text" id="inputHumiMax" maxlength="4" title="Максимальная влажность"> %RH</td>
+  </tr>
+</table>
+<table id="tbTrigger" disabled="true">
+  <tr>
+    <td>Триггер: </td>
+    <td>Температура: <input size="4" type="text" id="inputTempThr" maxlength="4" title="Температура переключения"> °C</td>
+    <td>Влажность: <input size="4" type="text" id="inputHumiThr" maxlength="4" title="Влажность переключения"> %RH, </td>
+    <td>Гистерезис: <input size="4" type="text" id="inputTempHsr" maxlength="4" title="Гистерезис температуры"> °C</td>
+    <td><input size="4" type="text" id="inputHumiHsr" maxlength="4" title="Гистерезис влажности"> %RH</td>
+    <td>Инверсия вывода <input type="checkbox" id="chbInvOut"></td>
+	<td>
+  </tr>
+</table>
+<button type="button"id="btnGetTrg" onclick="getTrgCfg()">Прочитать</button>
+<button type="button"id="btnSetTrg" onclick="setTrgCfg()">Записать</button><br>
+<hr>
 <button type="button" id="btnSetDevTime" onclick="setDevTime()">Установить время</button>
 </div>
 

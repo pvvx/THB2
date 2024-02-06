@@ -21,13 +21,14 @@
 #include "flash_eep.h"
 #include "thb2_main.h"
 #include "sbp_profile.h"
-#include "sensors.h"
+#include "sensor.h"
 #include "cmd_parser.h"
 #include "devinfoservice.h"
 #include "ble_ota.h"
 #include "thb2_peripheral.h"
 #include "lcd_th05.h"
 #include "logger.h"
+#include "trigger.h"
 /*********************************************************************/
 extern gapPeriConnectParams_t periConnParameters;
 
@@ -86,6 +87,18 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		} else if (cmd == CMD_ID_SEN_ID) {
 			memcpy(&obuf[1], (uint8_t *)&thsensor_cfg.mid, 5);
 			olen = 1 + 5;
+#if (OTA_TYPE == OTA_TYPE_APP) && ((DEV_SERVICES & SERVICE_TH_TRG) || (DEV_SERVICES & SERVICE_SCREEN))
+		} else if (cmd == CMD_ID_TRG) {	// Get/Set tigger data config
+			if (--len > trigger_send_size)
+				len = trigger_send_size;
+			if (len) {
+				memcpy(&trg, &ibuf[1], len);
+				flash_write_cfg(&trg, EEP_ID_TRG, trigger_send_size);
+			}
+			memcpy(&obuf[1], &trg, trigger_send_size);
+			olen = trigger_send_size + 1;
+#endif
+
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
 		} else if (cmd == CMD_ID_LOGGER && len > 2) { // Read memory measures

@@ -27,7 +27,7 @@
 #include "logger.h"
 #include "hci.h"
 #include "lcd_th05.h"
-#include "sensors.h"
+#include "sensor.h"
 
 /*********************************************************************
  * MACROS

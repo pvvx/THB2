@@ -3,11 +3,11 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 
 * Тестовый [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
-Прошивка Boot-OTA для THB2 (файл bin\BOOT_THB2_v1x.hex). 
+Прошивка Boot-OTA для THB2 (файл bin\BOOT_THB2_v10.hex). 
 
-Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v1x.hex). 
+Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v10.hex). 
 
-Прошивка Boot-OTA для TH05 (файл bin\BOOT_TH05_v1x.hex). 
+Прошивка Boot-OTA для TH05 (файл bin\BOOT_TH05_v10.hex). 
 
 ## Основные характеристики:
 
@@ -21,6 +21,14 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 * Запись итории каждые 30 минут
 * Интервал соединения с учетом Connect Latency - 900 мс
 * Поддерживаемые сенсоры температуры и влажности: AHT30, CHT8305, CHT8215, CHT8310
+
+## История версий:
+
+| N | Описание |
+|---|--- |
+| 1.0 | Первая релизная версия |
+| 1.1 | Добавлен триггер - вывод TX2 срабатывающий по установленным значениям температуры и/или влажности с гистерезисами. Передача состояния вывода RX2. Для термометров с экраном добавлен показ смайлика с "комфортом". |
+
 
 ## Прошивка:
 

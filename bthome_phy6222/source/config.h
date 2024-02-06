@@ -1,7 +1,7 @@
 /*
  * config.h
  *
- *  Created on: 11 янв. 2024 г.
+ *  Created on: 11/01/2024
  *      Author: pvvx
  */
 
@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x10	// BCD
+#define APP_VERSION	0x11	// BCD
 #endif
 
 /*
@@ -52,19 +52,20 @@
 #define SERVICE_SCREEN		0x00000020	// есть экран
 #define SERVICE_LE_LR		0x00000040	// пока нет: Есть поддержка рекламы в LE Long Range
 #define SERVICE_THS			0x00000080	// есть датчик температуры и влажности
-#define SERVICE_RDS			0x00000100	// пока нет есть обслуживние геркона/счета импульсов
+#define SERVICE_RDS			0x00000100	// пока нет: есть обслуживние геркона/счета импульсов
 #define SERVICE_KEY			0x00000200	// есть кнопка
 #define SERVICE_OUTS		0x00000400	// пока нет: есть обслуживние выходных пинов
 #define SERVICE_INS			0x00000800	// пока нет: есть обслуживние входных пинов
 #define SERVICE_TIME_ADJUST 0x00001000	// пока нет: есть функция коррекции счета времени
 #define SERVICE_HARD_CLOCK	0x00002000	// пока нет: есть реальные часы RTC
+#define SERVICE_TH_TRG		0x00004000	// триггер по температуре и влажности
 
 #define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
 #define OTA_TYPE_BOOT	SERVICE_OTA		// вариант для прошивки boot + OTA
 #define OTA_TYPE_APP	OTA_TYPE_NONE
 
 #ifndef OTA_TYPE
-#define OTA_TYPE	OTA_TYPE_BOOT
+#define OTA_TYPE	OTA_TYPE_APP
 #endif
 
 #if OTA_TYPE == OTA_TYPE_BOOT
@@ -85,6 +86,7 @@
 		| SERVICE_THS \
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
+		| SERVICE_TH_TRG \
 )
 #endif
 
@@ -98,6 +100,9 @@
 #define GPIO_LED	GPIO_P26
 #define LED_ON		0
 #define LED_OFF		1
+
+#define GPIO_TRG	GPIO_P09 // TX
+#define GPIO_INP	GPIO_P10 // RX
 
 #define DEF_MODEL_NUMBER_STR		"THB2"
 #define DEF_HARDWARE_REVISION		"0001"
@@ -115,6 +120,7 @@
 		| SERVICE_THS \
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
+		| SERVICE_TH_TRG \
 )
 #endif
 
@@ -129,6 +135,9 @@
 #define GPIO_LED	GPIO_P15
 #define LED_ON		1
 #define LED_OFF		0
+
+#define GPIO_TRG	GPIO_P20 // mark TX2
+#define GPIO_INP	GPIO_P18 // mark RX2
 
 #define DEF_MODEL_NUMBER_STR		"BTH01"
 #define DEF_HARDWARE_REVISION		"0001"
@@ -148,7 +157,12 @@
 		| SERVICE_THS \
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
+		| SERVICE_TH_TRG \
 )
+#endif
+
+#if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
+#error "Not SERVICE_TH_TRG!"
 #endif
 
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
@@ -163,8 +177,11 @@
 #define I2C_SCL 	GPIO_P34 // AHT20_SCL
 #define GPIO_SPWR	GPIO_P00 // питание сенсора CHT8305_VDD
 #define GPIO_KEY	GPIO_P14
-
 #define GPIO_LPWR	GPIO_P02 // питание LCD драйвера
+
+#define GPIO_TRG	GPIO_P20 // mark TX2
+#define GPIO_INP	GPIO_P18 // mark RX2
+
 //#define GPIO_LED	GPIO_P20
 //#define LED_ON		1
 //#define LED_OFF		0
@@ -205,7 +222,9 @@ extern const cfg_t def_cfg;
 
 #define FLG_MEAS_NOTIFY		0x00000001	// включить Notify измерений
 #define FLG_SHOW_TIME		0x00000002	// включить показ часов на LCD
-#define FLG_ADV_CRYPT		0x00000004	// Зашифрованная BLE реклама (bindkey)
+#define FLG_SHOW_SMILEY		0x00000004	// включить показ смайлика
+#define FLG_SHOW_TRG		0x00000008	// смайлик поаказывает TRG
+#define FLG_ADV_CRYPT		0x00000010	// Зашифрованная BLE реклама (bindkey)
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;

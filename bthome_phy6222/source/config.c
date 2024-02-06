@@ -34,10 +34,11 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
-#include "sensors.h"
+#include "sensor.h"
 #include "battery.h"
 #include "sbp_profile.h"
 #include "logger.h"
+#include "trigger.h"
 
 extern gapPeriConnectParams_t periConnParameters;
 
@@ -91,7 +92,7 @@ void test_config(void) {
 	if (cfg.rf_tx_power > RF_PHY_TX_POWER_EXTRA_MAX)
 		cfg.rf_tx_power = RF_PHY_TX_POWER_EXTRA_MAX;
 	g_rfPhyTxPower = cfg.rf_tx_power;
-	//rf_phy_set_txPower(g_rfPhyTxPower);
+	rf_phy_set_txPower(g_rfPhyTxPower);
 
 	gapRole_MinConnInterval = periConnParameters.intervalMin = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
 	gapRole_MaxConnInterval = periConnParameters.intervalMax = DEFAULT_DESIRED_MAX_CONN_INTERVAL;
@@ -112,7 +113,12 @@ void test_config(void) {
 void load_eep_config(void) {
 	if(!flash_supported_eep_ver(0, APP_VERSION)) {
 		memcpy(&cfg, &def_cfg, sizeof(cfg));
+#if (DEV_SERVICES & SERVICE_THS)
 		memset(&thsensor_cfg.coef, 0, sizeof(thsensor_cfg.coef));
+#endif
+#if (OTA_TYPE == OTA_TYPE_APP) && ((DEV_SERVICES & SERVICE_TH_TRG) || (DEV_SERVICES & SERVICE_SCREEN))
+		memcpy(&trg, &def_trg, sizeof(trg));
+#endif
 	} else {
 		if (flash_read_cfg(&cfg, EEP_ID_CFG, sizeof(cfg)) != sizeof(cfg))
 			memcpy(&cfg, &def_cfg, sizeof(cfg));
@@ -121,12 +127,17 @@ void load_eep_config(void) {
 			memset(&thsensor_cfg.coef, 0, sizeof(thsensor_cfg.coef));
 		}
 #endif
-	}
-#if (DEV_SERVICES & SERVICE_TIME_ADJUST)
-	if (flash_read_cfg(&clkt.delta_time, EEP_ID_TIM, sizeof(&clkt.delta_time)) != sizeof(&clkt.delta_time)) {
-		clkt.delta_time = 0;
-	}
+#if (OTA_TYPE == OTA_TYPE_APP) && ((DEV_SERVICES & SERVICE_TH_TRG) || (DEV_SERVICES & SERVICE_SCREEN))
+		if (flash_read_cfg(&trg, EEP_ID_TRG, trigger_send_size) != trigger_send_size) {
+			memcpy(&trg, &def_trg, sizeof(trg));
+		}
 #endif
+#if (DEV_SERVICES & SERVICE_TIME_ADJUST)
+		if (flash_read_cfg(&clkt.delta_time, EEP_ID_TIM, sizeof(&clkt.delta_time)) != sizeof(&clkt.delta_time)) {
+			clkt.delta_time = 0;
+		}
+#endif
+	}
 #if (DEV_SERVICES & SERVICE_HISTORY)
 	memo_init();
 #endif

@@ -12,7 +12,7 @@
 #include "gpio.h"
 #include "rom_sym_def.h"
 #include "dev_i2c.h"
-#include "sensors.h"
+#include "sensor.h"
 #include "lcd_th05.h"
 #include "thb2_peripheral.h"
 
@@ -107,7 +107,7 @@ const uint8_t lcd_init_cmd[]	=	{
  * 0x5 = "°F"
  * 0x6 = " ="
  * 0x7 = "°E" */
-void show_temp_symbol(CLD_TEMP_SYMBOL symbol) {
+void show_temp_symbol(LCD_TEMP_SYMBOLS symbol) {
 	display_buff[2] &= ~BIT(3);
 	display_buff[3] &= ~(BIT(7)|BIT(5)) ;
 	display_buff[2] |= (symbol << 2) & BIT(3);
@@ -122,10 +122,10 @@ void show_temp_symbol(CLD_TEMP_SYMBOL symbol) {
  * 5 = "(^_^)" happy
  * 6 = "(-^-)" sad
  * 7 = "(ooo)" */
-void show_smiley(uint8_t state) {
+void show_smiley(LCD_SMILEY_SYMBOLS symbol) {
 	display_buff[3] &= ~0x15;
-	state = (state & 1) | ((state << 1) & 4) | ((state << 2) & 0x10);
-	display_buff[3] |= state;
+	symbol = (symbol & 1) | ((symbol << 1) & 4) | ((symbol << 2) & 0x10);
+	display_buff[3] |= symbol;
 }
 
 void show_ble_symbol(bool state) {
@@ -234,13 +234,44 @@ void chow_measure(void) {
 	show_big_number_x10(measured_data.temp/10);
 	show_small_number(measured_data.humi/100, true);
 	show_battery_symbol(measured_data.battery < 20);
-	show_temp_symbol(CLD_TSYMBOL_C);
+	show_temp_symbol(LCD_TSYMBOL_C);
+#if (OTA_TYPE == OTA_TYPE_APP)
+	if(cfg.flg & FLG_SHOW_SMILEY) {
+#if (DEV_SERVICES & SERVICE_TH_TRG)
+		if(cfg.flg & FLG_SHOW_TRG) {
+			if(measured_data.flg.comfort) {
+				if(measured_data.flg.trg_on)
+					show_smiley(LD_SSYMBOL_HAPPY);
+				else
+					show_smiley(LD_SSYMBOL__HAPPY);
+			} else {
+				if(measured_data.flg.trg_on)
+					show_smiley(LD_SSYMBOL_SAD);
+				else
+					show_smiley(LD_SSYMBOL__SAD);
+			}
+		} else
+#endif // SERVICE_TH_TRG
+			if(measured_data.flg.comfort)
+				show_smiley(LD_SSYMBOL_HAPPY);
+			else
+				show_smiley(LD_SSYMBOL_SAD);
+#if (DEV_SERVICES & SERVICE_TH_TRG)
+	} else if(cfg.flg & FLG_SHOW_TRG) {
+		if(measured_data.flg.trg_on)
+			show_smiley(LD_SSYMBOL_CC);
+		else
+			show_smiley(LD_SSYMBOL_OFF);
+	} else
+#endif // SERVICE_TH_TRG
+#endif // OTA_TYPE
+		show_smiley(LD_SSYMBOL_OFF);
 #else
 	show_big_number_x10(measured_data.battery_mv/100);
 	show_small_number((measured_data.battery > 99)? 99 : measured_data.battery, true);
 	show_battery_symbol(1);
-#endif
-	show_smiley(0);
+	show_smiley(LD_SSYMBOL_OFF);
+#endif // SERVICE_THS
 	show_ble_symbol(gapRole_state == GAPROLE_CONNECTED);
 	update_lcd();
 }

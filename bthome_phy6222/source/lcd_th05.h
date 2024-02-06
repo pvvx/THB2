@@ -49,12 +49,31 @@ extern uint8_t display_buff[LCD_BUF_SIZE];
  * 0x6 = " ="
  * 0x7 = "°E" */
 typedef enum {
-	CLD_TSYMBOL_NONE, 	// "  "
-	CLD_TSYMBOL_C = 3,	// "°C"
-	CLD_TSYMBOL_F = 5,	// "°F"
-	CLD_TSYMBOL_EQ = 6,	// " ="
-	CLD_TSYMBOL_E = 7	// "°E"
-} CLD_TEMP_SYMBOL;
+	LCD_TSYMBOL_NONE, 	// "  "
+	LCD_TSYMBOL_C = 3,	// "°C"
+	LCD_TSYMBOL_F = 5,	// "°F"
+	LCD_TSYMBOL_EQ = 6,	// " ="
+	LCD_TSYMBOL_E = 7	// "°E"
+} LCD_TEMP_SYMBOLS;
+
+/* 0 = "     " off,
+ * 1 = " ^_^ " happy
+ * 2 = " -^- " sad
+ * 3 = " ooo "
+ * 4 = "(   )"
+ * 5 = "(^_^)" happy
+ * 6 = "(-^-)" sad
+ * 7 = "(ooo)" */
+typedef enum {
+	LD_SSYMBOL_OFF,		// 0 = "     " off,
+	LD_SSYMBOL__HAPPY,	// 1 = " ^_^ " happy
+	LD_SSYMBOL__SAD,	// 2 = " -^- " sad
+	LD_SSYMBOL_OOO,		// 3 = " ooo "
+	LD_SSYMBOL_CC,		// 4 = "(   )"
+	LD_SSYMBOL_HAPPY,	// 5 = "(^_^)" happy
+	LD_SSYMBOL_SAD,		// 6 = "(-^-)" sad
+	LD_SSYMBOL_ALL,		// 7 = "(ooo)"
+} LCD_SMILEY_SYMBOLS;
 
 void init_lcd(void);
 void update_lcd(void);
@@ -62,8 +81,8 @@ void show_small_number(int16_t number, bool percent);
 void show_big_number_x10(int16_t number);
 void show_battery_symbol(bool state);
 void show_ble_symbol(bool state);
-void show_smiley(uint8_t state);
-void show_temp_symbol(CLD_TEMP_SYMBOL symbol);
+void show_smiley(LCD_SMILEY_SYMBOLS symbol);
+void show_temp_symbol(LCD_TEMP_SYMBOLS symbol);
 //void chow_clock(void);
 //void chow_measure(void);
 

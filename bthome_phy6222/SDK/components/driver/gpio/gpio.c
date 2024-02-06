@@ -19,6 +19,7 @@
 #include "log.h"
 #include "global_config.h"
 
+#define TEST_PIN_NUM	0
 
 extern uint32_t s_gpio_wakeup_src_group1,s_gpio_wakeup_src_group2;
 
@@ -128,9 +129,10 @@ static int hal_gpio_interrupt_disable(gpio_pin_e pin)
 
 void hal_gpio_write(gpio_pin_e pin, uint8_t en)
 {
-//    hal_gpio_pin_init(pin,GPIO_OUTPUT);
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
+#endif
 
     if(en)
         AP_GPIO->swporta_dr |= BIT(pin);
@@ -142,8 +144,10 @@ void hal_gpio_write(gpio_pin_e pin, uint8_t en)
 
 void hal_gpio_fast_write(gpio_pin_e pin, uint8_t en)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
+#endif
 
     if(en)
         AP_GPIO->swporta_dr |= BIT(pin);
@@ -154,9 +158,10 @@ void hal_gpio_fast_write(gpio_pin_e pin, uint8_t en)
 bool hal_gpio_read(gpio_pin_e pin)
 {
     uint32_t r;
-
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
     if(AP_GPIO->swporta_ddr & BIT(pin))
         r = AP_GPIO->swporta_dr;
@@ -168,9 +173,10 @@ bool hal_gpio_read(gpio_pin_e pin)
 
 void hal_gpio_fmux(gpio_pin_e pin, bit_action_e value)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
-
+#endif
     if(value)
     {
 //        if((pin == P2) || (pin == P3))
@@ -201,9 +207,10 @@ void hal_gpio_fmux_set(gpio_pin_e pin, gpio_fmux_e type)
 
 int hal_gpio_pin_init(gpio_pin_e pin, gpio_dir_t type)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
-
+#endif
 //    if((m_gpioCtx.pin_assignments[pin] == GPIO_PIN_ASSI_OUT) &&
 //            (m_gpioCtx.pin_retention_status & BIT(pin)) && (type == GPIO_INPUT))
 //        return PPlus_ERR_INVALID_PARAM;
@@ -250,8 +257,10 @@ static void hal_gpio_wakeup_control(gpio_pin_e pin, bit_action_e value)
 
 void hal_gpio_ds_control(gpio_pin_e pin, bit_action_e value)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
+#endif
 
     if(value)
         AP_IOMUX->pad_ps0 |= BIT(pin);
@@ -261,8 +270,10 @@ void hal_gpio_ds_control(gpio_pin_e pin, bit_action_e value)
 
 int hal_gpioretention_unregister(gpio_pin_e pin)
 {
-    if (pin > (NUMBER_OF_PINS - 1))
+#if TEST_PIN_NUM
+	if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
     if(m_gpioCtx.pin_assignments[pin] != GPIO_PIN_ASSI_OUT)
         return PPlus_ERR_INVALID_PARAM;
@@ -275,9 +286,10 @@ int hal_gpioretention_unregister(gpio_pin_e pin)
 int hal_gpioin_unregister(gpio_pin_e pin)
 {
     gpioin_Ctx_t* p_irq_ctx = &(m_gpioCtx.irq_ctx[0]);
-
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
     hal_gpioin_disable(pin);
     p_irq_ctx[pin].negedgeHdl = NULL;
@@ -290,8 +302,10 @@ int hal_gpio_cfg_analog_io(gpio_pin_e pin, bit_action_e value)
     if((pin < P11) || (pin > P25))
         return PPlus_ERR_INVALID_PARAM;
 
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
     if(value)
     {
@@ -309,8 +323,10 @@ int hal_gpio_cfg_analog_io(gpio_pin_e pin, bit_action_e value)
 
 void hal_gpio_pull_set(gpio_pin_e pin, gpio_pupd_e type)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
+#endif
 
     uint8_t i = c_gpio_pull[pin].reg_i;
     uint8_t h = c_gpio_pull[pin].bit_h;
@@ -324,9 +340,10 @@ void hal_gpio_pull_set(gpio_pin_e pin, gpio_pupd_e type)
 
 void hal_gpio_wakeup_set(gpio_pin_e pin, gpio_polarity_e type)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
-
+#endif
     uint8_t i = c_gpio_pull[pin].reg_i;
     uint8_t p = c_gpio_pull[pin].bit_l-1;
 
@@ -364,8 +381,10 @@ void hal_gpio_pin2pin3_control(gpio_pin_e pin, uint8_t en)//0:sw,1:other func
 #if(CFG_SLEEP_MODE == PWR_MODE_SLEEP)
 static void hal_gpio_retention_enable(gpio_pin_e pin,uint8_t en)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
+#endif
 
     if(en)
     {
@@ -396,8 +415,10 @@ int hal_gpioin_disable(gpio_pin_e pin)
 {
     gpioin_Ctx_t* p_irq_ctx = &(m_gpioCtx.irq_ctx[0]);
 
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
     p_irq_ctx[pin].enable = FALSE;
     m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_NONE;
@@ -409,8 +430,10 @@ static int hal_gpio_interrupt_enable(gpio_pin_e pin, gpio_polarity_e type)
 {
     uint32_t gpio_tmp;
 
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
     gpio_tmp = AP_GPIO->inttype_level;
     gpio_tmp |= (1 << pin); //edge sensitive
@@ -436,8 +459,10 @@ static void hal_gpioin_event_pin(gpio_pin_e pin, gpio_polarity_e type)
 {
     gpioin_Ctx_t* p_irq_ctx = &(m_gpioCtx.irq_ctx[0]);
 
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
+#endif
 
     if (p_irq_ctx[pin].posedgeHdl && (type == POL_RISING ))
     {
@@ -452,8 +477,10 @@ static void hal_gpioin_event_pin(gpio_pin_e pin, gpio_polarity_e type)
 #if(CFG_SLEEP_MODE == PWR_MODE_SLEEP)
 static void hal_gpioin_wakeup_trigger(gpio_pin_e pin)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return;
+#endif
 
     uint8_t pin_state = (uint8_t)hal_gpio_read(pin);
     gpio_polarity_e type = pin_state ? POL_RISING  : POL_FALLING;
@@ -597,8 +624,10 @@ int hal_gpioin_enable(gpio_pin_e pin)
     gpio_polarity_e type = POL_FALLING;
     uint32 pinVal = 0;
 
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
     if (p_irq_ctx[pin].posedgeHdl == NULL && p_irq_ctx[pin].negedgeHdl == NULL)
         return PPlus_ERR_NOT_REGISTED;
@@ -628,8 +657,10 @@ int hal_gpioin_enable(gpio_pin_e pin)
 
 int hal_gpioretention_register(gpio_pin_e pin)
 {
+#if TEST_PIN_NUM
     if (pin > (NUMBER_OF_PINS - 1))
         return PPlus_ERR_NOT_SUPPORTED;
+#endif
 
 		hal_gpio_pin_init(pin, GPIO_OUTPUT);
 	  m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_OUT;

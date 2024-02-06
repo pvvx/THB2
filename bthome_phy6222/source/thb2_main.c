@@ -38,12 +38,13 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
-#include "sensors.h"
+#include "sensor.h"
 #include "battery.h"
 #include "sbp_profile.h"
 #include "ble_ota.h"
 #include "lcd_th05.h"
 #include "logger.h"
+#include "trigger.h"
 /*********************************************************************
  * MACROS
  */
@@ -330,6 +331,12 @@ static void init_app_gpio(void)
 #ifdef GPIO_SPWR  // питание сенсора CHT8305_VDD
 	hal_gpio_write(GPIO_SPWR, 1);
 	hal_gpioretention_register(GPIO_SPWR);//enable this pin retention
+#endif
+#if (DEV_SERVICES & SERVICE_TH_TRG)
+#ifdef GPIO_TRG
+	hal_gpio_write(GPIO_TRG, (trg.cfg & TRG_CFG_OUT_INV) != 0);
+	hal_gpioretention_register(GPIO_TRG);//enable this pin retention
+#endif
 #endif
 }
 

@@ -9,7 +9,7 @@
 #include "thb2_main.h"
 #include "pwrmgr.h"
 #include "jump_function.h"
-#include "sensors.h"
+#include "sensor.h"
 
 #ifndef ADC_PIN
 #define ADC_PIN GPIO_P11

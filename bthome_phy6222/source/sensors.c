@@ -4,7 +4,7 @@
 */
 
 #include "config.h"
-#include "sensors.h"
+#include "sensor.h"
 
 measured_data_t measured_data;
 
@@ -14,6 +14,7 @@ measured_data_t measured_data;
 #include "gpio.h"
 #include "rom_sym_def.h"
 #include "dev_i2c.h"
+#include "trigger.h"
 
 #define I2C_SPEED 1
 
@@ -95,6 +96,9 @@ int read_sensor(void) {
 	int ret = 1;
 	if(thsensor_cfg.i2c_addr && thsensor_cfg.read_sensor != NULL)
 		ret = thsensor_cfg.read_sensor();
+#if (OTA_TYPE == OTA_TYPE_APP) && ((DEV_SERVICES & SERVICE_TH_TRG) || (DEV_SERVICES & SERVICE_SCREEN))
+		set_trigger_out();
+#endif
 	if(ret)
 		init_sensor();
 	return ret;

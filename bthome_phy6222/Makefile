@@ -14,6 +14,7 @@ SRC_PRJ += osal_peripheral.c
 SRC_PRJ += peripheral_main.c
 SRC_PRJ += sbp_profile.c
 SRC_PRJ += devinfoservice.c
+SRC_PRJ += trigger.c
 SRC_PRJ += sensors.c
 SRC_PRJ += dev_i2c.c
 SRC_PRJ += config.c

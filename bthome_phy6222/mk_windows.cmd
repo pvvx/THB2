@@ -1,5 +1,5 @@
 @set PATH=D:\MCU\GNU_Tools_ARM_Embedded\13.2.rel1\bin;%PATH%
-@set SWVER=_v10
+@set SWVER=_v11
 @del /Q "build\THB2%SWVER%.hex"
 @del /Q "build\THB2%SWVER%.bin"
 @mkdir .\bin

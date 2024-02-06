@@ -21,7 +21,7 @@
 #include "flash_eep.h"
 #include "bleperipheral.h"
 #include "sbp_profile.h"
-#include "sensors.h"
+#include "sensor.h"
 #include "cmd_parcer.h"
 #include "devinfoservice.h"
 #include "ble_ota.h"

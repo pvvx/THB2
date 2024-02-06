@@ -9,7 +9,7 @@
 #include "config.h"
 #include "bcomdef.h"
 #include "gapbondmgr.h"
-#include "sensors.h"
+#include "sensor.h"
 #include "bthome_beacon.h"
 
 uint8_t bthome_data_beacon(void * padbuf) {

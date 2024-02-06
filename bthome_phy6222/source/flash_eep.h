@@ -16,7 +16,7 @@ extern "C" {
 #define EEP_ID_MAC (0xACAD) // EEP ID MAC
 #define EEP_ID_CFG (0x0CFC) // EEP ID config data
 #define EEP_ID_CFS (0x0CF5) // EEP ID sensor coefficients
-//#define EEP_ID_RPC (0x0DF5) // EEP ID reed switch pulse counter
+#define EEP_ID_TRG (0x1DF5) // EEP ID TH trigger config
 //#define EEP_ID_PCD (0xC0DE) // EEP ID pincode
 //#define EEP_ID_CMF (0x0FCC) // EEP ID comfort data
 #define EEP_ID_DVN (0xDEAE) // EEP ID device name
