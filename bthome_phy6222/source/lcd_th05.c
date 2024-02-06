@@ -280,6 +280,10 @@ void chow_measure(void) {
 
 /* flg != 0 -> chow_measure */
 void chow_lcd(int flg) {
+#if OTA_TYPE == OTA_TYPE_BOOT
+	if(flg)
+		chow_measure();
+#else
 	if(cfg.flg & FLG_SHOW_TIME) {
 		if(wrk.lcd_count++ & 1)
 			chow_clock();
@@ -288,6 +292,7 @@ void chow_lcd(int flg) {
 	} else if(flg) {
 		chow_measure();
 	}
+#endif
 }
 
 static void send_to_lcd(uint8_t *pbuf, int len){
