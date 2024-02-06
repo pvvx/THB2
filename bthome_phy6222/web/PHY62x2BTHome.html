@@ -1606,7 +1606,7 @@ function setTrgCfg() {
 		if(len > 0) {
 			let blk = new Uint8Array(len + 1);
 			blk[0] = 0x44;
-			let idx = 0;
+			let idx = 1;
 			if(len != 9) {
 			    devtrg.temp_min = Math.round($("inputTempMin").value * 100);
 			    devtrg.temp_max = Math.round($("inputTempMax").value * 100);
