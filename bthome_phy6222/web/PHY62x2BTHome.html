@@ -1225,17 +1225,21 @@ function customBlkParse(value) {
 		let rds_count = 0;
 		let	s = 'Температура: ' + temp.toFixed(2) + '°C, '
 		      + 'Влажность: ' + humi.toFixed(2) + '%, '
-			  + 'Vbat: ' + vbat + ' мВ, '
+			  + 'Vbat: ' + vbat + ' мВ ('+pbat+'%), '
 		      + 'ID: ' + count;
-		if(len > 12) {
-			flg = value.getUint8(9);
-			rds_count = value.getUint32(10, true);
-			s += ', счетчик срабатываний: '+ rds_count+', флаги: 0x'+hex(flg,2)+':r'+(flg&1)+'/t'+((flg>>1)&1);
-		}
-		console.log(s);
 		$('lblTemp').innerHTML = temp + ' °C';
 		$('lblHumi').innerHTML = humi + ' %RH';
 		$('lblBat').innerHTML = pbat + ' % (' + vbat / 1000 + ' V)';
+		if(len > 10) {
+			flg = value.getUint8(10);
+			s += ", флаги: 0x" + hex(flg,2);
+			$('lblTrg').innerHTML = "In: " + (flg&1)
+			+ ", Out: " + ((flg&2)? 1:0)
+			+ ", Cmf: " + ((flg&4)? 1:0)
+			+ ", Te: " + ((flg&16)? 1:0)
+			+ ", He: " + ((flg&32)? 1:0);
+		}
+		console.log(s);
 		if(rend) ShowGrf(temp, humi);
 		getDevTime();
 	} else if((blkId == 0x25 || blkId == 0x26) && (len > 12)) {
@@ -1755,7 +1759,6 @@ window.onload = (event) => {
 window.onresize = (event) => { if(window.innerWidth > 400) $('divDygraph').style.width = (window.innerWidth-40) + 'px';}
 
 window.onload = function() {
-
     document.querySelector("#inpFile").addEventListener("change", function() {
     	var file = this.files[0];
         if (file != null) {
@@ -1801,9 +1804,10 @@ function ShowGrf(temp, humi) {
 					legend: 'always',  // "follow"
 					digitsAfterDecimal: 3,
 				});
-			gu.updateOptions({'file': datau})
+			gu.updateOptions({'file': datau});
+			$(window).trigger('resize');
 		} else if (gu_flg == 3)
-			gu.updateOptions({'file': datau})
+			gu.updateOptions({'file': datau});
 	}
 }
 
@@ -1833,6 +1837,7 @@ function ShowGrf(temp, humi) {
     <td><label id="lblTemp">-- °C</label></td>
     <td><label id="lblHumi">-- %RH</label></td>
     <td><label id="lblBat">-- % (-- V)</label></td>
+    <td><label id="lblTrg"></label></td>
   </tr>
 </table>
 <hr>

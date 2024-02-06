@@ -149,7 +149,7 @@ typedef struct _measured_data_t {
 	int16_t		humi; // x 0.01 %
 	uint16_t	battery_mv; // mV
 	uint8_t		battery; // 0..100 %
-	uint8_t		out_flg;	// _measured_flg_t
+//	uint8_t		out_flg;	// _measured_flg_t
 	measured_flg_t flg;
 } measured_data_t;
 #define send_len_measured_data 10

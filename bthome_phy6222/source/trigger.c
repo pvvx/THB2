@@ -97,7 +97,7 @@ void set_trigger_out(void) {
 #ifdef GPIO_INP
 	measured_data.flg.pin_input = hal_gpio_read(GPIO_INP);
 #endif
-	measured_data.out_flg = *((uint8_t *)&measured_data.flg);
+//	measured_data.out_flg = *((uint8_t *)&measured_data.flg);
 }
 
 
