@@ -1400,8 +1400,7 @@ function customBlkParse(value) {
 		addLog(s); // UpdCmf();
 	} else if(blkId == 0x01 && len >= 1) {
 		devnm.name = new TextDecoder("utf-8").decode(value.buffer.slice(1));
-		//if($("dev_name"))
-		//	$("dev_name").value = dnm.name;
+		$("inpDevName").value = devnm.name;
 		addLog("Имя устройства: '"+devnm.name+"'");
 	} else if(blkId == 0x10 && len > 6) {
 		let mac = new Uint8Array(6);
@@ -1643,6 +1642,31 @@ function setTrgCfg() {
 		}
 	}
 }
+
+function getDevName() {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x01])).catch(error => { console.log(error); addLog("getDevName() error!"); });
+	}
+}
+
+function setDevName(flg) {
+	if(cmdCharacteristic != null) {
+		if(flg != 0) {
+			let eltxt = $("inpDevName").value;
+			let len = eltxt.length;
+			if(len > 1 && len < 20) {
+				let blk = new Uint8Array(1 + len);
+				blk[0] = 0x01;
+				blk.set((new TextEncoder()).encode(eltxt), 1);
+				console.log(blk);
+				cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setDevName() error!"); });
+			} else
+				addLog("Имя устройства должно быть от 1 до 19 символов!");
+		} else 
+			cmdCharacteristic.writeValue(new Uint8Array([0x01, 0])).catch(error => { console.log(error); addLog("setDevName() error!"); });
+	}
+}
+
 
 function readFile(file) {
 
@@ -1918,20 +1942,6 @@ function ShowGrf(temp, humi) {
   </tr>
 </table>
 <br>
-<!--
-  Поправочные коэффициенты:
-  Температуры: <input size="8" type="text" id="inputTempK" maxlength="8">
-  Влажности: 
-  <br>
-  Коррекция смещения:
-  Температуры: <input size="8" type="text" id="inputTempZ" maxlength="8">
-  Влажности: <input size="8" type="text" id="inputHumZ" maxlength="8">
-  <br> 
-  Параметры I2C<br>
-  Vendor: <input size="4" type="text" id="inputI2CVen" maxlength="4">
-  Model: <input size="4" type="text" id="inputI2CMod" maxlength="4">
-  Address: <input size="2" type="text" id="inputI2CAddr" maxlength="2">
-  <br> -->
 <button type="button"id="btnGetSens" onclick="getSensCfg()">Прочитать</button>
 <button type="button"id="btnSetSens" onclick="setSensCfg()">Записать</button><br>
 <hr>
@@ -1947,10 +1957,10 @@ function ShowGrf(temp, humi) {
 <table id="tbTrigger" disabled="true">
   <tr>
     <td>Триггер: </td>
-    <td>Температура: <input size="4" type="text" id="inputTempThr" maxlength="8" title="Температура переключения"> °C, </td>
-    <td>Влажность: <input size="4" type="text" id="inputHumiThr" maxlength="8" title="Влажность переключения"> %RH, </td>
-    <td>Гистерезис: <input size="4" type="text" id="inputTempHsr" maxlength="8" title="Гистерезис температуры"> °C</td>
-    <td><input size="4" type="text" id="inputHumiHsr" maxlength="8" title="Гистерезис влажности"> %RH, </td>
+    <td>Температура: <input size="4" type="text" id="inputTempThr" maxlength="8" title="Порог температуры"> °C, </td>
+    <td>Влажность: <input size="4" type="text" id="inputHumiThr" maxlength="8" title="Порог влажности"> %RH, </td>
+    <td>Гистерезис: <input size="4" type="text" id="inputTempHsr" maxlength="8" title="Гистерезис температуры, если =0 - обработка отключена, если отрицательный -  выход включен при температуре менее заданной (нагреватель)"> °C</td>
+    <td><input size="4" type="text" id="inputHumiHsr" maxlength="8" title="Гистерезис влажности, если =0 - обработка отключена, если отрицательный - выход включен при влажности менее заданной (увлажнитель)"> %RH, </td>
     <td>Инверсия вывода <input type="checkbox" id="chbInvOut"></td>
 	<td>
   </tr>
@@ -2004,10 +2014,18 @@ function ShowGrf(temp, humi) {
 <hr>
 <table>
   <tr>
-	<!--- <td style="width:100px;">MAC:</td> --->
-	<td><button type="button" id="btnGetDevMAC" onclick="getDevMAC()" style="width:120px;">Прочитать MAC</button></td>
+	<td><button type="button" id="btnGetDevMAC" onclick="getDevMAC()">Прочитать MAC</button></td>
 	<td><input type="text" id="inpDevMAC" value="?" maxlength="16"></td>
-	<td><button type="button" id="btnSetDevMAC" onclick="setDevMAC()" style="width:120px;">Записать MAC</button></td>
+	<td><button type="button" id="btnSetDevMAC" onclick="setDevMAC()">Записать MAC</button></td>
+  </tr>
+</table>
+<hr>
+<table>
+  <tr>
+	<td><button type="button" id="btnGetDevName" onclick="getDevName()">Прочитать имя устройства</button></td>
+	<td><input type="text" id="inpDevName" value="" maxlength="19"></td>
+	<td><button type="button" id="btnSetDevMAC" onclick="setDevName(1)">Записать имя устройства</button></td>
+	<td><button type="button" id="btnSetDevMAC" onclick="setDevName(0)">Установить имя устройства по молчанию</button></td>
   </tr>
 </table>
 </div>
