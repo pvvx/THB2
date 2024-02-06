@@ -131,12 +131,15 @@ void set_def_name(void)
 void set_dev_name(void)
 {
 	uint8_t * p = gapRole_ScanRspData;
-	int len = flash_read_cfg(&p[2], EEP_ID_DVN, B_MAX_ADV_LEN - 2);
-	if(len > 0) {
-		*p++ = (uint8_t)len + 1;
-		*p++ = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
+	int len = flash_read_cfg(&p[2], EEP_ID_DVN, 19);
+	if(len > 0 && p[2] != 0) {
+		p[0] = (uint8_t)len + 1;
+		p[1] = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
+		p[len + 2] = 0;
 	} else
 		set_def_name();
+	HCI_LE_SetScanRspDataCmd(p[0] + 1, p);
+	GGS_SetParameter( GGS_DEVICE_NAME_ATT, p[0] - 1, (void *)&p[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
 }
 
 static void set_mac(void)
@@ -449,7 +452,7 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 	}
 
 	// Set the GAP Characteristics
-	GGS_SetParameter( GGS_DEVICE_NAME_ATT, gapRole_ScanRspData[0] - 1, (void *)&gapRole_ScanRspData[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
+	// GGS_SetParameter( GGS_DEVICE_NAME_ATT, gapRole_ScanRspData[0] - 1, (void *)&gapRole_ScanRspData[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
 
 	// Set advertising interval
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
