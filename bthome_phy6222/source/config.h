@@ -224,7 +224,7 @@ extern const cfg_t def_cfg;
 #define FLG_SHOW_TIME		0x00000002	// включить показ часов на LCD
 #define FLG_SHOW_SMILEY		0x00000004	// включить показ смайлика
 #define FLG_SHOW_TRG		0x00000008	// смайлик поаказывает TRG
-#define FLG_ADV_CRYPT		0x00000010	// Зашифрованная BLE реклама (bindkey)
+//#define FLG_ADV_CRYPT		0x00000010	// Зашифрованная BLE реклама (bindkey)
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;

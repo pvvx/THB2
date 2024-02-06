@@ -252,14 +252,16 @@ void chow_measure(void) {
 			}
 		} else
 #endif // SERVICE_TH_TRG
+		{
 			if(measured_data.flg.comfort)
 				show_smiley(LD_SSYMBOL_HAPPY);
 			else
 				show_smiley(LD_SSYMBOL_SAD);
+		}
 #if (DEV_SERVICES & SERVICE_TH_TRG)
 	} else if(cfg.flg & FLG_SHOW_TRG) {
 		if(measured_data.flg.trg_on)
-			show_smiley(LD_SSYMBOL_CC);
+			show_smiley(LD_SSYMBOL_ALL);
 		else
 			show_smiley(LD_SSYMBOL_OFF);
 	} else

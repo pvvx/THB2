@@ -89,15 +89,15 @@ void set_trigger_out(void) {
 		}
 	} else measured_data.flg.humi_trg_on = false;
 
-	measured_data.flg.trg_on = measured_data.flg.humi_trg_on || measured_data.flg.humi_trg_on;
+	measured_data.flg.trg_on = measured_data.flg.temp_trg_on || measured_data.flg.humi_trg_on;
+	measured_data.flg.trg_output = (trg.cfg & TRG_CFG_OUT_INV)? !measured_data.flg.trg_on : measured_data.flg.trg_on;
 #ifdef GPIO_TRG
-	hal_gpio_fast_write(GPIO_TRG, (trg.cfg & TRG_CFG_OUT_INV)? !measured_data.flg.trg_on : measured_data.flg.trg_on);
+	hal_gpio_fast_write(GPIO_TRG, measured_data.flg.trg_output);
 #endif
 #endif
 #ifdef GPIO_INP
 	measured_data.flg.pin_input = hal_gpio_read(GPIO_INP);
 #endif
-//	measured_data.out_flg = *((uint8_t *)&measured_data.flg);
 }
 
 

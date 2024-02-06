@@ -979,7 +979,7 @@ var ota_errors = [
 
 function get_msg_ota_err(err) {
 	if(err == 0)
-		return "OK";
+		return "ok";
 	if(err == 255)
 		return "OTA end";
 	if(err <= 11)
@@ -1805,7 +1805,6 @@ function ShowGrf(temp, humi) {
 					digitsAfterDecimal: 3,
 				});
 			gu.updateOptions({'file': datau});
-			$(window).trigger('resize');
 		} else if (gu_flg == 3)
 			gu.updateOptions({'file': datau});
 	}
@@ -1885,13 +1884,13 @@ function ShowGrf(temp, humi) {
   </tr>
   <tr align="center">
     <td><!--- надо отдельно, на ходу, при изменении, выводить расчетное значение inputAdvInt*62.5 в ms --->
-    <input size="4" type="text" id="inputAdvInt" maxlength="4" title="Интервал BLE рекламы в мс, кратность 62.5 мс"></td>
+    <input size="4" type="text" id="inputAdvInt" maxlength="8" title="Интервал BLE рекламы в мс, кратность 62.5 мс"></td>
     <td><!--- надо отдельно выводить расчетное значение inputAdvInt*62.5*inputMeasInt в ms --->
-    <input size="4" type="text" id="inputMeasInt" maxlength="4" title="Опрос датчика в интервалах BLE рекламы, минимум = 2 интервала рекламы"></td>
+    <input size="4" type="text" id="inputMeasInt" maxlength="8" title="Опрос датчика в интервалах BLE рекламы, минимум = 2 интервала рекламы"></td>
     <td><!--- надо отдельно выводить расчетное значение inputAdvInt*62.5*inputMeasInt*inputAverInt в мс, сек --->
-    <input size="4" type="text" id="inputAverInt" maxlength="4" title="Запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"></td>
+    <input size="4" type="text" id="inputAverInt" maxlength="8" title="Запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"></td>
     <td>
-    <input size="4" type="text" id="inputBatInt" maxlength="4" title="В секундах, минимум 2 секунды, но обрабатывается кратно интервалу BLE рекламы"></td>
+    <input size="4" type="text" id="inputBatInt" maxlength="8" title="В секундах, минимум 2 секунды, но обрабатывается кратно интервалу BLE рекламы"></td>
   </tr>
 </table>
   <button type="button"id="btnGetDev" onclick="getDevCfg()" >Прочитать</button>
@@ -1939,19 +1938,19 @@ function ShowGrf(temp, humi) {
 <table id="tbComfort" disabled="true">
   <tr>
     <td>Комфорт: </td>
-    <td>Температура от <input size="4" type="text" id="inputTempMin" maxlength="4" title="Минимальная температура">
-    до <input size="4" type="text" id="inputTempMax" maxlength="4" title="Максимальная температура"> °C,</td>
-    <td>Влажность  от <input size="4" type="text" id="inputHumiMin" maxlength="4" title="Минимальная влажность">
-    до <input size="4" type="text" id="inputHumiMax" maxlength="4" title="Максимальная влажность"> %RH</td>
+    <td>Температура от <input size="4" type="text" id="inputTempMin" maxlength="8" title="Минимальная температура">
+    до <input size="4" type="text" id="inputTempMax" maxlength="8" title="Максимальная температура"> °C,</td>
+    <td>Влажность  от <input size="4" type="text" id="inputHumiMin" maxlength="8" title="Минимальная влажность">
+    до <input size="4" type="text" id="inputHumiMax" maxlength="8" title="Максимальная влажность"> %RH</td>
   </tr>
 </table>
 <table id="tbTrigger" disabled="true">
   <tr>
     <td>Триггер: </td>
-    <td>Температура: <input size="4" type="text" id="inputTempThr" maxlength="4" title="Температура переключения"> °C</td>
-    <td>Влажность: <input size="4" type="text" id="inputHumiThr" maxlength="4" title="Влажность переключения"> %RH, </td>
-    <td>Гистерезис: <input size="4" type="text" id="inputTempHsr" maxlength="4" title="Гистерезис температуры"> °C</td>
-    <td><input size="4" type="text" id="inputHumiHsr" maxlength="4" title="Гистерезис влажности"> %RH</td>
+    <td>Температура: <input size="4" type="text" id="inputTempThr" maxlength="8" title="Температура переключения"> °C, </td>
+    <td>Влажность: <input size="4" type="text" id="inputHumiThr" maxlength="8" title="Влажность переключения"> %RH, </td>
+    <td>Гистерезис: <input size="4" type="text" id="inputTempHsr" maxlength="8" title="Гистерезис температуры"> °C</td>
+    <td><input size="4" type="text" id="inputHumiHsr" maxlength="8" title="Гистерезис влажности"> %RH, </td>
     <td>Инверсия вывода <input type="checkbox" id="chbInvOut"></td>
 	<td>
   </tr>
