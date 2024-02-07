@@ -289,7 +289,7 @@ function doConnect() {
 	}).catch(handleError);
 }
 
-function showAuxControls(state)
+function auxControls(state)
 {
 	if ( devSrv.services & SERVICE_SCREEN ) {
 		$('tblChkCfg').style.display  = "block";
@@ -316,7 +316,7 @@ function showAuxControls(state)
 function disableControls(state)
 {
 	//--debug devSrv.services = SERVICE_SCREEN|SERVICE_TH_TRG;
-	showAuxControls(state);
+	auxControls(state);
 	if(state) { // hide
 	    $('hrSensorData').style.display = "none";
 	    $('tblSensorData').style.display = "none";
@@ -832,7 +832,7 @@ function parseBlkCustom(value) {
 		devSrv.sw_version = value.getUint16(4, true);
 		devSrv.dev_spec_data = value.getUint16(6, true);
 		devSrv.services = value.getUint32(8, true);
-		showAuxControls(true);
+		auxControls(false);
 		addLog("Device info # hw: " + hex(devSrv.hw_version,4)
 		   + ", sw: " + hex(devSrv.sw_version,4)
 		   + ", services: " + hex(devSrv.services,8)
