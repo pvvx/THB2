@@ -1,5 +1,5 @@
 # BTHome THB2, BTH01, TH-05
-Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pvvx.github.io/BTH01/), [TH-05](https://pvvx.github.io/TH-05). 
+Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.4](https://pvvx.github.io/TH-05). 
 
 * Тестовый [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
@@ -7,7 +7,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 
 Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v11.hex). 
 
-Прошивка Boot-OTA для TH05 (файл bin\BOOT_TH05_v11.hex). 
+Прошивка Boot-OTA для TH05_V1.4 (файл bin\BOOT_TH05_v11.hex). 
 
 ## Основные характеристики:
 
@@ -17,7 +17,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 * Опрос датчика влажности и температуры производится  каждый второй интервал BLE рекламы - период 10 секунд.
 * Измерение напряжения батареи происходит каждую минуту.
 * Кнопка используется для быстрого подключения к старым BT-адаптерам. Нажатие кнопки переключает интервал BLE рекламы на более короткий период (1562.5 мс). Действие продолжится 60 секунд, затем интервал восстановится на установленный в настройках.
-* Измеренное среднее потребление от источника в 3.3В при сканировании термометров THB2 и BTH01 в пассивном режиме составляет до 8 мкА. Для TH-05 среднее потребление около 23 мкА - [таков ток установленных компонентов](https://github.com/pvvx/THB2/issues/8#issuecomment-1908982171).
+* Измеренное среднее потребление от источника в 3.3В при сканировании термометров THB2 и BTH01 в пассивном режиме составляет до 8 мкА. Для TH05_V1.4 среднее потребление около 23 мкА - [таков ток установленных компонентов](https://github.com/pvvx/THB2/issues/8#issuecomment-1908982171).
 * Запись итории каждые 30 минут
 * Интервал соединения с учетом Connect Latency - 900 мс
 * Поддерживаемые сенсоры температуры и влажности: AHT30, CHT8305, CHT8215, CHT8310
@@ -44,7 +44,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 | RX | TX1 |
 | RTS | RESET |
 
-Название контактов на устройстве смотреть в [THB2](https://pvvx.github.io/THB2), [BTH01](https://pvvx.github.io/BTH01/), [TH-05](https://pvvx.github.io/TH-05). 
+Название контактов на устройстве смотреть в [THB2](https://pvvx.github.io/THB2), [BTH01](https://pvvx.github.io/BTH01/), [TH-05_V1.4](https://pvvx.github.io/TH-05). 
 
 2. Запустить:
 ```
