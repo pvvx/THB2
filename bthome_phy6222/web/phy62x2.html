@@ -1,319 +1,18 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v0.6</title>
+<title>PHY62x2 BTHome v0.99</title>
+<link rel="stylesheet" type="text/css" href="styles.css" />
+<link rel="stylesheet" type="text/css" href="chart.css" />
+<script type="text/javascript" src="dygraph.min.js" /></script>
+<!--link rel="stylesheet" type="text/css" href="https://dygraphs.com/dist/dygraph.min.css /-->
+<!--script type="text/javascript" src="https://dygraphs.com/dist/dygraph.min.js" /></script-->
 <style type="text/css">
-/* basic sytles */
 
-body {
-  font-family: Arial, 'Open Sans', sans-serif;
-  color: #204056;
-}
-
-h1 {
-  font-size: 28px;
-  font-weight: 400;
-  text-align: center;
-  margin-top: 12px;
-  margin-bottom: 18px;
-}
-
-hr {
-	height: 10px;
-	border: 0;
-	box-shadow: 0 10px 10px -10px #8c8b8b inset;
-}
-
-span#info {
-  font-style: italic;
-}
-
-.button, [type='button'] {
-  background-color: #1a73e8; 
-  border: none;
-  border-radius: 4px;
-  color: white;
-  padding: 8px 24px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 14px;
-  margin: 6px 6px;
-  cursor: pointer;
-  box-shadow: 0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f;
-}
-
-.button, [type='button'].ok {
-  background-color: #4CAF50; /* Green */
-  color: white;
-  border-color: #4CAF50;
-}
-
-.button, [type='button'].danger {
-  background-color: #f44336; /* Red */
-  color: white;
-  border-color: #f44336;
-}
-
-.button, [type='button']:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-input[type="checkbox"] + label {
-  margin-right: 8px;
-}
-
-div#div_v {
-	height:400px;
+div#divChart {
+	height: 100%;
+	width: 100%;
 	margin-top: 16px;
 	margin-bottom: 16px;
-}
-
-div#labdiv {
-	margin-top: 16px;
-	margin-bottom: 16px;
-}
-
-div#log {
-  padding: 12px;
-  font-style: italic;
-  font-size: 16px;
-}
-
-div#MAC {
-  font-style: smaller;
-  margin: 8px;
-}
-
-div#txtStatus {
-  font-style: italic;
-  font-size: 16px;
-  text-align: center;
-  background-color: #eef6fc;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-top: 8px;
-}
-
-div#tempHumiData{
-  text-align: center;
-  background-color: #eef6fc;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-input {
-  padding: 4px;
-  margin: 4px;
-}
-
-select {
-  padding: 4px;
-}
-
-/* menu */
-
-.navbar {
-  width: 95%;
-  /* box-shadow: 0 1px 4px rgb(146 161 176 / 15%);*/
-  position: absolute;
-  top: 0;
-}
-
-.nav-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 62px;
-}
-
-.navbar .menu-items {
-  display: flex;
-}
-
-.navbar .nav-container li {
-  list-style: none;
-}
-
-.navbar .nav-container a {
-  font-size: 1.0rem;
-  font-weight: 400;
-}
-
-.navbar .nav-container a:hover{
-    font-weight: bolder;
-}
-
-.nav-container {
-  display: block;
-  position: relative;
-  height: 60px;
-}
-
-.nav-container .checkbox {
-  position: absolute;
-  display: block;
-  height: 32px;
-  width: 32px;
-  top: 20px;
-  left: 20px;
-  z-index: 5;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.nav-container .hamburger-lines {
-  display: block;
-  height: 26px;
-  width: 32px;
-  position: absolute;
-  top: 17px;
-  left: 20px;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.nav-container .hamburger-lines .line {
-  display: block;
-  height: 4px;
-  width: 100%;
-  border-radius: 10px;
-  background: #0e2431;
-}
-
-.nav-container .hamburger-lines .line1 {
-  transform-origin: 0% 0%;
-  transition: transform 0.4s ease-in-out;
-}
-
-.nav-container .hamburger-lines .line2 {
-  transition: transform 0.2s ease-in-out;
-}
-
-.nav-container .hamburger-lines .line3 {
-  transform-origin: 0% 100%;
-  transition: transform 0.4s ease-in-out;
-}
-
-.navbar .menu-items {
-  position: relative;
-  padding-top: 55px;
-  box-shadow: 5px 3px 13px 0px rgb(204 204 204 / 80%);
-  min-height: 100vh;
-  width: 60%;
-  transform: translate(-150%);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.5s ease-in-out;
-  text-align: center;
-  z-index: 1;
-  background: white;
-}
-
-.navbar .menu-items li {
-  margin-bottom: 12px;
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-
-
-.nav-container input[type="checkbox"]:checked ~ .menu-items {
-  transform: translateX(0);
-}
-
-.nav-container input[type="checkbox"]:checked ~ .hamburger-lines .line1 {
-  transform: rotate(45deg);
-}
-
-.nav-container input[type="checkbox"]:checked ~ .hamburger-lines .line2 {
-  transform: scaleY(0);
-}
-
-.nav-container input[type="checkbox"]:checked ~ .hamburger-lines .line3 {
-  transform: rotate(-45deg);
-}
-
-.nav-container input[type="checkbox"]:checked ~ .logo{
-  display: none;
-}
-
-
-.shadowbox {
-  width: 15em;
-  border: 1px solid #333;
-  box-shadow: 8px 8px 5px #444;
-  padding: 8px 12px;
-  background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
-}
-
-.shadowprogress {
-  width: 15em;
-  border: 1px solid #333;
-  /* box-shadow: 8px 8px 5px #444; */
-  padding: 8px 12px;
-  /* background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc); */
-}
-
-.shadowerror {
-  color: red;
-  width: 15em;
-  border: 1px solid #333;
-  box-shadow: 8px 8px 5px #444;
-  padding: 8px 12px;
-  background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
-}
-
-
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-}
-
-/* Style the buttons inside the tab */
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-  font-size: 17px;
-}
-
-/* Change background color of buttons on hover */
-.tab button:hover {
-  background-color: #ddd;
-}
-
-/* Create an active/current tablink class */
-.tab button.active {
-  background-color: #ccc;
-}
-
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
-
-/* Create equal columns that floats next to each other */
-.column {
-  float: left;
-  padding: 5px;
-}
-
-/* Clear floats after the columns */
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
 }
 
 </style>
@@ -323,20 +22,26 @@ select {
 //BLE values
 const FLASH_SIZE = 0x80000;
 const OTA_MAX_SIZE = 0x30000; // 196608 
+
+const SERVICE_SCREEN = 0x00000020;
+const SERVICE_TH_TRG = 0x00004000;
+
 var bluetoothDevice, gattServer, otaCharacteristic, cmdCharacteristic, infoService;
 
-var devinfo = {};
-var devsrs = {};
-var devcfg = {};
-var devcfs = {};
-var devtime = {};
-var devnm = {};
+var devInfo = {};
+var devSrv  = { services: 0 };
+var devCfg  = {};
+var devSens = {};
+var devTrig = {};
+var devTime = {};
+var devName = "";
 
+var	isConnected = false;
+var isChartEnabled = true;
+var isMemoActive = false;
 
-var startTime = 0,
-	isConnected = false,
-	flg_memo_act = false
-	flg_memo_cnt = 0;
+var startTime = 0;
+var	memoCount = 0;
 
 var ota = {
 	fwArray: null,
@@ -371,7 +76,7 @@ function handleError(text) {
 	if ((bluetoothDevice != null) && (connectRetries < 5)) {
 		addLog("Переподключение " + connectRetries + " из " + 5);
 		$('btnDisconnect').disabled = true;
-		$('btnReconnect').disabled = true;
+		$('btnReconnect').disabled  = true;
 		connectRetries++;
 		doConnect();
 	} else {
@@ -399,6 +104,7 @@ function connect() {
 			.map((x) => ({ namePrefix: x }));
 	}
 	if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
+	chartData.length = 0;
 	resetVariables();
 	bluetoothDevice = null;
 	$('btnReconnect').disabled = true;
@@ -433,7 +139,7 @@ function reconnect() {
 		bluetoothDevice.gatt.disconnect();
 		isConnected = false;
 	}
-	$('btnConnect').disabled = true;
+	$('btnConnect').disabled   = true;
 	$('btnReconnect').disabled = true;
 	connectRetries = 0;
 	doConnect();
@@ -451,30 +157,31 @@ function getStrCharacteristic(infosrv, suuid) {
 
 function getDevInfo(devInfEnabled) {
 	return new Promise((resolve, reject) => {
-	devinfo.nrstr = null;
-	devinfo.srstr = null;
-	devinfo.frstr = null;
-	devinfo.hrstr = null;
-	devinfo.vrstr = null;
+	devInfo.nrstr = null;
+	devInfo.srstr = null;
+	devInfo.frstr = null;
+	devInfo.hrstr = null;
+	devInfo.vrstr = null;
 	if (devInfEnabled == true) {
 		gattServer.getPrimaryService(0x180a).then(service => {
 			console.log("Найден Device Information Service");
 			infoService = service;
 			return getStrCharacteristic(infoService, 0x2a24).then(value => {
-				devinfo.nrstr = value;
-				return getStrCharacteristic(infoService, 0x2a25).then(value => {
-					devinfo.srstr = value;
+				devInfo.nrstr = value;
+				//DOMException: getCharacteristic(s) called with blocklisted UUID. https://goo.gl/4NeimX
+				//return getStrCharacteristic(infoService, 0x2a25).then(value => {
+				//	devInfo.srstr = value;
 					return getStrCharacteristic(infoService, 0x2a26).then(value => {
-						devinfo.frstr = value;
+						devInfo.frstr = value;
 						return getStrCharacteristic(infoService, 0x2a27).then(value => {
-							devinfo.hrstr = value;
+							devInfo.hrstr = value;
 							return getStrCharacteristic(infoService, 0x2a28).then(value => {
-								devinfo.vrstr = value;
-								return resolve(devinfo.flg);
+								devInfo.vrstr = value;
+								return resolve(devInfo.flg);
 							}).catch(error => { console.log(error); return resolve(null);});
 						}).catch(error => { console.log(error); return resolve(null);});
 					}).catch(error => { console.log(error); return resolve(null);});
-				}).catch(error => { console.log(error); return resolve(null);});
+				//}).catch(error => { console.log(error); return resolve(null);});
 			}).catch(error => { console.log(error); return resolve(null);});
 		}).catch(error => { console.log(error); return resolve(null);});
 	} else	return resolve(null);
@@ -487,37 +194,40 @@ function linkOta() {
 	.then(characteristic => {
 		console.log("Найдена OTA Characteristic");
 		otaCharacteristic = characteristic;
-		return otaCharacteristic.addEventListener('characteristicvaluechanged', event => OtaBlkParse(event.target.value));
+		return otaCharacteristic.addEventListener('characteristicvaluechanged', event => parseBlkOTA(event.target.value));
 	}).then(_ => {
 		return otaCharacteristic.readValue();
 	}).then(value => {
-		if(value.byteLength > 1)
+		if(value.byteLength > 1) {
 			addLog("OTA ver: "+ hex(value.getUint8(1),2));
+			$("btnStartDFU").value = "Старт программирования"
+		}
 		return resolve(null);});
 	}).catch(error => { console.log(error); return resolve(null);});
 }
 
 function phyConnect(info_flg) {
 	return getDevInfo(info_flg).then(_ => {
-		if(devinfo.nrstr != null)
-			addLog("Model: "+devinfo.nrstr);
-		if(devinfo.srstr != null)
-			addLog("Serial: "+devinfo.srstr);
-		if(devinfo.frstr != null)
-			addLog("Firmware: "+devinfo.frstr);
-		if(devinfo.hrstr != null)
-			addLog("Hardware: "+devinfo.hrstr);
-		if(devinfo.vrstr != null)
-			addLog("Software: "+devinfo.vrstr);
+		if(devInfo.nrstr != null)
+			addLog("Model: "+devInfo.nrstr);
+		if(devInfo.srstr != null)
+			addLog("Serial: "+devInfo.srstr);
+		if(devInfo.frstr != null)
+			addLog("Firmware: "+devInfo.frstr);
+		if(devInfo.hrstr != null)
+			addLog("Hardware: "+devInfo.hrstr);
+		if(devInfo.vrstr != null)
+			addLog("Software: "+devInfo.vrstr);
 	 	return gattServer.getPrimaryService(0xfcd2);
 	}).then(service => {
 		console.log("Найден Main Service");
 		mainService = service;
+		cmdCharacteristic = null;
 		return mainService.getCharacteristic(0xfff4);
 	}).then(characteristic => {
 		console.log("Найдена CMD Characteristic");
 		cmdCharacteristic = characteristic;
-		return cmdCharacteristic.addEventListener('characteristicvaluechanged', event => customBlkParse(event.target.value));
+		return cmdCharacteristic.addEventListener('characteristicvaluechanged', event => parseBlkCustom(event.target.value));
 	}).then(_ => {
 		return cmdCharacteristic.startNotifications();
 	}).then(_ => {
@@ -526,21 +236,30 @@ function phyConnect(info_flg) {
 		if(value.byteLength >= 10)
 			if(value.getUint8(0) != 0)
 				addLog("Странный ответ устройства!");
+			else if((value.getUint32(8, true) & 1) != 0)  // SERVICE_OTA ?
+				return linkOta();
 		otaCharacteristic = null;
-		return linkOta();
 	}).then(_ => {
 		showState("Устройство подключено.");
 		isConnected = true;
 		// $('btnConnect').disabled = true;
 		$('btnDisconnect').disabled = false;
-		$('btnReconnect').disabled = false;
+		// $('btnReconnect').disabled = false;
 
 		disableControls(false);
+		// selectConfigTab();
+		// $('tabConfig').style.display = "block";
 
-		if (otaCharacteristic != null && ota.fwArray != null)
-			$('btnStartDFU').disabled = false;
-		selectConfigTab();
-		$('tabConfig').style.display = "block";
+		let el = $('btnStartDFU');
+		if (otaCharacteristic != null) {
+			el.disabled = ota.fwArray == null;
+			el.innerHTML = "Старт";
+			el.title = "Старт программирования..."
+		} else {
+			el.innerHTML = "Режим OTA";
+			el.title = "Переключение на BootLoader ..."
+		}
+		return cmdCharacteristic.writeValue(new Uint8Array([0x33])); // get measure
 	}).catch(handleError);
 }
 
@@ -570,8 +289,34 @@ function doConnect() {
 	}).catch(handleError);
 }
 
+function showAuxControls(state)
+{
+	if ( devSrv.services & SERVICE_SCREEN ) {
+		$('tblChkCfg').style.display  = "block";
+	    $('tblComfort').style.display = "block";
+	} else {
+		$('tblChkCfg').style.display  = "none";
+	    $('tblComfort').style.display = "none";
+	}
+	if ( devSrv.services & SERVICE_TH_TRG ) {
+		$('tblTrigger').style.display  = "block";
+		$('btnGetTrg').disabled = state;
+		$('btnSetTrg').disabled = state;
+	} else {
+	    $('tblTrigger').style.display = "none";
+		$('btnGetTrg').style.display  = "none";
+		$('btnSetTrg').style.display  = "none";
+	}
+	if (devSrv.services & (SERVICE_SCREEN|SERVICE_TH_TRG))
+		$('hrPres').style.display  = "block";
+	else
+	    $('hrPres').style.display     = "none";
+}
+
 function disableControls(state)
 {
+	//--debug devSrv.services = SERVICE_SCREEN|SERVICE_TH_TRG;
+	showAuxControls(state);
 	if(state) { // hide
 	    $('hrSensorData').style.display = "none";
 	    $('tblSensorData').style.display = "none";
@@ -581,37 +326,45 @@ function disableControls(state)
 	}
 	$('btnGetDev').disabled = state;
 	$('btnSetDev').disabled = state;
+	$('btnRstDev').disabled = state;
 	$('btnGetSens').disabled = state;
 	$('btnSetSens').disabled = state;
+	$('btnRstSens').disabled = state;
 	$('btnGetDevTime').disabled = state;
 	$('btnSetDevTime').disabled = state;
-
-	$('btnReadFlash').disabled = state;
-	$('btnSaveFlash').disabled = state;
 
 	$('btnReadAddr').disabled = state;
 	$('btnWriteAddr').disabled = state;
 	$('btnSendCommand').disabled = state;
+	
+	$('btnGetMAC').disabled = state;
+	$('btnSetMAC').disabled = state;
+
+	$('btnGetName').disabled = state;
+	$('btnSetName').disabled = state;
+	$('btnRstName').disabled = state;
+
 }
 
 function onDisconnected() {
 	isConnected = false;
 	resetVariables();
 	showState('Устройство отключено.');
-    $('btnConnect').disabled = false;
+    $('btnConnect').disabled   = false;
+	$('btnReconnect').disabled = false;
 	// $('tabConfig').style.display = "none";
 	disableControls(true);
 }
 
 function startDFU() {
-	if(otaCharacteristic != null && ota.ind.version == 1 && (devsrs.services & 1) == 1) {
-	addLog("Старт программирования...");
-	updateBegin();
+	if(otaCharacteristic != null && ota.ind.version == 1 && (devSrv.services & 1) == 1) {
+		addLog("Старт программирования...");
+		updateBegin();
 	} else {
 		addLog("Переключение на BootLoader...");
 		if(cmdCharacteristic != null) {
 			cmdCharacteristic.writeValue(new Uint8Array([0x72,0x55])).then(_ => {
-				console.log('Send reboot to bootloader - ok');
+				console.log('Comand to reboot to bootloader sent');
 				reconnect();
 			}).catch(error => { addLog(error); });
 		} 
@@ -632,6 +385,14 @@ function showState(text) {
 	addLog(text);
 }
 
+function showError(text) {
+//    console.log("Status: " + status);
+	let s = "Ошибка: " + text;
+	$("lblStatus").className = "shadowerror";
+	$("lblStatus").innerHTML = s;
+	addLog(text);
+}
+
 function showProgress(text) {
 	$("lblStatus").className = "shadowprogress";
 	$("lblStatus").innerHTML = text;
@@ -639,14 +400,6 @@ function showProgress(text) {
 
 function clearLog() {
 	$("log").innerHTML = "";
-}
-
-function showError(text) {
-//    console.log("Status: " + status);
-	let s = "Ошибка: " + text;
-	$("lblStatus").className = "shadowerror";
-	$("lblStatus").innerHTML = s;
-	addLog(text);
 }
 
 function updateFail(err) {
@@ -759,7 +512,7 @@ var crc32 = (function() {
 	};
 })();
 
-function testOTAFirmware(data) {
+function testFwOTA(data) {
 	ota.fwsize = 0;
 	let fsize = data.byteLength;
 	console.log("File size = 0x"+ fsize.toString(16));
@@ -802,7 +555,7 @@ function testOTAFirmware(data) {
 
 function getFwArray(data, filename) {
 	addLog("Файл: " + filename);
-	let s = testOTAFirmware(data);
+	let s = testFwOTA(data);
 	if(s != "OK") {
 		$('btnStartDFU').disabled = true;
 		addLog(s);
@@ -828,7 +581,7 @@ function getFwArray(data, filename) {
 		$('btnStartDFU').disabled = false;
 }
 
-var ota_errors = [
+var otaErrStrs = [
 'OK',
 'Неверная команда',
 'Не задан старт',
@@ -848,11 +601,11 @@ function get_msg_ota_err(err) {
 	if(err == 255)
 		return "OTA end";
 	if(err <= 11)
-		return ota_errors[err];
+		return otaErrStrs[err];
 	return "Неизвестная ошибка";
 }
 
-function OtaBlkParse(value) {
+function parseBlkOTA(value) {
 	if(value.byteLength < 20) return;
 	ota.ind = {};
 	ota.ind.err_flag = value.getUint8(0);
@@ -865,7 +618,14 @@ function OtaBlkParse(value) {
 	ota.ind.fw_value = value.getUint32(12,true);
 	ota.ind.crc32 = value.getUint32(16,true);
 	//console.log('otablk: '+dump8(value, value.byteLength));
-	console.log('OTA read: ver: '+hex(ota.ind.version,2)+', err: '+ota.ind.err_flag+' - '+get_msg_ota_err(ota.ind.err_flag)+', dbg: '+ota.ind.debug_flag+', start: '+ota.ind.start_flag+', offs: 0x'+hex(ota.ind.prg_offset,8)+', idx: 0x'+hex(ota.ind.pkt_index,4)+', total: 0x'+hex(ota.ind.pkt_total,4)+', crc: 0x'+hex(ota.ind.crc32,8));
+	console.log('OTA read: ver: ' + hex(ota.ind.version,2)
+            + ', err: ' + ota.ind.err_flag + ' - ' + get_msg_ota_err(ota.ind.err_flag)
+            + ', dbg: ' + ota.ind.debug_flag
+            + ', start: '+ota.ind.start_flag
+            + ', offs: 0x'+hex(ota.ind.prg_offset,8)
+            + ', idx: 0x'+hex(ota.ind.pkt_index,4)
+            + ', total: 0x'+hex(ota.ind.pkt_total,4)
+            + ', crc: 0x'+hex(ota.ind.crc32,8));
 }
 
 function updateBegin() {
@@ -874,7 +634,7 @@ function updateBegin() {
 		return;
 	}
 	setTimeout(function() {
-		otaCharSend("00ff").then(_ => { otaCharacteristic.readValue().then(value => {
+		sendCharOTA("00ff").then(_ => { otaCharacteristic.readValue().then(value => {
 			let cmd = "01ff";
 // TODO
 //			if(ota.ext_flg) {
@@ -882,11 +642,11 @@ function updateBegin() {
 //				cmd += ota.fwArray.substring(0,8); // fw_id
 //				cmd += hex((ota.blockCount >> 8) | ((ota.blockCount & 0xff) << 8),4); // pkt_total
 //			}
-			otaCharSend(cmd).then(_ => { otaCharacteristic.readValue().then(value => {
+			sendCharOTA(cmd).then(_ => { otaCharacteristic.readValue().then(value => {
 				if(value.byteLength >= 2 && value.getUint8(0) == 0) {
 	        		setTimeout(function() {
 		        		startTime = new Date().getTime();
-				        sendOTAblock(0);
+				        sendBlkOTA(0);
 					}, 50);
 				} else
 					showError("Ошибка N"+value.getUint8(0)+" OTA!");
@@ -900,7 +660,7 @@ function updateBegin() {
 function sendLastOTA() {
 	otaCharacteristic.readValue().then(value => {
 		if(value.byteLength >= 1 && value.getUint8(0) == 0xff) {
-			return otaCharSend("02ff").then(_ => {
+			return sendCharOTA("02ff").then(_ => {
 			let s = "Программирование завершено за " + (new Date().getTime() - startTime) / 1000 + " секунды";
 			showProgress(s);
 		  	addLog(s);
@@ -912,7 +672,7 @@ function sendLastOTA() {
 	 }).catch(function(err) { updateFail(err); });
 }
 
-function sendOTAblock(blockNr) {
+function sendBlkOTA(blockNr) {
 	if (blockNr >= ota.blockCount) {
 		return sendLastOTA();
 	}
@@ -920,7 +680,7 @@ function sendOTAblock(blockNr) {
 	var blockNrString = getHexBLockCount(blockNr);
 	var blockString = blockNrString + ota.fwArray.substring(blockNr * 32, blockNr * 32 + 32);
 	var blockCRC = getHexCRC(blockString);
-	otaCharSend(blockString + blockCRC).then(_ => {
+	sendCharOTA(blockString + blockCRC).then(_ => {
 	    if (blockNr >= ota.blockCount - 1) {
 		    return sendLastOTA();
 	    }
@@ -928,7 +688,7 @@ function sendOTAblock(blockNr) {
 			if ((blockNr + 1) % 16 == 0) {
 				otaCharacteristic.readValue().then(value => {
 					if(value.byteLength >= 20 && value.getUint8(0) == 0)
-	                    sendOTAblock(blockNr + 1);
+	                    sendBlkOTA(blockNr + 1);
 		            else {
 		            	let s = get_msg_ota_err(value.getUint8(0));
 		            	if(s != "OK")
@@ -936,7 +696,7 @@ function sendOTAblock(blockNr) {
 		            }
 				}).catch(function(err) { updateFail(err); });
 			} else
-				  sendOTAblock(blockNr + 1);
+				  sendBlkOTA(blockNr + 1);
 		}, 0);
 	}).catch(function(err) {
 		updateFail(err);
@@ -949,7 +709,7 @@ function getHexBLockCount(count) {
 }
 
 
-var otaCharSend = function(data) {
+var sendCharOTA = function(data) {
 	return new Promise(function(resolve, reject) {
 		//console.log("OTA send: " + data);
 		otaCharacteristic.writeValue(hexToBytes(data)).then(function(character) {
@@ -960,7 +720,7 @@ var otaCharSend = function(data) {
 	});
 }
 
-var mainCharSend = function(data, characteristic) {
+var sendCharMain = function(data, characteristic) {
 	return new Promise(function(resolve, reject) {
 		console.log("Send: " + data);
 		characteristic.writeValue(hexToBytes(data)).then(function(character) {
@@ -1011,14 +771,14 @@ function writeCmd(data) {
 
 function readAddress() {
 	if(cmdCharacteristic) {
-		let faddr = parseInt($('inputAddr').value, 16);
+		let faddr = parseInt($('inpAddr').value, 16);
 		readAddr(faddr);
 	}
 }
 
 function writeAddress() {
-	let addr = parseInt($('inputAddr').value, 16);
-	let data = hexToBytes($('inputData').value);
+	let addr = parseInt($('inpAddr').value, 16);
+	let data = hexToBytes($('inpData').value);
 	if(data.length != 0 && data.length <= 16)
 		writeAddr(addr, data);
 	else
@@ -1034,20 +794,51 @@ function sendCommand() {
 	    console.log('Должно быть от 1 до 20 hex байт!');
 }
 
-function customBlkParse(value) {
+function showConfig() {
+/*
+	if($('inpFlag') != null)
+		$('inpFlag').value  = devCfg.flg; // пока не реализовано
+	$('inpTxPwr').value = devCfg.tx_power; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
+	$('inpLat').value   = (devCfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
+
+	$('inpAdvInt').value  = devCfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
+	$('inpMeasInt').value = devCfg.measure_interval; // *devCfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
+	$('inpAverInt').value = devCfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
+	$('inpBatInt').value  = devCfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
+*/
+	$('chkCfgNotify').checked = (devCfg.flg & 1) != 0;
+	$('chkCfgClock').checked  = (devCfg.flg & 2) != 0;
+	$('chkCfgSmiley').checked = (devCfg.flg & 4) != 0;
+	$('chkCfgTrg').checked    = (devCfg.flg & 8) != 0;
+	let txPwr = 31;
+	el = $('selTxPwr');
+	for(let n = 0; n < el.options.length; n++) if(el.options[n].value >= devCfg.tx_power) txPwr = el.options[n].value;
+	el.value = txPwr;
+	$('inpLat').value     = (devCfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
+	$('inpAdvInt').value  = devCfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
+	$('inpMeasInt').value = devCfg.measure_interval; // *devCfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
+	$('inpAverInt').value = devCfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
+	$('inpBatInt').value  = devCfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
+}
+
+function parseBlkCustom(value) {
 	let len = value.byteLength;
 	if(len == 0) return;
 	let blkId = value.getUint8(0);
-	if((blkId == 0) && (len > 11)) {
+	if((blkId == 0x00) && (len >= 12)) {
 	// CMD_ID_DEVID Get dev id, version, services
-		devsrs.revision = value.getUint8(1);
-		devsrs.hw_version = value.getUint16(2, true);
-		devsrs.sw_version = value.getUint16(4, true);
-		devsrs.dev_spec_data = value.getUint16(6, true);
-		devsrs.services = value.getUint32(8, true);
-		addLog("Dev info # hw: "+hex(devsrs.hw_version,4)+", sw: "+hex(devsrs.sw_version,4)+", services: "+hex(devsrs.services,8)+", sd: "+hex(devsrs.dev_spec_data, 4));
+		devSrv.revision = value.getUint8(1);
+		devSrv.hw_version = value.getUint16(2, true);
+		devSrv.sw_version = value.getUint16(4, true);
+		devSrv.dev_spec_data = value.getUint16(6, true);
+		devSrv.services = value.getUint32(8, true);
+		showAuxControls(true);
+		addLog("Device info # hw: " + hex(devSrv.hw_version,4)
+		   + ", sw: " + hex(devSrv.sw_version,4)
+		   + ", services: " + hex(devSrv.services,8)
+		   + ", sd: " + hex(devSrv.dev_spec_data, 4));
 	} else if(blkId == 0x35){
-		if(flg_memo_act) {
+		if(isMemoActive) {
 			if(len >= 12) {
 				let cnt = value.getUint16(1, true);
 				let tc = value.getUint32(3, true);
@@ -1056,22 +847,22 @@ function customBlkParse(value) {
 				let vb = value.getUint16(11, true);
 				let dt = new Date(tc*1000);
 				addLog(((dt.toISOString().slice(0, -1)).replace('T',' ')).replace('.000','')+' # Батарея: '+vb+' мВ , Температура: '+tm+'°C, Влажность: '+hm+'%, Счетчик: '+cnt);
-				flg_memo_cnt = cnt;
+				memoCount = cnt;
 			} else if(len == 3) {
 				let flg = value.getUint16(1, true);
 				console.log('Memo End: '+flg);
-				if(flg_memo_cnt == 0)
+				if(memoCount == 0)
 					addLog('Пока нет истории!');										
-				flg_memo_act = false;
+				isMemoActive = false;
 			} else if(len == 2) {
 				addLog('Нет сервиса записи истории!');
-				flg_memo_act = false;
+				isMemoActive = false;
 			} else {
 				console.log('blk: ' + dump8(value, value.byteLength));
-				flg_memo_act = false;
+				isMemoActive = false;
 			}
 		}
-	} else if(blkId == 0x33 && len > 9) {
+	} else if(blkId == 0x33 && len >= 10) {
 		let count = value.getUint16(1, true);
 		let temp = value.getInt16(3, true) / 100.0;
 		let humi = value.getInt16(5, true) / 100.0;
@@ -1079,79 +870,100 @@ function customBlkParse(value) {
 		let pbat = value.getUint8(9);
 		let flg = 0;
 		let rds_count = 0;
+		let	s = 'Температура: ' + temp.toFixed(2) + '°C'
+		    + ', Влажность: ' + humi.toFixed(2) + '%'
+			+ ', Vbat: ' + vbat + ' мВ'
+		    + ', ID: ' + count;
 		if(len > 12) {
 			flg = value.getUint8(9);
 			rds_count = value.getUint32(10, true);
-			s += ', счетчик срабатываний: '+ rds_count+', флаги: 0x'+hex(flg,2)+':r'+(flg&1)+'/t'+((flg>>1)&1);
+			s += ', счетчик срабатываний: '+ rds_count
+			   + ', флаги: 0x' + hex(flg,2) + ':r' + (flg&1) + '/t' + ((flg>>1)&1);
 		}
+		console.log(s);
 		$('lblTemp').innerHTML = temp + ' °C';
 		$('lblHumi').innerHTML = humi + ' %RH';
-		$('lblBat').innerHTML = pbat + ' % (' + vbat / 1000 + ' V)';
-		// let s = 'Vbat: '+vbat+' мВ '+pbat+'%, Температура: '+temp.toFixed(2)+'°C, Влажность: '+humi.toFixed(2)+'%, ID: '+count;
-		let	s = 'Температура: ' + temp.toFixed(2) + '°C, '
-		      + 'Влажность: ' + humi.toFixed(2) + '%, '
-			  + 'Vbat: ' + vbat + ' мВ, '
-		      + 'ID: ' + count + ', счетчик срабатываний: '+ rds_count + ', '
-		      + 'флаги: 0x' + hex(flg,2) + ':r' + (flg&1) + '/t' + ((flg>>1)&1);
-		addLog(s);
+		$('lblBat').innerHTML  = pbat + ' % (' + vbat / 1000 + ' V)';
+		if(len > 10) {
+			flg = value.getUint8(10);
+			s += ", флаги: 0x" + hex(flg,2);
+			$('lblTrg').innerHTML = "In: " + (flg&1)
+			+ ", Out: " + ((flg&2)? 1:0)
+			+ ", Cmf: " + ((flg&4)? 1:0)
+			+ ", Te: " + ((flg&16)? 1:0)
+			+ ", He: " + ((flg&32)? 1:0);
+		}
+		console.log(s);
+		addChartData(temp, humi);
+		if(isChartEnabled)
+			chart.updateOptions(
+				{
+				file: chartData,
+				axes: {
+	                y:  { 'valueRange': rangeT },
+	                y2: { 'valueRange': rangeH }
+                }
+				}
+			);
 		getDevTime();
 	} else if((blkId == 0x25 || blkId == 0x26) && (len > 12)) {
 	// CMD_ID_CFS Get/Set sensor config
-	    devcfs.temp_k = value.getUint32(1, true);
-	    devcfs.humi_k = value.getUint32(5, true);
-	    devcfs.temp_z = value.getInt16(9, true);
-	    devcfs.humi_z = value.getInt16(11, true);
+	    devSens.temp_k = value.getUint32(1, true);
+	    devSens.humi_k = value.getUint32(5, true);
+	    devSens.temp_z = value.getInt16(9, true);
+	    devSens.humi_z = value.getInt16(11, true);
 
-		$('inputTempK').value  = devcfs.temp_k;
-		$('inputHumK').value = devcfs.humi_k;
-		$('inputTempZ').value = devcfs.temp_z;
-		$('inputHumZ').value  = devcfs.humi_z;
+		$('inpTempK').value  = devSens.temp_k;
+		$('inpHumK').value = devSens.humi_k;
+		$('inpTempZ').value = devSens.temp_z;
+		$('inpHumZ').value  = devSens.humi_z;
 
-		addLog("Dev sensor # tk: "+devcfs.temp_k+", hk: "+devcfs.humi_k+", tz: "+devcfs.temp_z+", hz: "+devcfs.humi_z);
+		addLog("Device Sensor "
+		   + "# Kt: " + devSens.temp_k
+		   + ", Kh: " + devSens.humi_k
+		   + ", Zt: " + devSens.temp_z
+		   + ", Zh: " + devSens.humi_z);
 		if (len > 17) {
-			devcfs.mid = value.getUint16(13, false);
-			devcfs.vid = value.getUint16(15, false);
-			devcfs.i2c_addr = value.getUint8(17);
+			devSens.mid = value.getUint16(13, false);
+			devSens.vid = value.getUint16(15, false);
+			devSens.i2c_addr = value.getUint8(17);
 			s = "???";
-			if(devcfs.mid == 0x5959)
-				s = "CHT"+hex(devcfs.vid,4);
-			else if(devcfs.mid == 0 && devcfs.vid == 0xaaaa)
+			if(devSens.mid == 0x5959)
+				s = "CHT"+hex(devSens.vid,4);
+			else if(devSens.mid == 0 && devSens.vid == 0xaaaa)
 				s = "AHT20";
-			$('lblSensor').innerHTML = s+', I2C адрес: 0x'+hex(devcfs.i2c_addr,2);
+			$('lblSensor').innerHTML = s+', I2C адрес: 0x'+hex(devSens.i2c_addr,2);
 
-			addLog("Dev sensor # id: "+hex(devcfs.mid,4)+"-"+hex(devcfs.vid,4)+", i2c_addr: 0x"+hex(devcfs.i2c_addr,2));
+			addLog("Dev sensor # id: "+hex(devSens.mid,4)+"-"+hex(devSens.vid,4)+", i2c_addr: 0x"+hex(devSens.i2c_addr,2));
 		}
 	} else if((blkId == 0x55 || blkId == 0x56) && (len > 12)) {
 	//	CMD_ID_CFG Get/Set device config
-	    devcfg.flg = value.getUint32(1, true);
+	    devCfg.flg = value.getUint32(1, true);
 	    // bit0 - measure notify enable
 	    // bit1 - lcd chow time enable
-	    devcfg.rf_tx_power = value.getUint8(5);
-	    devcfg.advertising_interval = value.getUint8(6);
-	    devcfg.connect_latency = value.getUint8(7);
-	    devcfg.reserved1 = value.getUint8(8);
-		devcfg.measure_interval = value.getUint8(9);
-		devcfg.batt_interval = value.getUint8(10);
-		devcfg.averaging_measurements = value.getUint8(11);
-	    devcfg.reserved2 = value.getUint8(12);
-
-		$('inputFlag').value  = devcfg.flg; // пока нет
-		$('inputTxPwr').value = devcfg.rf_tx_power; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
-		$('inputLat').value   = (devcfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
-
-		$('inputAdvInt').value  = devcfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
-		$('inputMeasInt').value = devcfg.measure_interval; // *devcfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
-		$('inputAverInt').value = devcfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
-		$('inputBatInt').value  = devcfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
-
-		console.log("Dev config # flg: "+hex(devcfg.flg,8)+", tx: "+devcfg.rf_tx_power+", adi: "+devcfg.advertising_interval+", cly: "+devcfg.connect_latency+", msi: "+devcfg.measure_interval+", bti: "+devcfg.batt_interval+", avi: "+devcfg.averaging_measurements);
+	    devCfg.tx_power = value.getUint8(5);
+	    devCfg.advertising_interval = value.getUint8(6);
+	    devCfg.connect_latency = value.getUint8(7);
+	    devCfg.reserved1 = value.getUint8(8);
+		devCfg.measure_interval = value.getUint8(9);
+		devCfg.batt_interval = value.getUint8(10);
+		devCfg.averaging_measurements = value.getUint8(11);
+	    devCfg.reserved2 = value.getUint8(12);
+		showConfig();
+		console.log("Dev config # flg: " + hex(devCfg.flg,8)
+		        + ", tx: " + devCfg.tx_power
+		        + ", adi: " + devCfg.advertising_interval
+		        + ", cli: " + devCfg.connect_latency
+		        +" , msi: " + devCfg.measure_interval
+		        + ", bti: " + devCfg.batt_interval
+		        + ", avi: " + devCfg.averaging_measurements);
 		addLog("Строка конфигурации: "+ bytesToHex(value.buffer));
 	} else if((blkId == 0xdb) && (len > 4)) {
 	// CMD_ID_MEM_RW Read/Write memory
 		len -= 4;
 		let addr = value.getUint32(1,true);
 		let s = bytesToHex(value.buffer.slice(5), len);
-		$('inputData').value = s;
+		$('inpData').value = s;
 		addLog("Данные по адресу 0x" + hex(addr,8) + ': ' + s);
 		showProgress("Считано: " + len + " байт из 0x" + hex(addr,8));
 	} else if((blkId == 0xda) && (len > 8)) {
@@ -1184,57 +996,88 @@ function customBlkParse(value) {
 			//	$("cbind_key").value = '?';
 		}
 	} else if(blkId == 0x23 && len >= 4) {
-		devtime.cur = value.getUint32(1,true);
-		console.log('Device Time: 0x' + hex(devtime.cur, 8));
-		let dt = new Date(devtime.cur * 1000);
+		devTime.cur = value.getUint32(1,true);
+		console.log('Device Time: 0x' + hex(devTime.cur, 8));
+		let dt = new Date(devTime.cur * 1000);
 		let sDateTime = (dt.toISOString().slice(0, -5)).replace('T',' ');
 		$('lblTime').innerHTML = sDateTime
-		addLog('Время на устройстве: ' + sDateTime);
+		let	time = Date.now() / 1000 - (new Date()).getTimezoneOffset() * 60;
+		let delta = devTime.cur - time;
+		console.log('Время на устройстве: ' + sDateTime + ', Уход: ' + Math.round(delta) + ' сек');
 		if(len >= 8) {
-			devtime.set = value.getUint32(5,true);
-			console.log('Последняя установка времени: 0x' + hex(devtime.set,8));
-			if(devtime.step == 1) {
-				if(devtime.set > 0x60000000) {
-					devtime.period = devtime.cur - devtime.set;
-					let time = Date.now() / 1000;
-					time -= (new Date()).getTimezoneOffset() * 60;
-					devtime.cmp = time;
-					let odt = new Date(devtime.set * 1000);
+			devTime.set = value.getUint32(5,true);
+			console.log('Последняя установка времени: 0x' + hex(devTime.set,8));
+			if(devTime.step == 1) {
+				if(devTime.set > 0x60000000) {
+					devTime.period = devTime.cur - devTime.set;
+					devTime.cmp = time;
+					let odt = new Date(devTime.set * 1000);
 					addLog('Последняя установка времени: '+(odt.toISOString().slice(0, -5)).replace('T',' '));
-					console.log('Прошло на устройстве: ' + devtime.period.toFixed(1) + ' секунд');
-					let rp = devtime.cmp - devtime.set;
-					let delta = rp - devtime.period;
+					console.log('Прошло на устройстве: ' + devTime.period.toFixed(1) + ' секунд');
+					let rp = devTime.cmp - devTime.set;
+					let delta = rp - devTime.period;
 					console.log('Прошло реально: ' + rp.toFixed(1) + ' секунд, разница: ' + delta.toFixed(1) + ' секунд');
 					if(rp >= 10800) { // 10800
-						devtime.step = 2;
+						devTime.step = 2;
 						console.log("Send cmd Get StepTimeSec...");
 						settingsCharacteristics.writeValue(new Uint8Array([0x24])).then(_ => {
 							console.log('Get StepTimeSec...');
 						});
 					} else {
-						devtime.step = 0;
+						devTime.step = 0;
 						addLog('Минимальный перод для расчета ухода часов 3 часа!');
 					}
 
 				} else {
-					devtime.step = 0;
+					devTime.step = 0;
 					addLog('Часы необходимо настроить заранее!');
 				}
 			}
 		}
+	} else if((blkId == 0x44) && (len > 8)) {
+		if(len != 9) {
+			devTrig.temp_min = value.getInt16(1, true);
+			devTrig.temp_max = value.getInt16(3, true);
+			devTrig.humi_min = value.getInt16(5, true);
+			devTrig.humi_max = value.getInt16(7, true);
+			if ( devSrv.services & SERVICE_SCREEN ) {
+				$("inpTempMin").value = (devTrig.temp_min/100.0).toFixed(2);
+				$("inpTempMax").value = (devTrig.temp_max/100.0).toFixed(2);
+				$("inpHumiMin").value = (devTrig.humi_min/100.0).toFixed(2);
+				$("inpHumiMax").value = (devTrig.humi_max/100.0).toFixed(2);
+			}
+		}
+		let x = 0;
+		if(len == 10) x = 1;
+		else if(len >= 18) x = 9;
+		if(x > 0) {
+			devTrig.temp_threshold = value.getInt16(x, true);
+			devTrig.humi_threshold = value.getInt16(x+2, true);
+			devTrig.temp_hysteresis = value.getInt16(x+4, true);
+			devTrig.humi_hysteresis = value.getInt16(x+6, true);
+			devTrig.flg = value.getUint8(x+8);
+			if( devSrv.services & SERVICE_TH_TRG ) { // 
+				$("chkInvOut").checked = (devTrig.flg & 1) != 0;
+				$("inpTempThr").value = (devTrig.temp_threshold/100.0).toFixed(2);
+				$("inpHumiThr").value = (devTrig.humi_threshold/100.0).toFixed(2);
+				$("inpTempHsr").value = (devTrig.temp_hysteresis/100.0).toFixed(2);
+				$("inpHumiHsr").value = (devTrig.humi_hysteresis/100.0).toFixed(2);
+			}
+		}
+		addLog("Строка настроек триггера: "+ bytesToHex(value.buffer));
 	} else if(blkId == 0x20 && len >= 8) {
 		devcmf.tmp_lo = value.getInt16(1, true); // temp lo
 		devcmf.tmp_hi = value.getInt16(3, true); // temp hi
 		devcmf.hm_lo = value.getUint16(5, true); // humi lo
 		devcmf.hm_hi = value.getUint16(7, true); // humi lo
-		let s = 'Комфорт температура: '+(devcmf.tmp_lo/100.0).toFixed(2)+'..'+(devcmf.tmp_hi/100.0).toFixed(2)+'°C, Влажность: '+(devcmf.hm_lo/100.0).toFixed(2)+'..'+(devcmf.hm_hi/100.0).toFixed(2)+'%';
+		let s = 'Комфорт Температура: ' + (devcmf.tmp_lo/100.0).toFixed(2) + '..' + (devcmf.tmp_hi/100.0).toFixed(2) + '°C'
+	        + ', Влажность: ' + (devcmf.hm_lo/100.0).toFixed(2) + '..' + (devcmf.hm_hi/100.0).toFixed(2) + '%';
 		addLog(s); // UpdCmf();
 	} else if(blkId == 0x01 && len >= 1) {
-		devnm.name = new TextDecoder("utf-8").decode(value.buffer.slice(1));
-		//if($("dev_name"))
-		//	$("dev_name").value = dnm.name;
-		addLog("Имя устройства: '"+devnm.name+"'");
-	} else if(blkId == 0x10 && len >= 7) {
+		devName = TextDecoder("utf-8").decode(value.buffer.slice(1));
+		$("inpDevName").value = devName;
+		addLog("Имя устройства: '" + devName + "'");
+	} else if(blkId == 0x10 && len > 6) {
 		let mac = new Uint8Array(6);
 		mac[0] = value.getUint8(6);
 		mac[1] = value.getUint8(5);
@@ -1242,7 +1085,9 @@ function customBlkParse(value) {
 		mac[3] = value.getUint8(3);
 		mac[4] = value.getUint8(2);
 		mac[5] = value.getUint8(1);
-		addLog("MAC устройства: "+ bytesToHex(mac));
+		let mac_txt = bytesToHex(mac);
+		$("inpDevMAC").value = mac_txt;
+		addLog("MAC устройства: "+ mac_txt);
 	} else {
 		console.log('blk: ' + dump8(value, value.byteLength));
 		addLog('Ответ на команду (' + hex(blkId,2) + '): ' + bytesToHex(value.buffer.slice(1)));
@@ -1251,31 +1096,9 @@ function customBlkParse(value) {
 function getMemo(num) {
 	if(cmdCharacteristic != null) {
 		//addLog("getSensCfg...");
-		flg_memo_act = true;
-		flg_memo_cnt = 0;
+		isMemoActive = true;
+		memoCount = 0;
 		cmdCharacteristic.writeValue(new Uint8Array([0x35, num&0xff, (num>>8)&0xff])).catch(error => { console.log(error); addLog("getMemo() error!"); });
-	}
-}
-
-function setDevTime() {
-	let time = Date.now()/1000;
-	time -= (new Date()).getTimezoneOffset() * 60;
-	blk = new Uint8Array(5);
-	blk[0] = 0x23;
-	blk[1] = time & 0xff;
-	blk[2] = (time >> 8) & 0xff;
-	blk[3] = (time >> 16) & 0xff;
-	blk[4] = (time >> 24) & 0xff;
-	addLog("Установка времени на утройстве ("+dump(blk, blk.length)+")...");
-	cmdCharacteristic.writeValue(blk).then(_ => {
-		console.log('Send new DevTime ok');
-	});
-}
-
-function getDevTime() {
-	if(cmdCharacteristic != null) {
-		// addLog("Получить время от устройства...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x23])).then(_ => { console.log('Send GetDevTime ok');	});
 	}
 }
 
@@ -1291,52 +1114,83 @@ function getSensCfg() {
 		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("getSensCfg() error!"); });
 	}
 }
+
+function getDevTime() {
+	if(cmdCharacteristic != null) {
+		// addLog("Получить время от устройства...");
+		cmdCharacteristic.writeValue(new Uint8Array([0x23])).then(_ => { console.log('Send GetDevTime ok');	});
+	}
+}
+
+function getDevMAC() {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x10])).catch(error => { console.log(error); addLog("getMAC() error!"); });
+	}
+}
+
+function getTrgCfg() {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x44])).catch(error => { console.log(error); addLog("getTrgCfg() error!"); });
+	}
+}
+
+function getDevName() {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x01])).catch(error => { console.log(error); addLog("getDevName() error!"); });
+	}
+}
+
 function setDevCfg() {
 	if(cmdCharacteristic != null) {
 		// addLog("setDevCfg...");
-	    devcfg.flg = parseInt($('inputFlag').value)&0xffffffff; // пока нет
-		devcfg.rf_tx_power = parseInt($('inputTxPwr').value)&0x3f; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
-		let connect_latency = parseInt($('inputLat').value); // = (connect_latency + 1)*30 ms
+	    devCfg.flg = parseInt($('inpFlag').value)&0xffffffff; // пока не реализовано
+		devCfg.tx_power = parseInt($('inpTxPwr').value)&0x3f; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
+	    devCfg.flg  = ($('chkCfgNotify').checked) ? 1 : 0;
+	    devCfg.flg |= ($('chkCfgClock').checked) ? 2 : 0;
+	    devCfg.flg |= ($('chkCfgSmiley').checked) ? 4 : 0;
+	    devCfg.flg |= ($('chkCfgTrg').checked) ? 8 : 0;
+		devCfg.tx_power = $('selTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
+		let connect_latency = parseInt($('inpLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
 			connect_latency = 0;
 		} else if (connect_latency <= 7680) {
 			connect_latency = (connect_latency/30) - 1;		
 		} else
 			connect_latency = 255;
-		devcfg.connect_latency = connect_latency & 0xff;
-		let advertising_interval = 	parseInt($('inputAdvInt').value);
+		devCfg.connect_latency = connect_latency & 0xff;
+		let advertising_interval = 	parseInt($('inpAdvInt').value);
 		if(advertising_interval <= 62.5)
 			advertising_interval = 1;
 		else if(advertising_interval >= 15937.5)
 			advertising_interval = 255;
 		else
-		  advertising_interval = advertising_interval/62.5;
-		devcfg.advertising_interval = advertising_interval & 0xff;
-		devcfg.measure_interval = parseInt($('inputMeasInt').value); 
-		if(devcfg.measure_interval < 2) // опрос датчика в интервалах рекламы, value минимум = 2 (интервала рекламы)
-			devcfg.measure_interval = 2;
-		else if(devcfg.measure_interval > 255)
-			devcfg.measure_interval = 255
-		devcfg.averaging_measurements = parseInt($('inputAverInt').value);
-		if(devcfg.averaging_measurements < 0) // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
-			devcfg.averaging_measurements = 0;
-		if(devcfg.averaging_measurements > 255)
-			devcfg.averaging_measurements = 255;
-		devcfg.batt_interval = parseInt($('inputBatInt').value);
-		if(devcfg.batt_interval < 2) // в секундах, минимум 2 секунды, но кратно интервалу рекламы
-			devcfg.batt_interval = 2;
-		if(devcfg.batt_interval > 255)
-			devcfg.batt_interval = 255;
+		  advertising_interval = advertising_interval / 62.5;
+		devCfg.advertising_interval = advertising_interval & 0xff;
+		devCfg.measure_interval = parseInt($('inpMeasInt').value); 
+		if(devCfg.measure_interval < 2) // опрос датчика в интервалах рекламы, value минимум = 2 (интервала рекламы)
+			devCfg.measure_interval = 2;
+		else if(devCfg.measure_interval > 255)
+			devCfg.measure_interval = 255
+		devCfg.averaging_measurements = parseInt($('inpAverInt').value);
+		if(devCfg.averaging_measurements < 0) // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
+			devCfg.averaging_measurements = 0;
+		if(devCfg.averaging_measurements > 255)
+			devCfg.averaging_measurements = 255;
+		devCfg.batt_interval = parseInt($('inpBatInt').value);
+		if(devCfg.batt_interval < 2) // в секундах, минимум 2 секунды, но кратно интервалу рекламы
+			devCfg.batt_interval = 2;
+		if(devCfg.batt_interval > 255)
+			devCfg.batt_interval = 255;
 		blk = new Uint8Array([0x55, 
-	    	devcfg.flg & 0xff, (devcfg.flg>>8) & 0xff, (devcfg.flg>>16) & 0xff, (devcfg.flg>>24) & 0xff,
-	  		devcfg.rf_tx_power,
-	    	devcfg.advertising_interval,
-	    	devcfg.connect_latency,
-	    	devcfg.reserved1,
-			devcfg.measure_interval,
-			devcfg.batt_interval,
-			devcfg.averaging_measurements,
-	    	devcfg.reserved2
+	    	devCfg.flg & 0xff, (devCfg.flg>>8) & 0xff, (devCfg.flg>>16) & 0xff, (devCfg.flg>>24) & 0xff,
+	  		devCfg.tx_power,
+	    	devCfg.advertising_interval,
+	    	devCfg.connect_latency,
+	    	devCfg.reserved1,
+			devCfg.measure_interval,
+			devCfg.batt_interval,
+			devCfg.averaging_measurements,
+	    	devCfg.reserved2
 			]);
 		cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setDevCfg() error!");});
 	}
@@ -1346,18 +1200,145 @@ function setSensCfg() {
 	if(cmdCharacteristic != null) {
 		addLog("setSensCfg...");
 
-		devcfs.temp_k = parseInt($('inputTempK').value);
-		devcfs.humi_k = parseInt($('inputHumK').value); 
-		devcfs.temp_z = parseInt($('inputTempZ').value);
-		devcfs.humi_z = parseInt($('inputHumZ').value);
+		devSens.temp_k = parseInt($('inpTempK').value);
+		devSens.humi_k = parseInt($('inpHumK').value); 
+		devSens.temp_z = parseInt($('inpTempZ').value);
+		devSens.humi_z = parseInt($('inpHumZ').value);
 
 		blk = new Uint8Array([0x55, 
-		    devcfs.temp_k & 0xff, (devcfs.temp_k >> 8) & 0xff, (devcfs.temp_k >> 16) & 0xff, (devcfs.temp_k >> 24) & 0xff,
-		    devcfs.humi_k & 0xff, (devcfs.humi_k >> 8) & 0xff, (devcfs.humi_k >> 16) & 0xff, (devcfs.humi_k >> 24) & 0xff,
-	    	devcfs.temp_z & 0xff, (devcfs.temp_z >> 8) & 0xff,
-		    devcfs.humi_z & 0xff, (devcfs.humi_z >> 8) & 0xff
+		    devSens.temp_k & 0xff, (devSens.temp_k >> 8) & 0xff, (devSens.temp_k >> 16) & 0xff, (devSens.temp_k >> 24) & 0xff,
+		    devSens.humi_k & 0xff, (devSens.humi_k >> 8) & 0xff, (devSens.humi_k >> 16) & 0xff, (devSens.humi_k >> 24) & 0xff,
+	    	devSens.temp_z & 0xff, (devSens.temp_z >> 8) & 0xff,
+		    devSens.humi_z & 0xff, (devSens.humi_z >> 8) & 0xff
 		    ]);
 		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("setSensCfg() error!"); });
+	}
+}
+
+function setDevTime() {
+	let time = Date.now()/1000;
+	time -= (new Date()).getTimezoneOffset() * 60;
+	blk = new Uint8Array(5);
+	blk[0] = 0x23;
+	blk[1] = time & 0xff;
+	blk[2] = (time >> 8) & 0xff;
+	blk[3] = (time >> 16) & 0xff;
+	blk[4] = (time >> 24) & 0xff;
+	addLog("Установка времени на устройстве (" + dump(blk, blk.length) + ")...");
+	cmdCharacteristic.writeValue(blk).then(_ => {
+		console.log('Время на устройстве синхронизировано');
+	});
+}
+
+function setDevMAC() {
+	if(cmdCharacteristic != null) {
+		let el = $("inpDevMAC").value;
+		let len = el.length;
+		if(len == 12) {
+			let mac = hexToBytes(el);
+			len = mac.length;
+			if(len == 6 || len == 8) {
+				let blk = new Uint8Array(len+2);
+				blk[0] = 0x10;
+				blk[1] = mac[5];
+				blk[2] = mac[4];
+				blk[3] = mac[3];
+				blk[4] = mac[2];
+				blk[5] = mac[1];
+				blk[6] = mac[0];
+				if(len == 8) {
+					blk[7] = mac[7];
+					blk[8] = mac[6];
+				}
+				console.log("Send cmd New MAC ("+dump(blk, blk.length)+")...");
+				cmdCharacteristic.writeValue(blk).then(_ => {
+					s = "Передача нового MAC: "+dump(mac, 6);
+					if(len == 8)
+						s += " RAND:" +dump(mac.slice(6), 2);
+					addLog(s+" ok");
+				});
+				return;
+			}
+		}
+		addLog("Строка MAC должна быть 6 байт в HEX виде!")
+		return;
+	}
+}
+
+function setTrgCfg() {
+	if(cmdCharacteristic != null) {
+		let len = 0;
+		if((devSrv.services & 0x00000020) != 0)	len = 8;
+		if((devSrv.services & 0x00004000) != 0)	len += 9;
+		if(len > 0) {
+			let blk = new Uint8Array(len + 1);
+			blk[0] = 0x44;
+			let idx = 1;
+			if(len != 9) {
+			    devTrig.temp_min = Math.round($("inpTempMin").value * 100);
+			    devTrig.temp_max = Math.round($("inpTempMax").value * 100);
+			    devTrig.humi_min = Math.round($("inpHumiMin").value * 100);
+			    devTrig.humi_max = Math.round($("inpHumiMax").value * 100);
+				blk[1] = devTrig.temp_min & 0xff;
+				blk[2] = (devTrig.temp_min >> 8) & 0xff;
+				blk[3] = devTrig.temp_max & 0xff;
+				blk[4] = (devTrig.temp_max >> 8) & 0xff;
+				blk[5] = devTrig.humi_min & 0xff;
+				blk[6] = (devTrig.humi_min >> 8) & 0xff;
+				blk[7] = devTrig.humi_max & 0xff;
+				blk[8] = (devTrig.humi_max >> 8) & 0xff;
+				idx = 9;
+			}
+			if(len > 8) {
+				devTrig.temp_threshold = Math.round($("inpTempThr").value * 100);
+				devTrig.humi_threshold = Math.round($("inpHumiThr").value * 100);
+				devTrig.temp_hysteresis = Math.round($("inpTempHsr").value * 100);
+				devTrig.humi_hysteresis = Math.round($("inpHumiHsr").value * 100);
+				devTrig.flg = ($("chkInvOut").checked)? 1: 0;
+				blk[idx+0] = devTrig.temp_threshold & 0xff;
+				blk[idx+1] = (devTrig.temp_threshold >> 8) & 0xff;
+				blk[idx+2] = devTrig.humi_threshold & 0xff;
+				blk[idx+3] = (devTrig.humi_threshold >> 8) & 0xff;
+				blk[idx+4] = devTrig.temp_hysteresis & 0xff;
+				blk[idx+5] = (devTrig.temp_hysteresis >> 8) & 0xff;
+				blk[idx+6] = devTrig.humi_hysteresis & 0xff;
+				blk[idx+7] = (devTrig.humi_hysteresis >> 8) & 0xff;
+				blk[idx+8] = devTrig.flg & 0xff;
+			}
+			cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setTrgCfg() error!"); });
+		}
+	}
+}
+
+function setDevName(flg) {
+	if(cmdCharacteristic != null) {
+		if(flg) {
+			let eltxt = $("inpDevName").value;
+			let len = eltxt.length;
+			if(len > 1 && len < 20) {
+				let blk = new Uint8Array(1 + len);
+				blk[0] = 0x01;
+				blk.set((new TextEncoder()).encode(eltxt), 1);
+				console.log(blk);
+				cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setDevName() error!"); });
+			} else
+				addLog("Имя устройства должно быть от 1 до 19 символов!");
+		} else 
+			cmdCharacteristic.writeValue(new Uint8Array([0x01, 0])).catch(error => { console.log(error); addLog("setDevName() error!"); });
+	}
+}
+
+function resetDevCfg() {
+	if(cmdCharacteristic != null) {
+		addLog("Restore connection default settings...");
+		cmdCharacteristic.writeValue(new Uint8Array([0x56])).catch(error => { console.log(error); addLog("resetDevCfg() error!"); });
+	}
+}
+
+function resetSensCfg() {
+	if(cmdCharacteristic != null) {
+		addLog("Restore sensor default settings...");
+		cmdCharacteristic.writeValue(new Uint8Array([0x26])).catch(error => { console.log(error); addLog("resetSensCfg() error!"); });
 	}
 }
 
@@ -1427,13 +1408,13 @@ var getFile = new selectFile;
 getFile.targets('inpFile','lblFile');
 
 function uploadFile() {
-	if ( isEmpty($("inputUrl").value) ) {
+	if ( isEmpty($("inpUrl").value) ) {
 		getFile.simulate()
 	} else {
 		let regex = /[^\\]+$/;
 		// match(regex);
-		//download(, $("inputUrl").value, "application/octet-stream");
-		download($("inputUrl").value, "OTA.bin");
+		//download(, $("inpUrl").value, "application/octet-stream");
+		download($("inpUrl").value, "OTA.bin");
         // readFile(file);
 	}
 }
@@ -1443,6 +1424,8 @@ function readFlash() {
 	// if "OK"
 	$('btnSaveFlash').disabled = false;
 }
+
+var	chart = null;
 
 function openTab(evt, tabName) {
 	var i, tabcontent, tablinks;
@@ -1460,6 +1443,14 @@ function openTab(evt, tabName) {
 		evt.currentTarget.className += " active";
 		// console.log(evt.currentTarget.className);
 	}
+	if (tabName == 'tabCharts') {
+		if ((chartData.length > 0) && (chart != null))
+			chart.updateOptions({'file': chartData});
+		resizeChart();
+		isChartEnabled = true;
+	} else {
+		isChartEnabled = false;
+	}
 }
 
 function selectConfigTab() {
@@ -1468,44 +1459,186 @@ function selectConfigTab() {
     tablinks[0].className += " active";
 }
 
-window.onload = (event) => {
-	showState("Нет подключения" );
-	selectConfigTab();
+// Буфер входящих данных
+var chart = null;
+var chartData = [];
+var rslT = 1;
+var rslH = 1;
+var rangeT = [15, 25]; // y:  { valueRange: [15, 25] },
+var rangeH = [25, 85]; // y2: { valueRange: [25, 85] }
+
+const arrayColumn = (arr, n) => arr.map(x => x[n]);
+
+function addChartData(temp, humi) {
+
+    let dt = new Date();
+	chartData.push([dt, temp, humi]);
+	if(chartData.length >= 1000) chartData.shift();
+
+	//console.log(arrayColumn(a, 1));
+	//console.log(Math.min(...arrayColumn(a, 1)));
+	//console.log(Math.max(...arrayColumn(a, 1)));
+	let yMin = Math.min(...arrayColumn(chartData, 1));
+	let yMax = Math.max(...arrayColumn(chartData, 1));
+	let xMin = Math.floor(yMin / rslT);
+	let xMax = Math.floor(yMax / rslT) + 1;
+	rangeT = [xMin*rslT, xMax*rslT];
+
+	yMin = Math.min(...arrayColumn(chartData, 2));
+	yMax = Math.max(...arrayColumn(chartData, 2));
+	xMin = Math.floor(yMin / rslH);
+	xMax = Math.floor(yMax / rslH) + 1;
+	rangeH = [xMin*rslH, xMax*rslH];
+	//console.log(rangeT, rangeH);
+
+/*********************************
+	if (chartData.length < 3) return;
+	if (chart == null) {
+
+	chart = new Dygraph(
+	    $("divChart"),
+	    "ny-vs-sf.txt",
+	    {
+			rollPeriod: 14,
+			showRoller: true,
+			customBars: true,
+			title: 'NYC vs. SF',
+			ylabel: 'Temperature (F)',
+			legend: 'always'
+	    }
+	  );
+ *******************************/
+/******************************
+	chart = new Dygraph(
+		$("divDygraph"),
+	    "ny-vs-sf.txt", // chartData,
+		{
+			//title: "Live data",
+			//showRangeSelector: true,
+			//showRoller: true,
+			//rollPeriod: 1,
+			//xlabel: 'Time(sec)',
+			//ylabel: 'Temp(C&deg;)',
+			//y2label: 'RH(%)',
+			colors: ['green', 'blue'],
+			series : { 'RH(%)': { axis: 'y2' } },
+			labels: ['T(сек)', 'T(°C)', 'RH(%)'],
+			//divLabels: $('divLabels'),
+			legend: 'always',  // "follow"
+			digitsAfterDecimal: 3,
+			rollPeriod: 14,
+			showRoller: true,
+			customBars: true,
+			title: 'NYC vs. SF',
+			ylabel: 'Temperature (F)',
+			legend: 'always'
+		}
+	);
+ ******************************/
+	//chart.updateOptions({'file': chartData})
+}
+
+function resizeChart() {
+	if (chart == null) return;
+	// console.log('resize однако');
+	var element = $('divChart');
+	var positionInfo = element.getBoundingClientRect();
+	// console.log(positionInfo);
+	// var width = positionInfo.width;
+	// var height = positionInfo.height;
+	var width  = $('tabCharts').clientWidth;
+	var height = $('tabCharts').clientHeight;
+	// console.log(width, height);
+	if (height < (320 + 100)) 
+		height = 320;
+	else
+		height -= 100;
+
+	if (width < (480 + 40))
+		width = 480;
+	else
+		width -= 40;
+	chart.resize(width, height);
+	// console.log(width, height);
 }
 
 window.onload = function() {
 
-    document.querySelector("#inpFile").addEventListener("change", function() {
-    	var file = this.files[0];
-        if (file != null) {
+	document.querySelector("#inpFile").addEventListener("change", function() {
+		var file = this.files[0];
+	    if (file != null) {
 			text = "не загружен";
-            readFile(file);
-        } else {
+	        readFile(file);
+	    } else {
 	        $('lblFile').innerHTML = "не выбран";
+	    }
+	}, false);
+
+	showState("Не подключено");
+
+	disableControls(true);
+	selectConfigTab();
+	chart = new Dygraph(
+	    $('divChart'),
+	    [],
+	    {
+			//title: "Live data",
+			//showRangeSelector: true,
+			//showRoller: true,
+			//rollPeriod: 1,
+			//xlabel: 'Time(sec)',
+			//ylabel: 'Temp(C&deg;)',
+			//y2label: 'RH(%)',
+			/******************************/
+            axes: {
+              y:  { valueRange: rangeT },
+              y2: { valueRange: rangeH }
+            },
+            /******************************/
+			colors: ['green', 'blue'],
+			series : { 'RH(%)': { axis: 'y2' } },
+			labels: ['T(сек)', 'T(°C)', 'RH(%)'],
+			//labelsDiv: $('labelsDiv'),
+			legend: 'always',  // "follow"
+			digitsAfterDecimal: 2,
+	    }
+	  );
+	/******************************************
+	// debug
+	// let a = [[1, 21, 81], [2, 20, 79], [3, 19, 83]];
+	// addChartData(21, 81);
+	// addChartData(20, 79);
+	// addChartData(19, 83);
+
+	for (i = 0; i < 128; i++) {
+		let t = 20 + (1 - Math.random() * 2);
+		let h = 70 + (5 - Math.random() * 10);
+		chartData.push([i, t, h]);
+		//addChartData(t, h);
+	}
+	chart.updateOptions(
+		{
+		file: chartData,
+		axes: {
+            y:  { 'valueRange': rangeT },
+            y2: { 'valueRange': rangeH }
         }
-    }, false);
-
-    $("btnSaveFlash").onclick = function() {
-    	if(flashBuffer != null)
-    		download(flashBuffer, 'r11000000-00080000.bin', 'application/octet-stream;charset=utf-8');
-    };
-
-    showState("Не подключено");
-
-    disableControls(true);
+		}
+	);
+	// chart.updateOptions({'file': chartData});
+	******************************************/
+	addEventListener("resize", resizeChart);
 };
 
 </script>
 <h2>PHY62x2 BTHome <a href="https://github.com/pvvx/THB2"><small>&#9432;</small></a></h2>
-<label for="inpNamePrefix">Префикс названия устройств(а)</label><br>
+<label for="inpNamePrefix">Префикс имени устройств(а)</label>
 <input type="text" id="inpNamePrefix" value="" placeholder="THB, BT, TH">
-<hr>
-<label id="lblStatus"></label>
-<br><br><hr>
+<br>
 <button type="button" id="btnConnect"     onclick="connect()">Соединение</button>
 <button type="button" id="btnDisconnect"  onclick="disconnect()" disabled="true">Отключение</button>
 <button type="button" id="btnReconnect"   onclick="reconnect()" disabled="true">Переподключение</button>
-<br><hr id="hrSensorData" hidden>
+<hr id="hrSensorData" hidden>
 <table id="tblSensorData" hidden>
   <tr>
     <th>Время</th>
@@ -1518,38 +1651,70 @@ window.onload = function() {
     <td><label id="lblTemp">-- °C</label></td>
     <td><label id="lblHumi">-- %RH</label></td>
     <td><label id="lblBat">-- % (-- V)</label></td>
+    <td><label id="lblTrg"></label></td>
   </tr>
 </table>
 <hr>
 <div class="tab">
   <button class="tablinks" onclick="openTab(event, 'tabConfig')">Config</button>
   <button class="tablinks" onclick="openTab(event, 'tabOTA')">OTA</button>
-  <button class="tablinks" onclick="openTab(event, 'tabFlash')">Flash</button>
+  <button class="tablinks" onclick="openTab(event, 'tabCharts')">Chart</button>
   <button class="tablinks" onclick="openTab(event, 'tabService')">Service</button>
 </div>
 
 <div id="tabConfig" class="tabcontent">
-  Параметры связи<br>
-  <!--
-  Флаг: <input size="8" type="text" id="inputFlag" maxlength="8">
-  Tx Power: <input size="8" type="text" id="inputTxPwr" maxlength="8">
-  Conn. Latency: <input size="8" type="text" id="inputLat" maxlength="8">
-  <br>
-  Интервал рекламы: <input size="8" type="text" id="inputAdvInt" maxlength="8">
-  Интервал измерений: <input size="8" type="text" id="inputMeasInt" maxlength="8">
-  Интервал опроса батареи: <input size="8" type="text" id="inputMeasBat" maxlength="8">
-  Интервал усреднения: <input size="8" type="text" id="inputAverInt" maxlength="8">
-  <br> -->
+<table id="tblChkCfg">
+  <tr align="left">
+    <td><label><input type="checkbox" id="chkCfgClock"/>Показывать время</label></td>
+    <td><label><input type="checkbox" id="chkCfgSmiley"/>Отображать смайлики</label></td>
+    <td><label><input type="checkbox" id="chkCfgTrg"/>Отображать триггер</label></td>
+  </tr>
+</table>
+<table id="tblComfort">
+  <tr>
+    <td style="width:75px;"><b>Комфорт</b></td>
+    <td>Температура от <input size="4" type="text" id="inpTempMin" maxlength="8" title="Минимальная температура">
+    до <input size="4" type="text" id="inpTempMax" maxlength="8" title="Максимальная температура"> °C,</td>
+    <td>Влажность  от <input size="4" type="text" id="inpHumiMin" maxlength="8" title="Минимальная влажность">
+    до <input size="4" type="text" id="inpHumiMax" maxlength="8" title="Максимальная влажность"> %RH</td>
+  </tr>
+</table>
+<table id="tblTrigger">
+  <tr>
+    <td style="width:75px;"><b>Триггер</b></td>
+    <td>Температура: <input size="4" type="text" id="inpTempThr" maxlength="8" title="Порог температуры"> °C, </td>
+    <td>Влажность: <input size="4" type="text" id="inpHumiThr" maxlength="8" title="Порог влажности"> %RH, </td>
+    <td>Гистерезис: <input size="4" type="text" id="inpTempHsr" maxlength="8" title="Гистерезис температуры, если =0 - обработка отключена, если отрицательный -  выход включен при температуре менее заданной (нагреватель)"> °C</td>
+    <td><input size="4" type="text" id="inpHumiHsr" maxlength="8" title="Гистерезис влажности, если =0 - обработка отключена, если отрицательный - выход включен при влажности менее заданной (увлажнитель)"> %RH, </td>
+    <td><label><input type="checkbox" id="chkInvOut"/>Инверсия вывода</label></td>
+  </tr>
+</table>
+<button type="button"id="btnGetTrg" onclick="getTrgCfg()">Прочитать</button>
+<button type="button"id="btnSetTrg" onclick="setTrgCfg()">Записать</button>
+<hr id="hrPres">
+<button type="button" id="btnGetDevTime" onclick="getDevTime()">Время устройства</button>  
+<button type="button" id="btnSetDevTime" onclick="setDevTime()">Установить время</button>
+<hr>
+Параметры связи
 <table>
   <tr>
-    <th>Флаг</th>
+    <th>Send Notification</th>
     <th>Tx Power</th>
     <th>Conn. Latency</th>
   </tr>
   <tr align="center">
-    <td><input size="8" type="text" id="inputFlag" maxlength="8" title="Пока не заданы, будут отдельными checkbox" ></td>
-    <td><input size="4" type="text" id="inputTxPwr" maxlength="4" title="-20..+5 dBm нелинейное  0x1f = +0 дБм"></td>
-    <td><input size="4" type="text" id="inputLat" maxlength="4" title="Connect latency, Итоговый интервал = 30 * (Connect latency + 1) мс"></td>
+    <td><label><input type="checkbox" id="chkCfgNotify"/>Измерения</label></td>
+    <td>
+	<select id="selTxPwr">
+	<option value="63">+5 дБм</option>
+	<option value="31" selected>+0 дБм</option>
+	<option value="23">-5 дБм</option>
+	<option value="15">-10 дБм</option>
+	<option value="7">-15 дБм</option>
+	<option value="0">-20 дБм</option>
+	</select>
+	</td>
+    <td><input size="4" type="text" id="inpLat" maxlength="4" title="Connect latency, Итоговый интервал = 30 * (Connect latency + 1) мс"></td>
   </tr>
 </table>
 Интервалы
@@ -1561,18 +1726,19 @@ window.onload = function() {
     <th>Уровень батареи</th>
   </tr>
   <tr align="center">
-    <td><!--- надо отдельно, на ходу, при изменении, выводить расчетное значение inputAdvInt*62.5 в ms --->
-    <input size="4" type="text" id="inputAdvInt" maxlength="4" title="*62.5 = интервал BLE рекламы в мс"></td>
-    <td><!--- надо отдельно выводить расчетное значение inputAdvInt*62.5*inputMeasInt в ms --->
-    <input size="4" type="text" id="inputMeasInt" maxlength="4" title="Опрос датчика в интервалах BLE рекламы, минимум = 2 интервала рекламы"></td>
-    <td><!--- надо отдельно выводить расчетное значение inputAdvInt*62.5*inputMeasInt*inputAverInt в мс, сек --->
-    <input size="4" type="text" id="inputAverInt" maxlength="4" title="Запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"></td>
+    <td><!--- надо отдельно, на ходу, при изменении, выводить расчетное значение inpAdvInt*62.5 в ms --->
+    <input size="4" type="text" id="inpAdvInt" maxlength="4" title="Интервал BLE рекламы в мс, кратность 62.5 мс"></td>
+    <td><!--- надо отдельно выводить расчетное значение inpAdvInt*62.5*inpMeasInt в ms --->
+    <input size="4" type="text" id="inpMeasInt" maxlength="4" title="Опрос датчика в интервалах BLE рекламы, минимум 2 интервала рекламы"></td>
+    <td><!--- надо отдельно выводить расчетное значение inpAdvInt*62.5*inpMeasInt*inpAverInt в мс, сек --->
+    <input size="4" type="text" id="inpAverInt" maxlength="4" title="Запись истории: 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"></td>
     <td>
-    <input size="4" type="text" id="inputBatInt" maxlength="4" title="В секундах, минимум 2 секунды, но обрабатывается кратно интервалу BLE рекламы"></td>
+    <input size="4" type="text" id="inpBatInt" maxlength="4" title="В секундах, обрабатывается кратно интервалу BLE рекламы, минимум 2 секунды"></td>
   </tr>
 </table>
-  <button type="button"id="btnGetDev" onclick="getDevCfg()" >Прочитать</button>
-  <button type="button"id="btnSetDev" onclick="setDevCfg()" >Записать</button>
+  <button type="button"id="btnGetDev" onclick="getDevCfg()">Прочитать</button>
+  <button type="button"id="btnSetDev" onclick="setDevCfg()">Записать</button>
+  <button type="button"id="btnRstDev" onclick="resetDevCfg()" title="Восстановить стандартные параметры связи">Восстановить</button>
   <hr>
   Параметры сенсора&emsp;<b><label id="lblSensor">?</label></b>
 <table>
@@ -1586,36 +1752,19 @@ window.onload = function() {
   </tr>
   <tr>
     <td>Поправочные коэффициенты</td>
-    <td align="center"><input size="8" type="text" id="inputTempK" maxlength="8" title="*0.01 = Коэффициент угла наклона (линейная функция) для расчета температуры"></td>
-    <td align="center"><input size="8" type="text" id="inputHumK" maxlength="8" title="*0.01 = Коэффициент угла наклона (линейная функция) для расчета влажности"></td>
+    <td align="center"><input size="8" type="text" id="inpTempK" maxlength="8" title="*0.01 = Коэффициент угла наклона (линейная функция) для расчета температуры"></td>
+    <td align="center"><input size="8" type="text" id="inpHumK" maxlength="8" title="*0.01 = Коэффициент угла наклона (линейная функция) для расчета влажности"></td>
   </tr>
   <tr>
     <td>Коррекция смещения</td>
-    <td><input size="8" type="text" id="inputTempZ" maxlength="8" title="*0.01C = Смещение нуля с поправочным значением для расчета температуры"></td>
-    <td><input size="8" type="text" id="inputHumZ" maxlength="8" title="*0.01% = Смещение нуля с поправочным значением для расчета влажности"></td>
+    <td><input size="8" type="text" id="inpTempZ" maxlength="8" title="*0.01C = Смещение нуля с поправочным значением для расчета температуры"></td>
+    <td><input size="8" type="text" id="inpHumZ" maxlength="8" title="*0.01% = Смещение нуля с поправочным значением для расчета влажности"></td>
   </tr>
 </table>
 <br>
-
-<!--
-  Поправочные коэффициенты:
-  Температуры: <input size="8" type="text" id="inputTempK" maxlength="8">
-  Влажности: 
-  <br>
-  Коррекция смещения:
-  Температуры: <input size="8" type="text" id="inputTempZ" maxlength="8">
-  Влажности: <input size="8" type="text" id="inputHumZ" maxlength="8">
-  <br> 
-  Параметры I2C<br>
-  Vendor: <input size="4" type="text" id="inputI2CVen" maxlength="4">
-  Model: <input size="4" type="text" id="inputI2CMod" maxlength="4">
-  Address: <input size="2" type="text" id="inputI2CAddr" maxlength="2">
-  <br> -->
 <button type="button"id="btnGetSens" onclick="getSensCfg()">Прочитать</button>
-<button type="button"id="btnSetSens" onclick="setSensCfg()">Записать</button><br>
-<hr>
-<button type="button" id="btnGetDevTime" onclick="getDevTime()">Время устройства</button>  
-<button type="button" id="btnSetDevTime" onclick="setDevTime()">Установить время</button>
+<button type="button"id="btnSetSens" onclick="setSensCfg()">Записать</button>
+<button type="button"id="btnRstSens" onclick="resetSensCfg()" title="Восстановить стандартные параметры сенсора">Восстановить</button>
 </div>
 
 <div id="tabOTA" class="tabcontent">
@@ -1624,17 +1773,16 @@ window.onload = function() {
   <input type="file" hidden accept=".bin,application/octet-stream" id="inpFile">
   <label id="lblFile">не выбран</label>
   <button type="button" onClick="$('inpFile').click()">Выбрать</button>
-  <div hidden>URL: <input type="text" id="inputUrl"></div>
+  <div hidden>URL: <input type="text" id="inpUrl"></div>
   <p>
 <hr>
-<button type="button"id="btnStartDFU" onclick="startDFU()" disabled="true" >Старт программирования</button>
+<button type="button" id="btnStartDFU" onclick="startDFU()" disabled="true" >Старт</button>
 </div>
 
-<div id="tabFlash" class="tabcontent">
-  <p>
-  <button type="button" id="btnReadFlash" onclick="readFlash()">Прочитать</button>
-  <button type="button" id="btnSaveFlash" disabled="true">Сохранить в файл</button>
-  <p>
+<div id="tabCharts" class="tabcontent">
+  <div id="divChart"></div>
+  <!--div id="divLabels"></div-->
+  <p><a href="GraphMemo.html" target="_blank">Memo Chart</a> - График истории замеров</p>
 </div>
 
 <div id="tabService" class="tabcontent">
@@ -1646,9 +1794,9 @@ window.onload = function() {
 	<td>Данные (hex):</td>
   </tr>
   <tr>
-	<td><input size="8" type="text" id="inputAddr" value="11000000" maxlength="8"></td>
+	<td><input size="8" type="text" id="inpAddr" value="11000000" maxlength="8"></td>
 	<td><button type="button" id="btnWriteAddr" onclick="writeAddress()" style="width:120px;">Записать</button></td>
-	<td><input size="32" type="text" id="inputData" value="?" maxlength="32"></td>
+	<td><input size="32" type="text" id="inpData" value="?" maxlength="32"></td>
   </tr>
 </table>
 <hr>
@@ -1659,9 +1807,30 @@ window.onload = function() {
 	<td><input type="text" id="inpCmdData" value="55" maxlength="16"></td>
   </tr>
 </table>
+<hr>
+<table>
+  <tr>
+	<td style="width:100px;">MAC Адрес:</td>
+	<td><button type="button" id="btnGetMAC" onclick="getDevMAC()">Прочитать</button></td>
+	<td><input type="text" id="inpDevMAC" value="?" maxlength="16"></td>
+	<td><button type="button" id="btnSetMAC" onclick="setDevMAC()">Записать</button></td>
+  </tr>
+</table>
+<hr>
+<table>
+  <tr>
+	<td style="width:100px;">Имя устройства:</td>
+	<td><button type="button" id="btnGetName" onclick="getDevName()">Прочитать</button></td>
+	<td><input type="text" id="inpDevName" value="" maxlength="19"></td>
+	<td><button type="button" id="btnSetName" onclick="setDevName(true)">Записать</button></td>
+	<td><button type="button" id="btnRstName" onclick="setDevName(false)">По умолчанию</button></td>
+  </tr>
+</table>
 </div>
 <hr>
-<button type="button" onclick="clearLog()">Очистить лог</button><br>
+<button type="button" onclick="clearLog()">Очистить лог</button>
+<label id="lblStatus"></label>
+<br>
 <div id="log"></div>
 </body>
 </html>
