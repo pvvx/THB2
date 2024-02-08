@@ -9,7 +9,7 @@
 #include "flash.h"
 #include "flash_eep.h"
 #include "logger.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "cmd_parser.h"
 #include "trigger.h"
 

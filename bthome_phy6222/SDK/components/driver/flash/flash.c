@@ -372,7 +372,7 @@ int hal_flash_erase_block64(unsigned int addr) {
 	uint8_t retval;
 #if(FLASH_PROTECT_FEATURE == 1)
     hal_flash_unlock();
-    #endif
+#endif
 	uint32_t cs = spif_lock();
 	uint32_t cb = AP_PCR->CACHE_BYPASS;
 	HAL_CACHE_ENTER_BYPASS_SECTION();
@@ -390,7 +390,7 @@ int hal_flash_erase_block64(unsigned int addr) {
 	spif_unlock(cs);
 #if(FLASH_PROTECT_FEATURE == 1)
     hal_flash_lock();
-    #endif
+#endif
 	return retval;
 }
 
@@ -398,7 +398,7 @@ int hal_flash_erase_all(void) {
 	uint8_t retval;
 #if(FLASH_PROTECT_FEATURE == 1)
     hal_flash_unlock();
-    #endif
+#endif
 	uint32_t cs = spif_lock();
 	uint32_t cb = AP_PCR->CACHE_BYPASS;
 	HAL_CACHE_ENTER_BYPASS_SECTION();

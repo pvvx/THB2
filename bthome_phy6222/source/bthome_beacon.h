@@ -129,6 +129,13 @@ typedef struct __attribute__((packed)) _adv_bthome_data2_t {
 	uint16		battery_mv; // x 0.001 V
 } adv_bthome_data2_t, * padv_bthome_data2_t;
 
+typedef struct __attribute__((packed)) _adv_bthome_event1_t {
+	uint8_t		o_id;	// = BtHomeID_opened ?
+	uint8_t		opened;
+	uint8_t		c_id;	// = BtHomeID_count32
+	uint32_t	counter;
+} adv_bthome_event1_t, * padv_bthome_event1_t;
+
 
 #define ADV_BUFFER_SIZE		(31-3)
 
@@ -151,6 +158,17 @@ typedef struct __attribute__((packed)) _adv_bthome_ns2_t {
 	uint8		pid;	// PacketId (measurement count)
 	adv_bthome_data2_t data;
 } adv_bthome_ns2_t, * padv_bthome_ns2_t;
+
+// BTHOME event1, no security
+typedef struct __attribute__((packed)) _adv_bthome_evns1_t {
+	uint8 		flag[3];		// Advertise type flags
+	adv_head_bth_t head;
+	uint8		info;	// = 0x40 BtHomeID_Info
+	uint8		p_id;	// = BtHomeID_PacketId
+	uint8		pid;	// PacketId (measurement count)
+	adv_bthome_event1_t data;
+} adv_bthome_evns1_t, * padv_bthome_evns1_t;
+
 
 uint8_t bthome_data_beacon(void * padbuf);
 

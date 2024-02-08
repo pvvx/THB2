@@ -20,7 +20,7 @@
 //#include "hiddev.h"
 
 #include "thservice.h"
-#include "sensor.h"
+#include "sensors.h"
 /*********************************************************************
 	MACROS
 */

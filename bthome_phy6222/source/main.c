@@ -112,19 +112,15 @@ const ioinit_cfg_t ioInit[] = {
 #if DEVICE == DEVICE_THB2
 		{ GPIO_P00, GPIO_PULL_DOWN },
 		{ GPIO_P01, GPIO_PULL_DOWN },
-		{ GPIO_P02, GPIO_PULL_DOWN },
-		{ GPIO_P03, GPIO_PULL_DOWN },
-		{ GPIO_P07, GPIO_PULL_UP }, // KEY
 #ifdef GPIO_TRG
-		{ GPIO_P09, GPIO_FLOATING }, // TX - GPIO_TRG
+		{ GPIO_P02, GPIO_FLOATING }, // TX2 - GPIO_TRG
 #else
 		{ GPIO_P09, GPIO_PULL_UP }, // TX
 #endif
-#ifdef GPIO_INP
-		{ GPIO_P10, GPIO_FLOATING }, // RX - GPIO_INP
-#else
-		{ GPIO_P10, GPIO_PULL_UP }, // RX
-#endif
+		{ GPIO_P03, GPIO_PULL_DOWN },
+		{ GPIO_P07, GPIO_PULL_UP }, // KEY
+		{ GPIO_P09, GPIO_PULL_UP }, // TX
+		{ GPIO_P10, GPIO_PULL_UP }, // RX - GPIO_INP
 		{ GPIO_P11, GPIO_FLOATING }, // ADC_VBAT
 		{ GPIO_P14, GPIO_PULL_DOWN },
 		{ GPIO_P15, GPIO_PULL_DOWN },
@@ -162,11 +158,7 @@ const ioinit_cfg_t ioInit[] = {
 #endif
 		{ GPIO_P16, GPIO_PULL_DOWN },
 		{ GPIO_P17, GPIO_PULL_DOWN },
-#ifdef GPIO_INP
-		{ GPIO_P18, GPIO_FLOATING }, // RX2 - GPIO_INP
-#else
-		{ GPIO_P18, GPIO_PULL_UP }, // RX2
-#endif
+		{ GPIO_P18, GPIO_PULL_UP }, // RX2 - GPIO_INP
 #ifdef GPIO_TRG
 		{ GPIO_P20, GPIO_FLOATING }, // TX2 - GPIO_TRG
 #else
@@ -194,11 +186,7 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P15, GPIO_PULL_DOWN },
 		{ GPIO_P16, GPIO_PULL_DOWN },
 		{ GPIO_P17, GPIO_PULL_DOWN },
-#ifdef GPIO_INP
-		{ GPIO_P18, GPIO_FLOATING }, // RX2 - GPIO_INP
-#else
-		{ GPIO_P18, GPIO_PULL_UP }, // RX2
-#endif
+		{ GPIO_P18, GPIO_PULL_UP }, // RX2  - GPIO_INP
 #ifdef GPIO_TRG
 		{ GPIO_P20, GPIO_FLOATING }, // TX2 - GPIO_TRG
 #else

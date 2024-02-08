@@ -34,7 +34,7 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "battery.h"
 #include "sbp_profile.h"
 #include "logger.h"
@@ -105,9 +105,11 @@ void test_config(void) {
 
 	if(cfg.advertising_interval == 0)
 		cfg.advertising_interval = 1;
+	else if(cfg.advertising_interval > 160)
+		cfg.advertising_interval = 160;
 	if(cfg.measure_interval < 2)
 		cfg.measure_interval = 2;
-	adv_wrk.measure_interval_ms = cfg.advertising_interval * cfg.measure_interval * 625 / 10;
+	adv_wrk.measure_interval_ms = (cfg.advertising_interval * cfg.measure_interval * 625) / 10;
 }
 
 void load_eep_config(void) {

@@ -6267,9 +6267,9 @@ llStatus_t LL_SetAdvControl1( uint8 advMode )
                  || llState == LL_STATE_CONN_MASTER)
                 && (pGlobal_config[LL_SWITCH] & SIMUL_CONN_ADV_ALLOW))
         {
-            #ifdef DEBUG_LL
+#ifdef DEBUG_LL
             LOG("LL_SetAdvControl: start sec adv\r\n");
-            #endif
+#endif
 
             if (llSecondaryState != LL_SEC_STATE_IDLE)
                 return( LL_STATUS_ERROR_UNEXPECTED_STATE_ROLE );
@@ -8077,9 +8077,9 @@ void rflib_vesion(uint8_t* major, uint8_t* minor, uint8_t* revision, char* test_
     *minor = SDK_VER_MINOR;
     *revision = SDK_VER_REVISION;
     *test_build = '\0';
-    #ifdef SDK_VER_TEST_BUILD
+#ifdef SDK_VER_TEST_BUILD
     *test_build = SDK_VER_TEST_BUILD;
-    #endif
+#endif
 }
 
 

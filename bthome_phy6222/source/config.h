@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x11	// BCD
+#define APP_VERSION	0x12	// BCD
 #endif
 
 /*
@@ -40,24 +40,24 @@
 #define DEVICE_TH05		21
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05
+#define DEVICE		DEVICE_THB2
 #endif
 
 // supported services by the device (bits)
 #define SERVICE_OTA			0x00000001	// есть функция OTA
-#define SERVICE_OTA_EXT		0x00000002	// пока нет: есть расширенная функция OTA
-#define SERVICE_PINCODE 	0x00000004	// пока нет: есть установка pin-code
-#define SERVICE_BINDKEY 	0x00000008	// пока нет: есть шифрование
+#define SERVICE_OTA_EXT		0x00000002	// пока нет // есть расширенная функция OTA
+#define SERVICE_PINCODE 	0x00000004	// пока нет // есть установка pin-code
+#define SERVICE_BINDKEY 	0x00000008	// пока нет // есть шифрование
 #define SERVICE_HISTORY 	0x00000010	// есть запись истории
 #define SERVICE_SCREEN		0x00000020	// есть экран
-#define SERVICE_LE_LR		0x00000040	// пока нет: Есть поддержка рекламы в LE Long Range
+#define SERVICE_LE_LR		0x00000040	// пока нет // Есть поддержка рекламы в LE Long Range
 #define SERVICE_THS			0x00000080	// есть датчик температуры и влажности
-#define SERVICE_RDS			0x00000100	// пока нет: есть обслуживние геркона/счета импульсов
+#define SERVICE_RDS			0x00000100	// есть обслуживние геркона/счета импульсов
 #define SERVICE_KEY			0x00000200	// есть кнопка
-#define SERVICE_OUTS		0x00000400	// пока нет: есть обслуживние выходных пинов
-#define SERVICE_INS			0x00000800	// пока нет: есть обслуживние входных пинов
-#define SERVICE_TIME_ADJUST 0x00001000	// пока нет: есть функция коррекции счета времени
-#define SERVICE_HARD_CLOCK	0x00002000	// пока нет: есть реальные часы RTC
+#define SERVICE_OUTS		0x00000400	// пока нет // есть обслуживние выходных пинов
+#define SERVICE_INS			0x00000800	// пока нет // есть обслуживние входных пинов
+#define SERVICE_TIME_ADJUST 0x00001000	// пока нет // есть функция коррекции счета времени
+#define SERVICE_HARD_CLOCK	0x00002000	// пока нет // есть реальные часы RTC
 #define SERVICE_TH_TRG		0x00004000	// триггер по температуре и влажности
 
 #define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
@@ -87,6 +87,7 @@
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
+		| SERVICE_RDS \
 )
 #endif
 
@@ -121,6 +122,7 @@
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
+		| SERVICE_RDS \
 )
 #endif
 
@@ -158,6 +160,7 @@
 		| SERVICE_KEY \
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
+		| SERVICE_RDS \
 )
 #endif
 
@@ -215,7 +218,6 @@ typedef struct _cfg_t {
 	uint8_t batt_interval; // measure battery * seconds
 	uint8_t averaging_measurements; // * measure_interval, 0 - off, 1..255 * measure_interval
 	uint8_t reserved2;
-
 }cfg_t;
 extern cfg_t cfg;
 extern const cfg_t def_cfg;
@@ -229,9 +231,13 @@ extern const cfg_t def_cfg;
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;
 	uint32_t	measure_batt_tik;
+#if (DEV_SERVICES & SERVICE_RDS)
+	uint32_t	rds_count;
+#endif
 	uint8_t		adv_count;
-	uint8_t 	adv_con_count;
-	uint8_t		adv_batt;
+	uint8_t 	adv_reload_count;
+	uint8_t		adv_batt_count;
+	uint8_t		adv_event;
 } adv_work_t;
 extern adv_work_t adv_wrk;
 

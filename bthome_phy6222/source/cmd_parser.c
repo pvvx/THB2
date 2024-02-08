@@ -21,7 +21,7 @@
 #include "flash_eep.h"
 #include "thb2_main.h"
 #include "sbp_profile.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "cmd_parser.h"
 #include "devinfoservice.h"
 #include "ble_ota.h"

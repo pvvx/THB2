@@ -28,6 +28,8 @@ extern "C"
 #define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 5000 ms
 #define DEF_CON_ADV_INERVAL 		2500 // 1.5625 sec
 #define DEF_CON_ADV_INERVAL_MS 		((DEF_CON_ADV_INERVAL*625)/1000) // 1562 ms
+#define DEF_EVENT_ADV_INERVAL 		80 // 50 ms
+#define DEF_EVENT_ADV_INERVAL_MS 	((DEF_EVENT_ADV_INERVAL*625)/1000) // 50 ms
 #define DEF_OTA_ADV_INERVAL 		1600 // 1 sec
 #define DEF_OTA_ADV_INERVAL_MS 		((DEF_OTA_ADV_INERVAL*625)/1000) // 1000 ms
 
@@ -52,6 +54,7 @@ extern "C"
 #define BATT_VALUE_EVT				0x0010  // Event for battery voltage value update
 #define ADV_BROADCAST_EVT			0x0020  // Advent. Event Done Notice
 #define	WRK_NOTIFY_EVT				0x0040  // work notify
+#define	PIN_INPYT_EVT				0x0080  // pin input event
 
 /*********************************************************************
  * MACROS

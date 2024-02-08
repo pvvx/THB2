@@ -9,15 +9,11 @@
 #include "config.h"
 #include "bcomdef.h"
 #include "gapbondmgr.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "bthome_beacon.h"
 
 uint8_t bthome_data_beacon(void * padbuf) {
-#if (DEV_SERVICES & SERVICE_THS)
 	padv_bthome_ns1_t p = (padv_bthome_ns1_t)padbuf;
-#else
-	padv_bthome_ns2_t p = (padv_bthome_ns2_t)padbuf;
-#endif
 	p->flag[0] = 0x02; // size
 	p->flag[1] = GAP_ADTYPE_FLAGS; // type
 	/*	Flags:
@@ -34,25 +30,42 @@ uint8_t bthome_data_beacon(void * padbuf) {
 	p->info = BtHomeID_Info;
 	p->p_id = BtHomeID_PacketId;
 	p->pid = (uint8)measured_data.count;
-	p->data.b_id = BtHomeID_battery;
-	p->data.battery_level = measured_data.battery;
-#if (DEV_SERVICES & SERVICE_THS)
-	p->data.t_id = BtHomeID_temperature;
-	p->data.temperature = measured_data.temp; // x0.01 C
-	p->data.h_id = BtHomeID_humidity;
-	p->data.humidity = measured_data.humi; // x0.01 %
+#if (DEV_SERVICES & SERVICE_RDS)
+	if(adv_wrk.adv_event) {
+		padv_bthome_evns1_t pe = (padv_bthome_evns1_t)p;
+		pe->data.o_id = BtHomeID_opened;
+		pe->data.opened = measured_data.flg.pin_input;
+		pe->data.c_id = BtHomeID_count32;
+		pe->data.counter = adv_wrk.rds_count;
+		pe->head.size = sizeof(adv_bthome_evns1_t) - sizeof(pe->head.size) - sizeof(pe->flag);
+		return sizeof(adv_bthome_ns1_t);
+	} else
 #endif
-	p->data.v_id = BtHomeID_voltage;
-	p->data.battery_mv = measured_data.battery_mv; // x mV
 #if (DEV_SERVICES & SERVICE_THS)
-	p->head.size = sizeof(adv_bthome_ns1_t) - sizeof(p->head.size) - sizeof(p->flag);
-	return sizeof(adv_bthome_ns1_t);
+	{
+		p->data.b_id = BtHomeID_battery;
+		p->data.battery_level = measured_data.battery;
+		p->data.t_id = BtHomeID_temperature;
+		p->data.temperature = measured_data.temp; // x0.01 C
+		p->data.h_id = BtHomeID_humidity;
+		p->data.humidity = measured_data.humi; // x0.01 %
+		p->data.v_id = BtHomeID_voltage;
+		p->data.battery_mv = measured_data.battery_mv; // x mV
+		p->head.size = sizeof(adv_bthome_ns1_t) - sizeof(p->head.size) - sizeof(p->flag);
+		return sizeof(adv_bthome_ns1_t);
+	}
 #else
-	p->head.size = sizeof(adv_bthome_ns2_t) - sizeof(p->head.size) - sizeof(p->flag);
-	return sizeof(adv_bthome_ns2_t);
+	{
+		padv_bthome_ns2_t pe = (padv_bthome_ns2_t)p;
+		pe->data.b_id = BtHomeID_battery;
+		pe->data.battery_level = measured_data.battery;
+		pe->data.v_id = BtHomeID_voltage;
+		pe->data.battery_mv = measured_data.battery_mv; // x mV
+		pe->head.size = sizeof(adv_bthome_ns2_t) - sizeof(pe->head.size) - sizeof(pe->flag);
+		return sizeof(adv_bthome_ns2_t);
+	}
 #endif
 }
-
 
 
 

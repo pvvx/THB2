@@ -1,5 +1,5 @@
 /*
-	sensors.h
+	sensor.h
 	Author: pvvx
 */
 
@@ -66,7 +66,7 @@
 #define CHT8215_CFG_CONSEC_FQ	0x0006
 #define CHT8215_CFG_ATM			0x0001
 
-#define CHT8215_MID	0x5959
+#define CHT8315_MID	0x5959
 #define CHT8215_VID	0x1582
 
 /* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/BTH01/CHT8305.pdf */
@@ -133,15 +133,25 @@ struct __attribute__((packed)) _cht8305_config_t{
 #define AHT2x_DATA_TMS	0x3300  // Trigger Measurement data
 #define AHT2x_CMD_RST	0x0BA  // Soft Reset Command
 
+
+typedef struct __attribute__((packed)) _measured_flg_t {
+	uint8_t 	pin_input	:	1; // GPIO_INP input pin
+	uint8_t 	trg_output	:	1; // GPIO_TRG pin output value
+	uint8_t 	comfort		:	1; // Temperature or Humidity comfort
+	uint8_t 	trg_on 		:	1; // Temperature or Humidity trigger on
+	uint8_t 	temp_trg_on :	1; // Temperature trigger on
+	uint8_t 	humi_trg_on :	1; // Humidity trigger on
+} measured_flg_t;
+
 typedef struct _measured_data_t {
 	uint16_t	count;
 	int16_t		temp; // x 0.01 C
 	int16_t		humi; // x 0.01 %
 	uint16_t	battery_mv; // mV
-	uint8_t		battery; // 0..100 % 
+	uint8_t		battery; // 0..100 %
+	measured_flg_t flg;
 } measured_data_t;
-#define send_len_measured_data 9
-
+#define send_len_measured_data 10
 extern measured_data_t measured_data;
 
 typedef struct _thsensor_coef_t {

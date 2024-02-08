@@ -38,7 +38,7 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "battery.h"
 #include "sbp_profile.h"
 #include "ble_ota.h"
@@ -213,14 +213,17 @@ static void set_adv_interval(uint16_t advInt)
 static void adv_measure(void) {
 	if(gapRole_AdvEnabled) {
 		get_utc_time_sec(); // счет UTC timestamp
+#if	(DEV_SERVICES & SERVICE_RDS)
+		if(!adv_wrk.adv_event) {
+#endif
 		if(clkt.utc_time_tik - adv_wrk.measure_batt_tik >= ((uint32_t)cfg.batt_interval << 15)) {
 			adv_wrk.measure_batt_tik = clkt.utc_time_tik;
 			batt_start_measure();
 #if ((DEV_SERVICES & SERVICE_THS) == 0)
-			adv_wrk.adv_batt = 1;
+			adv_wrk.adv_batt_count = 1;
 		} else {
-			if(adv_wrk.adv_batt) {
-				adv_wrk.adv_batt = 0;
+			if(adv_wrk.adv_batt_count) {
+				adv_wrk.adv_batt_count = 0;
 #if (DEV_SERVICES & SERVICE_SCREEN)
 				chow_lcd(1);
 #endif
@@ -261,15 +264,22 @@ static void adv_measure(void) {
 #endif
 			}
 		}
-
 #endif	// (DEV_SERVICES & SERVICE_THS)
-		if(adv_wrk.adv_con_count) {
-			if(--adv_wrk.adv_con_count == 0) {
+#if	(DEV_SERVICES & SERVICE_RDS)
+		}
+#endif
+		if(adv_wrk.adv_reload_count) {
+			if(--adv_wrk.adv_reload_count == 0) {
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
 				if (wrk.boot_flg == BOOT_FLG_OTA) {
 					hal_system_soft_reset();
 				}
 #endif
+				if(adv_wrk.adv_event) {
+					adv_wrk.adv_event = 0;
+					measured_data.count++;
+					LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+				}
 				set_new_adv_interval(cfg.advertising_interval * 100);
 			}
 		}
@@ -277,7 +287,7 @@ static void adv_measure(void) {
 	}
 }
 
-#if (DEV_SERVICES & SERVICE_KEY)
+#if (DEV_SERVICES & SERVICE_KEY) || (DEV_SERVICES & SERVICE_RDS)
 /*********************************************************************
  * LED and Key
  */
@@ -287,13 +297,22 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	if(type == POSEDGE)
 	{
 		LOG("int or wakeup(pos):gpio:%d type:%d\n", pin, type);
+#if (DEV_SERVICES & SERVICE_KEY)
+		if(pin == GPIO_KEY) {
 #ifdef GPIO_LED
-		hal_gpio_write(GPIO_LED, LED_OFF);
+			hal_gpio_write(GPIO_LED, LED_OFF);
 #endif
-		if(gapRole_AdvEnabled) {
-			adv_wrk.adv_con_count = 60000/DEF_CON_ADV_INERVAL_MS; // 60 sec
-			set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
+			if(gapRole_AdvEnabled) {
+				adv_wrk.adv_reload_count = 60000/DEF_CON_ADV_INERVAL_MS; // 60 sec
+				set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time * 625us
+			}
 		}
+#endif
+#if (DEV_SERVICES & SERVICE_RDS)
+		if(pin == GPIO_INP) {
+			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPYT_EVT);
+		}
+#endif
 	}
 	else
 	{
@@ -307,8 +326,17 @@ static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	if(type == NEGEDGE)
 	{
 		LOG("int or wakeup(neg):gpio:%d type:%d\n", pin, type);
+#if (DEV_SERVICES & SERVICE_KEY)
+		if(pin == GPIO_KEY) {
 #ifdef GPIO_LED
-		hal_gpio_write(GPIO_LED, LED_ON);
+			hal_gpio_write(GPIO_LED, LED_ON);
+#endif
+		}
+#endif
+#if (DEV_SERVICES & SERVICE_RDS)
+		if(pin == GPIO_INP) {
+			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPYT_EVT);
+		}
 #endif
 	}
 	else
@@ -326,6 +354,9 @@ static void init_app_gpio(void)
 #ifdef GPIO_LED
 	hal_gpio_write(GPIO_LED, LED_ON);
 	hal_gpioretention_register(GPIO_LED);//enable this pin retention
+#endif
+#if	(DEV_SERVICES & SERVICE_RDS)
+	hal_gpioin_register(GPIO_INP, posedge_int_wakeup_cb, negedge_int_wakeup_cb);
 #endif
 #ifdef GPIO_LPWR // питание LCD драйвера
 	hal_gpio_write(GPIO_LPWR, 1);
@@ -457,11 +488,11 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 	// Set advertising interval
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
 	if (wrk.boot_flg == BOOT_FLG_OTA) {
-		adv_wrk.adv_con_count = 60000/DEF_OTA_ADV_INERVAL_MS; // 60 sec
+		adv_wrk.adv_reload_count = 60000/DEF_OTA_ADV_INERVAL_MS; // 60 sec
 		set_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
 	} else
 #endif
-	set_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
+	set_adv_interval(cfg.advertising_interval * 100); // actual time = advInt * 625us
 
 	HCI_PPLUS_AdvEventDoneNoticeCmd(simpleBLEPeripheral_TaskID, ADV_BROADCAST_EVT);
 #if (DEF_GAPBOND_MGR_ENABLE==1)
@@ -633,6 +664,35 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 		// return unprocessed events
 		return ( events ^ SBP_START_DEVICE_EVT );
 	}
+#if (DEV_SERVICES & SERVICE_RDS)
+	if(events & PIN_INPYT_EVT) {
+		int ev = 0;
+		if(hal_gpio_read(GPIO_INP)) {
+			if(!measured_data.flg.pin_input) {
+				adv_wrk.rds_count++;
+				ev = 1;
+			}
+			measured_data.flg.pin_input = 1;
+		} else {
+			if(measured_data.flg.pin_input)
+				ev = 1;
+			measured_data.flg.pin_input = 0;
+		}
+		if(ev) {
+			if(gapRole_AdvEnabled) {
+				measured_data.count++;
+				adv_wrk.adv_event = 1;
+				adv_wrk.adv_reload_count = 5;
+				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+				set_new_adv_interval(DEF_EVENT_ADV_INERVAL); // actual time * 625us
+			} else if(cfg.flg & FLG_MEAS_NOTIFY) {
+				get_utc_time_sec(); // счет UTC timestamp
+				measure_notify();
+			}
+		}
+		return(events ^ PIN_INPYT_EVT);
+	}
+#endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
 	if(events & WRK_NOTIFY_EVT) {
 		LOG("Wrk notify events\n");
@@ -726,7 +786,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 
 		case GAPROLE_CONNECTED:
 			adv_wrk.adv_count = 0;
-			adv_wrk.adv_con_count = 0;
+			adv_wrk.adv_reload_count = 0;
 #if (DEV_SERVICES & SERVICE_THS)
 			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, adv_wrk.measure_interval_ms); // 10000 ms
 #else
@@ -750,7 +810,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 			bthome_data_beacon((void *) gapRole_AdvertData);
 			gapRole_SlaveLatency = periConnParameters.latency = cfg.connect_latency;
 			adv_wrk.adv_count = 0;
-			adv_wrk.adv_con_count = 1;
+			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			show_ble_symbol(0);
 			update_lcd();
