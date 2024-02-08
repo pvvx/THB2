@@ -787,7 +787,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 		case GAPROLE_CONNECTED:
 			adv_wrk.adv_event = 0;
 			adv_wrk.adv_count = 0;
-			adv_wrk.adv_reload_count = 0;
+			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_THS)
 			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, adv_wrk.measure_interval_ms); // 10000 ms
 #else
