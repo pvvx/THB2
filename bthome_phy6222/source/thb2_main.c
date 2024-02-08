@@ -785,6 +785,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 		break;
 
 		case GAPROLE_CONNECTED:
+			adv_wrk.adv_event = 0;
 			adv_wrk.adv_count = 0;
 			adv_wrk.adv_reload_count = 0;
 #if (DEV_SERVICES & SERVICE_THS)
@@ -809,6 +810,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 			osal_stop_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT);
 			bthome_data_beacon((void *) gapRole_AdvertData);
 			gapRole_SlaveLatency = periConnParameters.latency = cfg.connect_latency;
+			adv_wrk.adv_event = 0;
 			adv_wrk.adv_count = 0;
 			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_SCREEN)
