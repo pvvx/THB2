@@ -5586,7 +5586,13 @@ void config_RTC1(uint32 time)
     //update for cal ll next time after wakeup
     ll_remain_time = read_LL_remainder_time();
     // comparator configuration
+#if TEST_RTC_DELTA
+    do
+    	sleep_tick = *(volatile uint32_t*) 0x4000f028;          // read current RTC counter
+    while(sleep_tick != *(volatile uint32_t*) 0x4000f028);
+#else
     sleep_tick = *(volatile uint32_t*) 0x4000f028;          // read current RTC counter
+#endif
     g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount>(AP_TIM3->CurrentCount))
                                    ? (g_TIM2_IRQ_TIM3_CurrCount-(AP_TIM3->CurrentCount)): 0;
     AP_AON->RTCCC0 = sleep_tick + time;  //set RTC comparatr0 value
@@ -7672,7 +7678,7 @@ void init_config(void)
     if(g_clk32K_config == CLK_32K_XTAL)
         pGlobal_config[LL_SWITCH] &= 0xffffffee;
     else
-        pGlobal_config[LL_SWITCH] |= RC32_TRACKINK_ALLOW | LL_RC32K_SEL;
+        pGlobal_config[LL_SWITCH] |= LL_RC32K_SEL | RC32_TRACKINK_ALLOW; // TODO: RTC 32000 Hz or 32768 Hz ?
 
     // sleep delay
     pGlobal_config[MIN_TIME_TO_STABLE_32KHZ_XOSC] = 10;      // 10ms, temporary set

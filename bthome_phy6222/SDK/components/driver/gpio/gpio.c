@@ -561,7 +561,7 @@ static void hal_gpio_sleep_handler(void)
 static void hal_gpio_wakeup_handler(void)
 {
     int i;
-    NVIC_SetPriority(GPIO_IRQn, IRQ_PRIO_HAL);
+    NVIC_SetPriority(GPIO_IRQn, IRQ_PRIO_APP); //IRQ_PRIO_HAL);
     NVIC_EnableIRQ(GPIO_IRQn);
 #ifdef XOSC_PIN_ALLOW
 
@@ -699,7 +699,7 @@ int hal_gpio_init(void)
     //disable all wakeup pin
     AP_WAKEUP->io_wu_mask_31_0 = 0;
     AP_WAKEUP->io_wu_mask_34_32 = 0;
-    NVIC_SetPriority(GPIO_IRQn, IRQ_PRIO_HAL);
+    NVIC_SetPriority(GPIO_IRQn, IRQ_PRIO_APP); // IRQ_PRIO_HAL);
     NVIC_EnableIRQ(GPIO_IRQn);
 #if(CFG_SLEEP_MODE == PWR_MODE_SLEEP)
     hal_pwrmgr_register(MOD_GPIO, hal_gpio_sleep_handler, hal_gpio_wakeup_handler);

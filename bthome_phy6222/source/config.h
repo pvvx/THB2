@@ -190,7 +190,7 @@
 //#define LED_OFF		0
 
 #define DEF_MODEL_NUMBER_STR		"TH05"
-#define DEF_HARDWARE_REVISION		"0001"
+#define DEF_HARDWARE_REVISION		"0014"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #else
@@ -259,7 +259,12 @@ extern work_parm_t wrk;
 #if 1
 #define clock_time_rtc() rtc_get_counter()
 #else
-inline uint32 clock_time_rtc(void) { return AP_AON->RTCCNT; } // (*(volatile unsigned int*)0x4000f028); }// & 0xffffff; // max 512 sec
+inline uint32 clock_time_rtc(void) {
+	uint32_t tick;
+	do
+		tick = *(volatile uint32_t*) 0x4000f028;          // read current RTC counter (AP_AON->RTCCNT)
+	while(tick != *(volatile uint32_t*) 0x4000f028;) // AP_AON->RTCCNT
+	return tick; } // (*(volatile unsigned int*)0x4000f028); }// & 0xffffff; // max 512 sec
 #endif
 // uint32_t get_delta_time_rtc(uint32_t start_time_rtc);
 

@@ -252,7 +252,13 @@ void config_RTC0(uint32 time)
 {
 //    *((volatile uint32_t *)(0xe000e100)) |= INT_BIT_RTC;   // remove, we don't use RTC interrupt
     // comparator configuration
+#if TEST_RTC_DELTA
+    do
+    	sleep_tick = *(volatile uint32_t*) 0x4000f028;          // read current RTC counter
+    while(sleep_tick != *(volatile uint32_t*) 0x4000f028);
+#else
     sleep_tick = *(volatile uint32_t*) 0x4000f028;          // read current RTC counter
+#endif
     //align to rtc clock edge
     WaitRTCCount(1);
     g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount>(AP_TIM3->CurrentCount))

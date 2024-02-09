@@ -1316,17 +1316,11 @@ function parseBlkCustom(value) {
 		let pbat = value.getUint8(9);
 		let flg = 0;
 		let rds_count = 0;
+		let delta = 0;
 		let	s = 'Температура: ' + temp.toFixed(2) + '°C'
 		    + ', Влажность: ' + humi.toFixed(2) + '%'
 			+ ', Vbat: ' + vbat + ' мВ'
 		    + ', ID: ' + count;
-		if(len > 12) {
-			flg = value.getUint8(9);
-			rds_count = value.getUint32(10, true);
-			s += ', счетчик срабатываний: '+ rds_count
-			   + ', флаги: 0x' + hex(flg,2) + ':r' + (flg&1) + '/t' + ((flg>>1)&1);
-		}
-		console.log(s);
 		$('lblTemp').innerHTML = temp + ' °C';
 		$('lblHumi').innerHTML = humi + ' %RH';
 		$('lblBat').innerHTML  = pbat + ' % (' + vbat / 1000 + ' V)';
@@ -1334,29 +1328,27 @@ function parseBlkCustom(value) {
 		if(len > 10) {
 			flg = value.getUint8(10);
 			s += ", флаги: 0x" + hex(flg,2);
-
 			so = "In: " + (flg&1)
 			+ ", Out: " + ((flg&2)? 1:0)
 			+ ", Cmf: " + ((flg&4)? 1:0)
 			+ ", Te: " + ((flg&16)? 1:0)
 			+ ", He: " + ((flg&32)? 1:0);
-		}
-		if(len > 14) {
-			devTime.cur = value.getUint32(11,true);
-			//console.log('Device Time: 0x' + hex(devtime.cur, 8));
-			let dt = new Date(devTime.cur * 1000);
-			let sDateTime = (dt.toISOString().slice(0, -5)).replace('T',' ');
-			$('lblTime').innerHTML = sDateTime;
-			let	time = Date.now() / 1000 - (new Date()).getTimezoneOffset() * 60;
-			let delta = devTime.cur - time;
-			console.log('Время на устройстве: ' + sDateTime + ', Уход: ' + Math.round(delta) + ' сек');
-			$('lbDeltaTime').innerHTML = 'Уход часов: ' + Math.round(delta) + ' сек';
-			if(len > 18) {
-			  rds_count = value.getUint32(15,true);
-			  s += ", rds: " + rds_count;
-			  so += ", rds: " + rds_count;
+			if(len > 14) {
+				devTime.cur = value.getUint32(11,true);
+				//console.log('Device Time: 0x' + hex(devtime.cur, 8));
+				let dt = new Date(devTime.cur * 1000);
+				let sDateTime = (dt.toISOString().slice(0, -5)).replace('T',' ');
+				$('lblTime').innerHTML = sDateTime;
+				let	time = Date.now() / 1000 - (new Date()).getTimezoneOffset() * 60;
+				let delta = devTime.cur - time;
+				console.log('Время на устройстве: ' + sDateTime + ', Уход: ' + Math.round(delta) + ' сек');
+				$('lbDeltaTime').innerHTML = 'Уход часов: ' + Math.round(delta) + ' сек';
+				if(len > 18) {
+				  rds_count = value.getUint32(15,true);
+				  s += ", rds: " + rds_count;
+				  so += ", rds: " + rds_count;
+				}
 			}
-			// if(delta > 10 || delta < -10) setDevTime();
 		}
 		$('lblTrg').innerHTML = so;
 		console.log(s);
@@ -1371,7 +1363,12 @@ function parseBlkCustom(value) {
                 }
 				}
 			);
-	   if(len < 15)	getDevTime();
+		if(len < 15)	getDevTime();
+		if(delta > 10800 || delta < -10800) {
+		    addLog("Авто установка часов устройства...");
+			setDevTime();
+		}
+
 	} else if((blkId == 0x25 || blkId == 0x26) && (len > 12)) {
 	// CMD_ID_CFS Get/Set sensor config
 	    devSens.temp_k = value.getUint32(1, true);

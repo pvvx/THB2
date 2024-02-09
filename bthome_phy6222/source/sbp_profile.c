@@ -466,6 +466,24 @@ void new_ota_data(void) {
 }
 #endif
 
+uint16_t make_measure_msg(uint8_t *pbuf) {
+	pbuf[0] = CMD_ID_MEASURE;
+	memcpy(&pbuf[1], &measured_data, send_len_measured_data);
+	pbuf[send_len_measured_data + 1] = clkt.utc_time_sec & 0xff;
+	pbuf[send_len_measured_data + 2] = (clkt.utc_time_sec >> 8) & 0xff;
+	pbuf[send_len_measured_data + 3] = (clkt.utc_time_sec >> 16) & 0xff;
+	pbuf[send_len_measured_data + 4] = (clkt.utc_time_sec >> 24) & 0xff;
+#if (DEV_SERVICES & SERVICE_RDS)
+	pbuf[send_len_measured_data + 5] = adv_wrk.rds_count & 0xff;
+	pbuf[send_len_measured_data + 6] = (adv_wrk.rds_count >> 8) & 0xff;
+	pbuf[send_len_measured_data + 7] = (adv_wrk.rds_count >> 16) & 0xff;
+	pbuf[send_len_measured_data + 8] = (adv_wrk.rds_count >> 24) & 0xff;
+	return send_len_measured_data + 1 + 4 + 4;
+#else
+	return send_len_measured_data + 1 + 4;
+#endif
+}
+
 static void measureNotifyCB( linkDBItem_t* pLinkItem )
 {
 	if ( pLinkItem->stateFlags & LINK_CONNECTED )
@@ -477,23 +495,7 @@ static void measureNotifyCB( linkDBItem_t* pLinkItem )
 		{
 			attHandleValueNoti_t noti;
 			noti.handle = simpleProfileAttrTbl[CDM_DATA_ATTR_IDX].handle;;
-#if (DEV_SERVICES & SERVICE_RDS)
-			noti.len = send_len_measured_data + 1 + 4 + 4;
-#else
-			noti.len = send_len_measured_data + 1 + 4;
-#endif
-			noti.value[0] = CMD_ID_MEASURE;
-			memcpy(&noti.value[1], &measured_data, send_len_measured_data);
-			noti.value[send_len_measured_data + 1] = clkt.utc_time_sec & 0xff;
-			noti.value[send_len_measured_data + 2] = (clkt.utc_time_sec >> 8) & 0xff;
-			noti.value[send_len_measured_data + 3] = (clkt.utc_time_sec >> 16) & 0xff;
-			noti.value[send_len_measured_data + 4] = (clkt.utc_time_sec >> 24) & 0xff;
-#if (DEV_SERVICES & SERVICE_RDS)
-			noti.value[send_len_measured_data + 5] = adv_wrk.rds_count & 0xff;
-			noti.value[send_len_measured_data + 6] = (adv_wrk.rds_count >> 8) & 0xff;
-			noti.value[send_len_measured_data + 7] = (adv_wrk.rds_count >> 16) & 0xff;
-			noti.value[send_len_measured_data + 8] = (adv_wrk.rds_count >> 24) & 0xff;
-#endif
+			noti.len = make_measure_msg(noti.value);
 			GATT_Notification( pLinkItem->connectionHandle, &noti, FALSE );
 		}
 	}

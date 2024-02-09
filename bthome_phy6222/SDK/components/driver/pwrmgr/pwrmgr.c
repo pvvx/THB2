@@ -281,22 +281,6 @@ void clk_change_mod_restore(void)
 }
 
 #if(CFG_SLEEP_MODE == PWR_MODE_SLEEP)
-void peripheral_interrupt_restore_default(void)
-{
-	NVIC_SetPriority((IRQn_Type)KSCAN_IRQn, IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)WDT_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)UART0_IRQn, IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)UART1_IRQn, IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)I2C0_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)I2C1_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)SPI0_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)SPI1_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)GPIO_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)DMAC_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)TIM5_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)TIM6_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)ADCC_IRQn,	IRQ_PRIO_HAL);
-}
 
 int __attribute__((used)) hal_pwrmgr_wakeup_process(void)
 {
@@ -324,11 +308,11 @@ int __attribute__((used)) hal_pwrmgr_wakeup_process(void)
 	NVIC_SetPriority((IRQn_Type)I2C1_IRQn,	IRQ_PRIO_HAL);
 	NVIC_SetPriority((IRQn_Type)SPI0_IRQn,	IRQ_PRIO_HAL);
 	NVIC_SetPriority((IRQn_Type)SPI1_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)GPIO_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)GPIO_IRQn,	IRQ_PRIO_APP);
 	NVIC_SetPriority((IRQn_Type)DMAC_IRQn,	IRQ_PRIO_HAL);
 	NVIC_SetPriority((IRQn_Type)TIM5_IRQn,	IRQ_PRIO_HAL);
 	NVIC_SetPriority((IRQn_Type)TIM6_IRQn,	IRQ_PRIO_HAL);
-	NVIC_SetPriority((IRQn_Type)ADCC_IRQn,	IRQ_PRIO_HAL);
+	NVIC_SetPriority((IRQn_Type)ADCC_IRQn,	IRQ_PRIO_APP);
 
 
 	for(i = 0; i< s_pwrmgr_cfg.moudle_num; i++)

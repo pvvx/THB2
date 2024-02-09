@@ -138,8 +138,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				obuf[1] = wrk.reboot;
 			olen = 2;
 		} else if (cmd == CMD_ID_MEASURE) {
-			memcpy(&obuf[1], &measured_data, send_len_measured_data);
-			olen = 1 + send_len_measured_data;
+			olen = make_measure_msg(obuf);
 #if (DEV_SERVICES & SERVICE_SCREEN)
 		} else if (cmd == CMD_ID_LCD_DUMP) { // Get/set lcd buf
 			if (--len > sizeof(display_buff))

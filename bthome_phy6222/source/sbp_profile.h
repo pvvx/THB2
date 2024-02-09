@@ -80,6 +80,7 @@ void new_cmd_data(void);
 void new_ota_data(void);
 void wrk_notify(void);
 void measure_notify(void);
+uint16_t make_measure_msg(uint8_t *pbuf);
 
 #ifdef __cplusplus
 }
