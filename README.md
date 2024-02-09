@@ -3,11 +3,11 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 
 * Тестовый [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
-Прошивка Boot-OTA для THB2 (файл bin\BOOT_THB2_v11.hex). 
+Прошивка Boot-OTA для THB2 (файл bin\BOOT_THB2_v12.hex). 
 
-Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v11.hex). 
+Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v12.hex). 
 
-Прошивка Boot-OTA для TH05_V1.4 (файл bin\BOOT_TH05_v11.hex). 
+Прошивка Boot-OTA для TH05_V1.4 (файл bin\BOOT_TH05_v12.hex). 
 
 ## Основные характеристики:
 
@@ -28,7 +28,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 |---|--- |
 | 1.0 | Первая релизная версия |
 | 1.1 | Добавлен триггер - вывод TX2 срабатывающий по установленным значениям температуры и/или влажности с гистерезисами. Передача состояния вывода RX2 при connect. Для термометров с экраном добавлен показ смайлика с "комфортом". Дополнены: изменение имени и MAC устройства. |
-| 1.2 | Будущая версия (ещё в работе, доступна в bthome_phy6222/bin): Обработка и передача событий open/close со счетчиком с вывода маркированного "RX2" (для THB2 - "RX1"). |
+| 1.2 | Обработка и передача событий open/close со счетчиком с вывода маркированного "RX2" (для THB2 - "RX1"). |
 
 ## Прошивка:
 
