@@ -7,7 +7,7 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 
 Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v12.hex). 
 
-Прошивка Boot-OTA для TH05_V1.4 (файл bin\BOOT_TH05_v12.hex). 
+Прошивка Boot-OTA для TH05 (файл bin\BOOT_TH05_v12.hex) для версий указанных на печатной плате: TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028
 
 ## Основные характеристики:
 
@@ -21,6 +21,8 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 * Запись итории каждые 30 минут
 * Интервал соединения с учетом Connect Latency - 900 мс
 * Поддерживаемые сенсоры температуры и влажности: AHT30, CHT8305, CHT8215, CHT8310
+* Обработка входного контакта со счетчиком для передаваемых событий [Open/Close](https://github.com/pvvx/THB2/issues/10#issuecomment-1935169274)
+* Обработка выходного контакта переключаемого по устанавливаемой температуре и/или влажности с гистерезисом
 
 ## История версий:
 
