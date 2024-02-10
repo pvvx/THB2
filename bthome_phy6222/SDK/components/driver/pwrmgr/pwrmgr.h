@@ -46,7 +46,7 @@ typedef struct
 	uint8_t moudle_num:5;
 } PWRMGR_CFG_BIT;
 
-
+#define CHIP_RETENTION_FLG_FLASH_ADDRESS 0x1100181c
 
 extern uint32_t g_system_reset_cause;
 extern sysclk_t g_system_clk_change;

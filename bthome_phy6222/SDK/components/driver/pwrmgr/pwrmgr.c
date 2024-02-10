@@ -417,7 +417,7 @@ int hal_pwrmgr_LowCurrentLdo_enable(void)
 {
 #ifdef CFG_SRAM_RETENTION_LOW_CURRENT_LDO_ENABLE
 	uint32_t retention_flag;
-	hal_flash_read(0x1100181c,(uint8_t*)&retention_flag,4);
+	hal_flash_read(CHIP_RETENTION_FLG_FLASH_ADDRESS,(uint8_t*)&retention_flag,4);
 
 	if(retention_flag == 0xffffffff)
 	{

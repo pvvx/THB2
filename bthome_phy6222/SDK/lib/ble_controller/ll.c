@@ -39,7 +39,7 @@
 #include "rf_phy_driver.h"
 #include "time.h"
 
-#define OWN_PUBLIC_ADDR_POS      0x11004000
+//#define OWN_PUBLIC_ADDR_POS      0x11004000
 
 extern void clear_timer(AP_TIM_TypeDef* TIMx);
 extern uint32_t get_timer_count(AP_TIM_TypeDef* TIMx);

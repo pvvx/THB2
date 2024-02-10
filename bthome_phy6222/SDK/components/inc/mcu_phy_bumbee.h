@@ -175,7 +175,7 @@ typedef struct
     __IO uint32_t SW_RESET1;   //0x4
     __IO uint32_t SW_CLK;   //0x8
     __IO uint32_t SW_RESET2;   //0xc
-    __IO uint32_t SW_RESET3;   //0x10
+    __IO uint32_t SW_RESET3;   //0x10 bit 1: M0 cpu reset pulse, bit 0: M0 system reset pulse.
     __IO uint32_t SW_CLK1;   //0x14
     __IO uint32_t APB_CLK;   //0x18
     __IO uint32_t APB_CLK_UPDATE;   //0x1c
@@ -464,28 +464,45 @@ typedef struct
 } IOMUX_TypeDef;
 
 
+// 0x4000f05C - [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k
+// 0x4000f064 - RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
+// uint32_t  counter_tracking // 24bit tracking counter, read from 0x4000f064
+// counter_tracking = g_counter_traking_avg = STD_RC32_16_CYCLE_16MHZ_CYCLE; hal_rc32k_clk_tracking_init()
+// 0x4000f0C0 - SLEEP_R[0] flags =2 RSTC_OFF_MODE, =4 RSTC_WARM_NDWC
+// 0x4000f0C4 - SLEEP_R[1] bit7 - first wakeupinit, tracking flags
+// 0x4000f0C8 - SLEEP_R[2] использую для сохранения UTC счета времени при перезагрузке
+// 0x4000f0CС - SLEEP_R[3] использую для сохранения UTC счета времени при перезагрузке
+
 typedef struct
 {
-    __IO uint32_t    PWROFF;        //0x00
-    __IO uint32_t    PWRSLP;        //0x04
+    __IO uint32_t    PWROFF;        //0x00 = 0x5a5aa5a5 enter system off mode
+    __IO uint32_t    PWRSLP;        //0x04 = 0xa5a55a5a system sleep mode
     __IO uint32_t    IOCTL[3];      //0x08 0x0c 0x10
     __IO uint32_t    PMCTL0;        //0x14
     __IO uint32_t    PMCTL1;        //0x18
-    __IO uint32_t    PMCTL2_0;      //0x1c
+    __IO uint32_t    PMCTL2_0;      //0x1c bit6 enable software control 32k_clk
     __IO uint32_t    PMCTL2_1;      //0x20
-    __IO uint32_t    RTCCTL;                //0x24
-    __IO uint32_t    RTCCNT;                //0x28
-    __IO uint32_t    RTCCC0;                //0x2c
-    __IO uint32_t    RTCCC1;                //0x30
-    __IO uint32_t    RTCCC2;                //0x34
-    __IO uint32_t    RTCFLAG;               //0x38
-    __IO uint32_t    reserved[25];
+    __IO uint32_t    RTCCTL;        //0x24 bit20 - enable comparator0 envent, bit18 counter overflow interrupt, bit15 enable comparator0 inerrupt,
+    __IO uint32_t    RTCCNT;        //0x28 current RTC counter
+    __IO uint32_t    RTCCC0;        //0x2c
+    __IO uint32_t    RTCCC1;        //0x30
+    __IO uint32_t    RTCCC2;        //0x34
+    __IO uint32_t    RTCFLAG;       //0x38
+    __IO uint32_t    RTCCLK0;		//0x3C bit3:0 = sysclk_t: 1 dll 32m,  2 xtal 16m, 3 dll 48m, 4 dll 64m, 5 dll 96m
+    __IO uint32_t    RTCCLK1;		//0x40 bit18 - xtal output to digital enable
+    __IO uint32_t    RTCCFG1;		//0x44 - [bit16] enable digclk 96M, [bit7] enable DLL, 25:24 g_rxAdcClkSel 26:25 sel_rxadc_dbl_clk_32M_polarity, 23:22 g_rfPhyClkSel, 6:5 trim dll/dbl ldo vout
+    __IO uint32_t    reserved0[5];	//0x48 4c 50 54 58
+    __IO uint32_t    RTCCFG2;		//0x5C - [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k
+    __IO uint32_t    reserved1; 	//0x60
+    __IO uint32_t    RTCTRWPCNT;	//0x64 counter_tracking_wakeup
+    __IO uint32_t    RTCTRCNT;		//0x68 RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
+    __IO uint32_t    reserved2[13]; //0x6c 70 74 78 7c 80 84 88 8c 90 94 98 9c
     __IO uint32_t    REG_S9;        //0xa0
     __IO uint32_t    REG_S10;       //0xa4
-    __IO uint32_t    REG_S11;       //0xa8
-    __IO uint32_t    IDLE_REG;     //0xac
+    __IO uint32_t    REG_S11;       //0xa8 bit0 sleep_flag
+    __IO uint32_t    IDLE_REG;      //0xac
     __IO uint32_t    GPIO_WAKEUP_SRC[2]; //0xb0 b4
-    __IO uint32_t    PCLK_CLK_GATE; //0xb8
+    __IO uint32_t    PCLK_CLK_GATE; //0xb8 bit0 pclk_clk_gate_en
     __IO uint32_t    XTAL_16M_CTRL; //0xbc
     __IO uint32_t    SLEEP_R[4];    //0xc0 c4 c8 cc
 

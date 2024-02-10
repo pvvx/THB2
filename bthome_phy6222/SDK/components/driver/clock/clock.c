@@ -219,7 +219,7 @@ void hal_rc32k_clk_tracking_init(void)
 __ATTR_SECTION_XIP__  void hal_rfPhyFreqOff_Set(void)
 {
     int32_t freqPpm=0;
-    freqPpm= *(volatile int32_t*) 0x11004008;
+    freqPpm= *(volatile int32_t*) CHIP_RFEQ_OFF_FLASH_ADDRESS; // было 0x11004008
 
     if((freqPpm!=-1) && (freqPpm>=-50) && (freqPpm<=50))
     {
@@ -234,7 +234,7 @@ __ATTR_SECTION_XIP__  void hal_rfPhyFreqOff_Set(void)
 __ATTR_SECTION_XIP__ void hal_xtal16m_cap_Set(void)
 {
     uint32_t cap=0;
-    cap= *(volatile int32_t*) 0x1100400c;
+    cap= *(volatile int32_t*) CHIP_XTAK_CAP_FLASH_ADDRESS; // было 0x1100400c
 
     if((cap!=0xffffffff) && (cap <= 0x1f))
     {

@@ -1340,7 +1340,7 @@ function parseBlkCustom(value) {
 				let sDateTime = (dt.toISOString().slice(0, -5)).replace('T',' ');
 				$('lblTime').innerHTML = sDateTime;
 				let	time = Date.now() / 1000 - (new Date()).getTimezoneOffset() * 60;
-				let delta = devTime.cur - time;
+				delta = devTime.cur - time;
 				console.log('Время на устройстве: ' + sDateTime + ', Уход: ' + Math.round(delta) + ' сек');
 				$('lbDeltaTime').innerHTML = 'Уход часов: ' + Math.round(delta) + ' сек';
 				if(len > 18) {
@@ -1364,7 +1364,7 @@ function parseBlkCustom(value) {
 				}
 			);
 		if(len < 15)	getDevTime();
-		if(delta > 10800 || delta < -10800) {
+		if(delta > 86400 || delta < -86400) {
 		    addLog("Авто установка часов устройства...");
 			setDevTime();
 		}
@@ -1428,7 +1428,7 @@ function parseBlkCustom(value) {
 		let s = bytesToHex(value.buffer.slice(5), len);
 		$('inpData').value = s;
 		addLog("Данные по адресу 0x" + hex(addr,8) + ': ' + s);
-		showProgress("Считано: " + len + " байт из 0x" + hex(addr,8));
+		//showProgress("Считано: " + len + " байт из 0x" + hex(addr,8));
 	} else if((blkId == 0xda) && (len > 8)) {
 		let addr = value.getUint32(1,true);
 		let reg_data = value.getUint32(5,true);

@@ -64,7 +64,6 @@ static uint8 bSleepAllow = TRUE;
 
 volatile uint32_t forever_write;
 
-
 /*********************************************************************
     EXTERNAL VARIABLES
 */
@@ -115,7 +114,6 @@ Sleep_Mode getSleepMode(void)
 
 ////////////////////////////
 // process of enter system sleep mode
-
 /*******************************************************************************
     @fn          enterSleepProcess0
 
@@ -561,7 +559,5 @@ void enter_sleep_off_mode0(Sleep_Mode mode)
         forever_write = 0x12345678;
     }
 }
-
-
 
 

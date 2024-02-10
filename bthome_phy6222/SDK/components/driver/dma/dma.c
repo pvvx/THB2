@@ -163,7 +163,7 @@ int hal_dma_config_channel(DMA_CH_t ch, DMA_CH_CFG_t* cfg)
         transf_per = DMA_DMACCxConfig_DestPeripheral(dst_conn-1);
     }
 
-    if((cfg->dst_addr > 0x11000000) && (cfg->dst_addr <= 0x11080000))
+    if((cfg->dst_addr > 0x11000000) && (cfg->dst_addr <= 0x11080000)) // 512 k
     {
         pctx->xmit_flash = DMA_DST_XIMT_IS_FLASH;
 
