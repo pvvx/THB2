@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.0</title>
+<title>PHY62x2 BTHome v1.1</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -1241,17 +1241,6 @@ function sendCommand() {
 }
 
 function showConfig() {
-/*
-	if($('inpFlag') != null)
-		$('inpFlag').value  = devCfg.flg; // пока не реализовано
-	$('inpTxPwr').value = devCfg.tx_power; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
-	$('inpLat').value   = (devCfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
-
-	$('inpAdvInt').value  = devCfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
-	$('inpMeasInt').value = devCfg.measure_interval; // *devCfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
-	$('inpAverInt').value = devCfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
-	$('inpBatInt').value  = devCfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
-*/
 	$('chkCfgNotify').checked = (devCfg.flg & 1) != 0;
 	$('chkCfgClock').checked  = (devCfg.flg & 2) != 0;
 	$('chkCfgSmiley').checked = (devCfg.flg & 4) != 0;
@@ -1261,9 +1250,22 @@ function showConfig() {
 	for(let n = 0; n < el.options.length; n++) if(el.options[n].value >= devCfg.tx_power) txPwr = el.options[n].value;
 	el.value = txPwr;
 	$('inpLat').value     = (devCfg.connect_latency + 1)*30; // = (connect_latency + 1)*30 ms
-	$('inpAdvInt').value  = devCfg.advertising_interval*62.5; // *62.5 = интервала рекламы в ms
-	$('inpMeasInt').value = devCfg.measure_interval; // *devCfg.advertising_interval*62.5 = опрос датчика в ms, value минимум = 2 (интервала рекламы)
+	let advi = devCfg.advertising_interval*62.5;
+	$('inpAdvInt').value  = advi.toFixed(1); // интервала рекламы в ms
+	$('inpMeasInt').value = devCfg.measure_interval; // опрос датчика в ms, value минимум = 2 (интервала рекламы)
+	let msri = advi*devCfg.measure_interval;
+	$('lblMeasInt').innerHTML = "= " + msri.toFixed(1) + " мс";
 	$('inpAverInt').value = devCfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
+	if(devCfg.averaging_measurements == 0)
+		$('lblAverInt').innerHTML = "отключена";
+	else {
+		let hsti = (msri*devCfg.averaging_measurements)/1000.0;
+		if(hsti > 60) {
+			hsti /= 60.0;
+			$('lblAverInt').innerHTML = "= " + hsti.toFixed(1) + ' минут';
+		} else
+			$('lblAverInt').innerHTML = "= " + hsti.toFixed(1) + ' сек.';
+	}
 	$('inpBatInt').value  = devCfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
 }
 
@@ -1363,7 +1365,7 @@ function parseBlkCustom(value) {
                 }
 				}
 			);
-		if(len < 15)	getDevTime();
+		//if(len < 15) getDevTime();
 		if(delta > 86400 || delta < -86400) {
 		    addLog("Авто установка часов устройства...");
 			setDevTime();
@@ -1604,11 +1606,8 @@ function getDevName() {
 	}
 }
 
-function setDevCfg() {
-	if(cmdCharacteristic != null) {
-		// addLog("setDevCfg...");
-	    devCfg.flg = parseInt($('inpFlag').value)&0xffffffff; // пока не реализовано
-		devCfg.tx_power = parseInt($('inpTxPwr').value)&0x3f; // 0..0x3f -> -20..+5 dBm нелинейное  0x1f = +0 дБм
+function chkDevCfg() {
+		if(devCfg.flg == null) return;
 	    devCfg.flg  = ($('chkCfgNotify').checked) ? 1 : 0;
 	    devCfg.flg |= ($('chkCfgClock').checked) ? 2 : 0;
 	    devCfg.flg |= ($('chkCfgSmiley').checked) ? 4 : 0;
@@ -1622,14 +1621,14 @@ function setDevCfg() {
 		} else
 			connect_latency = 255;
 		devCfg.connect_latency = connect_latency & 0xff;
-		let advertising_interval = 	parseInt($('inpAdvInt').value);
+		let advertising_interval = 	parseFloat($("inpAdvInt").value);
 		if(advertising_interval <= 62.5)
 			advertising_interval = 1;
 		else if(advertising_interval >= 15937.5)
 			advertising_interval = 255;
 		else
 		  advertising_interval = advertising_interval / 62.5;
-		devCfg.advertising_interval = advertising_interval & 0xff;
+		devCfg.advertising_interval = Math.round(advertising_interval) & 0xff;
 		devCfg.measure_interval = parseInt($('inpMeasInt').value); 
 		if(devCfg.measure_interval < 2) // опрос датчика в интервалах рекламы, value минимум = 2 (интервала рекламы)
 			devCfg.measure_interval = 2;
@@ -1645,6 +1644,12 @@ function setDevCfg() {
 			devCfg.batt_interval = 2;
 		if(devCfg.batt_interval > 255)
 			devCfg.batt_interval = 255;
+		showConfig();
+}
+
+function setDevCfg() {
+	if(cmdCharacteristic != null) {
+		chkDevCfg();
 		blk = new Uint8Array([0x55, 
 	    	devCfg.flg & 0xff, (devCfg.flg>>8) & 0xff, (devCfg.flg>>16) & 0xff, (devCfg.flg>>24) & 0xff,
 	  		devCfg.tx_power,
@@ -2132,13 +2137,62 @@ window.onload = function() {
 </div>
 
 <div id="tabConfig" class="tabcontent">
+Основные установки
 <table id="tblChkCfg">
   <tr align="left">
     <td><label><input type="checkbox" id="chkCfgClock"/>Показывать время</label></td>
-    <td><label><input type="checkbox" id="chkCfgSmiley"/>Отображать смайлики</label></td>
+    <td><label><input type="checkbox" id="chkCfgSmiley"/>Отображать смайлик</label></td>
     <td><label><input type="checkbox" id="chkCfgTrg"/>Отображать триггер</label></td>
   </tr>
 </table>
+<table>
+  <tr>
+    <td><label><input type="checkbox" id="chkCfgNotify" title="Передача измерений при соединении и включении Notification"/>Notification</label></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td>Tx Power: 
+	<select id="selTxPwr">
+	<option value="63">+5 дБм</option>
+	<option value="31" selected>+0 дБм</option>
+	<option value="23">-5 дБм</option>
+	<option value="15">-10 дБм</option>
+	<option value="7">-15 дБм</option>
+	<option value="0">-20 дБм</option>
+	</select>
+	</td>
+  </tr>
+  <tr>
+    <td>Conn. Latency: <input size="4" type="text" id="inpLat" maxlength="8" title="Connect latency, Итоговый интервал = 30 * (Connect latency + 1) мс">мс</td>
+  </tr>
+  <tr>
+    <td>Период рекламы:<input size="4" type="text" id="inpAdvInt" onchange="chkDevCfg()" maxlength="8" title="Интервал BLE рекламы в мс, кратность 62.5 мс">мс</td>
+  </tr>
+</table>
+<table>
+  <tr>
+   <td>Шаг измерений: <input size="4" type="text" id="inpMeasInt" onchange="chkDevCfg()" maxlength="8" title="Опрос датчика в интервалах BLE рекламы, минимум 2 интервала рекламы"><label id="lblMeasInt"></label></td>
+  </tr>
+  <tr>
+    <td>Опрос батареи: <input size="4" type="text" id="inpBatInt" maxlength="8" title="В секундах, обрабатывается кратно интервалу BLE рекламы, минимум 2 секунды">сек.</td>
+  </tr>
+  <tr>
+    <td>Запись истории: <input size="4" type="text" id="inpAverInt" onchange="chkDevCfg()" maxlength="8" title="Запись истории: 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"><label id="lblAverInt"></label></td>
+  </tr>
+</table>
+  <button type="button"id="btnGetDev" onclick="getDevCfg()">Прочитать</button>
+  <button type="button"id="btnSetDev" onclick="setDevCfg()">Записать</button>
+  <button type="button"id="btnRstDev" onclick="resetDevCfg()" title="Восстановить стандартные параметры связи">Default</button>
+  <hr>
+<table id="tblTime">
+  <tr>
+	<td><button type="button" id="btnGetDevTime" onclick="getDevTime()">Время устройства</button></td>  
+	<td><button type="button" id="btnSetDevTime" onclick="setDevTime()">Установить время</button></td>
+	<td><label id="lbDeltaTime"></label></td>
+  </tr>
+</table>
+<hr>
 <table id="tblComfort">
   <tr>
     <td style="width:75px;"><b>Комфорт</b></td>
@@ -2165,59 +2219,6 @@ window.onload = function() {
   </tr>
 </table>
 <hr id="hrPres">
-<table id="tblTime">
-  <tr>
-	<td><button type="button" id="btnGetDevTime" onclick="getDevTime()">Время устройства</button></td>  
-	<td><button type="button" id="btnSetDevTime" onclick="setDevTime()">Установить время</button></td>
-	<td><label id="lbDeltaTime"></label></td>
-  </tr>
-</table>
-<hr>
-Параметры связи
-<table>
-  <tr>
-    <th>Send Notification</th>
-    <th>Tx Power</th>
-    <th>Conn. Latency</th>
-  </tr>
-  <tr align="center">
-    <td><label><input type="checkbox" id="chkCfgNotify"/>Измерения</label></td>
-    <td>
-	<select id="selTxPwr">
-	<option value="63">+5 дБм</option>
-	<option value="31" selected>+0 дБм</option>
-	<option value="23">-5 дБм</option>
-	<option value="15">-10 дБм</option>
-	<option value="7">-15 дБм</option>
-	<option value="0">-20 дБм</option>
-	</select>
-	</td>
-    <td><input size="4" type="text" id="inpLat" maxlength="8" title="Connect latency, Итоговый интервал = 30 * (Connect latency + 1) мс"></td>
-  </tr>
-</table>
-Интервалы
-<table>
-  <tr>
-    <th>Реклама</th>
-    <th>Измерения</th>
-    <th>Усреднение</th>
-    <th>Уровень батареи</th>
-  </tr>
-  <tr align="center">
-    <td><!--- надо отдельно, на ходу, при изменении, выводить расчетное значение inpAdvInt*62.5 в ms --->
-    <input size="4" type="text" id="inpAdvInt" maxlength="8" title="Интервал BLE рекламы в мс, кратность 62.5 мс"></td>
-    <td><!--- надо отдельно выводить расчетное значение inpAdvInt*62.5*inpMeasInt в ms --->
-    <input size="4" type="text" id="inpMeasInt" maxlength="8" title="Опрос датчика в интервалах BLE рекламы, минимум 2 интервала рекламы"></td>
-    <td><!--- надо отдельно выводить расчетное значение inpAdvInt*62.5*inpMeasInt*inpAverInt в мс, сек --->
-    <input size="4" type="text" id="inpAverInt" maxlength="8" title="Запись истории: 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"></td>
-    <td>
-    <input size="4" type="text" id="inpBatInt" maxlength="8" title="В секундах, обрабатывается кратно интервалу BLE рекламы, минимум 2 секунды"></td>
-  </tr>
-</table>
-  <button type="button"id="btnGetDev" onclick="getDevCfg()">Прочитать</button>
-  <button type="button"id="btnSetDev" onclick="setDevCfg()">Записать</button>
-  <button type="button"id="btnRstDev" onclick="resetDevCfg()" title="Восстановить стандартные параметры связи">Восстановить</button>
-  <hr>
   Параметры сенсора&emsp;<b><label id="lblSensor">?</label></b>
 <table>
   <tr>
