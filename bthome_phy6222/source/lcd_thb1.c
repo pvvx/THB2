@@ -7,7 +7,7 @@
 #include <string.h>
 #include "types.h"
 #include "config.h"
-#if (DEV_SERVICES & SERVICE_SCREEN)  && (DEVICE == DEVICE_TH05)
+#if (DEV_SERVICES & SERVICE_SCREEN) && (DEVICE == DEVICE_THB1)
 #include "OSAL.h"
 #include "gpio.h"
 #include "rom_sym_def.h"
@@ -20,7 +20,7 @@
 #define I2C_WAIT_ms		1
 
 dev_i2c_t i2c_dev1 = {
-		//.pi2cdev = AP_I2C1,
+		.pi2cdev = AP_I2C1,
 		.scl = I2C_LCD_SCL,
 		.sda = I2C_LCD_SDA,
 		.speed = I2C_100KHZ,
@@ -30,34 +30,34 @@ dev_i2c_t i2c_dev1 = {
 /* 0,1,2,3,4,5,6,7,8,9,A,b,C,d,E,F*/
 const uint8_t display_numbers[] = {
 		// 76543210
-		0b011110011, // 0
-		0b000000011, // 1
-		0b010110101, // 2
-		0b010010111, // 3
-		0b001000111, // 4
-		0b011010110, // 5
-		0b011110110, // 6
-		0b000010011, // 7
-		0b011110111, // 8
-		0b011010111, // 9
+		0b001011111, // 0
+		0b000000110, // 1
+		0b001101011, // 2
+		0b000101111, // 3
+		0b000110110, // 4
+		0b000111101, // 5
+		0b001111101, // 6
+		0b000000111, // 7
+		0b001111111, // 8
+		0b000111111, // 9
 		0b001110111, // A
-		0b011100110, // b
-		0b011110000, // C
-		0b010100111, // d
-		0b011110100, // E
-		0b001110100  // F
+		0b001111100, // b
+		0b001011001, // C
+		0b001101110, // d
+		0b001111001, // E
+		0b001110001  // F
 };
-#define LCD_SYM_b  0b011100110 // "b"
-#define LCD_SYM_H  0b001100111 // "H"
-#define LCD_SYM_h  0b001100110 // "h"
-#define LCD_SYM_i  0b000100000 // "i"
-#define LCD_SYM_L  0b011100000 // "L"
-#define LCD_SYM_o  0b010100110 // "o"
-#define LCD_SYM_t  0b011100100 // "t"
-#define LCD_SYM_0  0b011110011 // "0"
+#define LCD_SYM_b  0b001111100 // "b"
+#define LCD_SYM_H  0b001110110 // "H"
+#define LCD_SYM_h  0b001110100 // "h"
+#define LCD_SYM_i  0b001000000 // "i"
+#define LCD_SYM_L  0b001011000 // "L"
+#define LCD_SYM_o  0b001101100 // "o"
+#define LCD_SYM_t  0b001111000 // "t"
+#define LCD_SYM_0  0b001011111 // "0"
 #define LCD_SYM_A  0b001110111 // "A"
-#define LCD_SYM_a  0b011110110 // "a"
-#define LCD_SYM_P  0b001110101 // "P"
+#define LCD_SYM_a  0b001101110 // "a"
+#define LCD_SYM_P  0b001110011 // "P"
 
 uint8_t lcd_i2c_addr; // = 0x3E
 
@@ -65,6 +65,7 @@ uint8_t display_buff[LCD_BUF_SIZE] = {
 		LCD_SYM_o, LCD_SYM_o, LCD_SYM_o,
 };
 uint8_t display_out_buff[LCD_BUF_SIZE+1];
+/* blink off: display_out_buff[0] = 0xf0, on: display_out_buff[0] = 0xf2 */
 
 const uint8_t lcd_init_cmd[]	=	{
 		// LCD controller initialize:
@@ -78,6 +79,7 @@ const uint8_t lcd_init_cmd[]	=	{
 		0x00,0x00,000,0x00,0x00,0x00,0x00,0x00,0x00
 };
 
+
 /* 0x0 = "  "
  * 0x1 = "°Г"
  * 0x2 = " _"
@@ -87,10 +89,10 @@ const uint8_t lcd_init_cmd[]	=	{
  * 0x6 = " ="
  * 0x7 = "°E" */
 void show_temp_symbol(LCD_TEMP_SYMBOLS symbol) {
-	display_buff[2] &= ~BIT(3);
-	display_buff[3] &= ~(BIT(7)|BIT(5)) ;
-	display_buff[2] |= (symbol << 2) & BIT(3);
-	display_buff[3] |= (symbol << 5) & (BIT(7)|BIT(5));
+	display_buff[3] &= ~(BIT(1)|BIT(2)|BIT(3)) ;
+	display_buff[3] |= (symbol << 2) & BIT(2);
+	display_buff[3] |= (symbol << 2) & BIT(3);
+	display_buff[3] |= (symbol >> 1) & BIT(1);
 }
 
 /* 0 = "     " off,
@@ -102,53 +104,67 @@ void show_temp_symbol(LCD_TEMP_SYMBOLS symbol) {
  * 6 = "(-^-)" sad
  * 7 = "(ooo)" */
 void show_smiley(LCD_SMILEY_SYMBOLS symbol) {
-	display_buff[3] &= ~0x15;
-	symbol = (symbol & 1) | ((symbol << 1) & 4) | ((symbol << 2) & 0x10);
-	display_buff[3] |= symbol;
+	if(symbol & 4)
+		display_buff[4] |= BIT(7);
+	else
+		display_buff[4] &= ~BIT(7);
+	display_buff[6] = symbol << 6;
 }
 
 void show_ble_symbol(bool state) {
 	if (state)
-		display_buff[4] |= BIT(3);
+		display_buff[1] |= BIT(7);
 	else
-		display_buff[4] &= ~BIT(3);
+		display_buff[1] &= ~BIT(7);
+}
+
+void show_battery(uint8_t level) {
+	display_buff[3] &= ~(BIT(4) | BIT(5) | BIT(6) | BIT(7));
+	if(level > 80)
+		display_buff[3] |=  BIT(4);
+	if(level > 60)
+		display_buff[3] |=  BIT(5);
+	if(level > 40)
+		display_buff[3] |=  BIT(6);
+	if(level > 20)
+		display_buff[3] |=  BIT(7);
+	display_buff[3] |= BIT(0);
 }
 
 void show_battery_symbol(bool state) {
 	if (state)
-		display_buff[3] |= BIT(6);
+		display_buff[3] |= BIT(0);
 	else
-		display_buff[3] &= ~BIT(6);
+		display_buff[3] &= ~(BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7));
 }
 
 void show_big_number_x10(int16_t number) {
-	display_buff[2] &= BIT(3); // F/C "_"
+	display_buff[1] &= BIT(7); // connect
 	if (number > 19995) {
    		display_buff[0] = LCD_SYM_H; // "H"
-   		display_buff[1] = LCD_SYM_i; // "i"
+   		display_buff[1] |= LCD_SYM_i; // "i"
 	} else if (number < -995) {
    		display_buff[0] = LCD_SYM_L; // "L"
-   		display_buff[1] = LCD_SYM_o; // "o"
+   		display_buff[1] |= LCD_SYM_o; // "o"
 	} else {
 		display_buff[0] = 0;
-		display_buff[1] = 0;
 		/* number: -995..19995 */
 		if (number > 1995 || number < -95) {
-			display_buff[1] = 0; // no point, show: -99..1999
+			display_buff[2] = 0; // no point, show: -99..1999
 			if (number < 0){
 				number = -number;
-				display_buff[0] = BIT(2); // "-"
+				display_buff[0] = BIT(5); // "-"
 			}
 			number = (number + 5) / 10; // round(div 10)
 		} else { // show: -9.9..199.9
-			display_buff[1] = BIT(3); // point,
+			display_buff[2] = BIT(7); // point,
 			if (number < 0){
 				number = -number;
-				display_buff[0] = BIT(2); // "-"
+				display_buff[0] = BIT(5); // "-"
 			}
 		}
 		/* number: -99..1999 */
-		if (number > 999) display_buff[0] |= BIT(3); // "1" 1000..1999
+		if (number > 999) display_buff[0] |= BIT(7); // "1" 1000..1999
 		if (number > 99) display_buff[0] |= display_numbers[number / 100 % 10];
 		if (number > 9) display_buff[1] |= display_numbers[number / 10 % 10];
 		else display_buff[1] |= LCD_SYM_0; // "0"
@@ -159,8 +175,8 @@ void show_big_number_x10(int16_t number) {
 /* -9 .. 99 */
 void show_small_number(int16_t number, bool percent) {
 
-	display_buff[4] &= BIT(3); // connect
-	display_buff[5] = percent? BIT(3) : 0;
+	display_buff[4] &= BIT(7); // smiley
+	display_buff[5] = percent? BIT(7) : 0;
 	if (number > 99) {
 		display_buff[4] |= LCD_SYM_H; // "H"
 		display_buff[5] |= LCD_SYM_i; // "i"
@@ -178,18 +194,18 @@ void show_small_number(int16_t number, bool percent) {
 }
 
 void lcd_show_version(void) {
+	display_buff[1] &= BIT(7); // connect
 #if OTA_TYPE
 	display_buff[0] = LCD_SYM_b;
-	display_buff[1] = LCD_SYM_o;
+	display_buff[1] |= LCD_SYM_o;
 	display_buff[2] = LCD_SYM_t;
 #else
 	display_buff[0] = LCD_SYM_A;
-	display_buff[1] = LCD_SYM_P;
+	display_buff[1] |= LCD_SYM_P;
 	display_buff[2] = LCD_SYM_P;
 #endif
-	display_buff[3] &= BIT(6); // bat
-	display_buff[4] &= BIT(3); // connect
-	display_buff[4] |= display_numbers[(APP_VERSION>>4) & 0x0f];
+	display_buff[3] &= BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7); // bat
+	display_buff[4] = display_numbers[(APP_VERSION>>4) & 0x0f];
 	display_buff[5] = display_numbers[APP_VERSION & 0x0f];
 	update_lcd();
 }
@@ -199,12 +215,13 @@ void chow_clock(void) {
 	uint32_t min = tmp % 60;
 	uint32_t hrs = (tmp / 60) % 24;
 	display_buff[0] = 0;
-	display_buff[1] = display_numbers[(hrs / 10) % 10];
+	display_buff[1] &= BIT(7); // connect
+	display_buff[1] |= display_numbers[(hrs / 10) % 10];
 	display_buff[2] = display_numbers[hrs % 10];
-	display_buff[3] &= BIT(6); // bat
-	display_buff[4] &= BIT(3); // connect
-	display_buff[4] |= display_numbers[(min / 10) % 10];
+	display_buff[3] &= BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7); // bat
+	display_buff[4] = display_numbers[(min / 10) % 10];
 	display_buff[5] = display_numbers[min % 10];
+	display_buff[6] = 0;
 	update_lcd();
 }
 
@@ -212,7 +229,7 @@ static void chow_measure(void) {
 #if (DEV_SERVICES & SERVICE_THS)
 	show_big_number_x10(measured_data.temp/10);
 	show_small_number(measured_data.humi/100, true);
-	show_battery_symbol(measured_data.battery < 20);
+	show_battery(measured_data.battery);
 	show_temp_symbol(LCD_TSYMBOL_C);
 #if (OTA_TYPE == OTA_TYPE_APP)
 	if(cfg.flg & FLG_SHOW_SMILEY) {
@@ -263,6 +280,7 @@ void chow_lcd(int flg) {
 	if(flg)
 		chow_measure();
 #else
+	if(cfg.flg & FLG_DISPLAY_OFF) return;
 	if(cfg.flg & FLG_SHOW_TIME) {
 		if(wrk.lcd_count++ & 1)
 			chow_clock();
@@ -301,12 +319,14 @@ void init_lcd(void) {
 #if (OTA_TYPE == OTA_TYPE_APP)
 		if(cfg.flg & FLG_DISPLAY_OFF)
 			send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd0); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
+//		else
+//			send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd8); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
 #endif
 		lcd_i2c_addr = LCD_I2C_ADDR;
 	} else
 		lcd_i2c_addr = 0;
 	deinit_i2c(&i2c_dev1);
-	i2c_dev1.speed = I2C_400KHZ;
+//	i2c_dev1.speed = I2C_400KHZ;
 }
 
 /****************************************************/

@@ -42,7 +42,7 @@
 #include "battery.h"
 #include "sbp_profile.h"
 #include "ble_ota.h"
-#include "lcd_th05.h"
+#include "lcd.h"
 #include "logger.h"
 #include "trigger.h"
 /*********************************************************************
@@ -310,7 +310,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 #endif
 #if (DEV_SERVICES & SERVICE_RDS)
 		if(pin == GPIO_INP) {
-			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPYT_EVT);
+			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
 		}
 #endif
 	}
@@ -335,7 +335,7 @@ static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 #endif
 #if (DEV_SERVICES & SERVICE_RDS)
 		if(pin == GPIO_INP) {
-			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPYT_EVT);
+			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
 		}
 #endif
 	}
@@ -639,7 +639,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 			if(cfg.flg & FLG_MEAS_NOTIFY)
 				measure_notify();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-			chow_measure();
+			chow_lcd(1);
 #endif
 #endif
 		}
@@ -665,7 +665,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 		return ( events ^ SBP_START_DEVICE_EVT );
 	}
 #if (DEV_SERVICES & SERVICE_RDS)
-	if(events & PIN_INPYT_EVT) {
+	if(events & PIN_INPUT_EVT) {
 		int ev = 0;
 		if(hal_gpio_read(GPIO_INP)) {
 			if(!measured_data.flg.pin_input) {
@@ -690,7 +690,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 				measure_notify();
 			}
 		}
-		return(events ^ PIN_INPYT_EVT);
+		return(events ^ PIN_INPUT_EVT);
 	}
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)

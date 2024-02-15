@@ -1,13 +1,18 @@
 # BTHome THB2, BTH01, TH-05
-Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.4](https://pvvx.github.io/TH-05). 
+Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [THB1](https://pvvx.github.io/THB1), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.4](https://pvvx.github.io/TH-05). 
 
-* Тестовый [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
+* Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
 Прошивка Boot-OTA для THB2 (файл bin\BOOT_THB2_v12.hex). 
 
 Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v12.hex). 
 
 Прошивка Boot-OTA для TH05 (файл bin\BOOT_TH05_v12.hex) для версий указанных на печатной плате: TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028
+
+Boot-OTA для THB1 (файл bin\BOOT_BTH1_v13.hex) 
+
+Тестовые версии 1.3 пока не рекомендуются к установке (!)
+
 
 ## Основные характеристики:
 
@@ -31,6 +36,8 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [BTH01](https://pv
 | 1.0 | Первая релизная версия |
 | 1.1 | Добавлен триггер - вывод TX2 срабатывающий по установленным значениям температуры и/или влажности с гистерезисами. Передача состояния вывода RX2 при connect. Для термометров с экраном добавлен показ смайлика с "комфортом". Дополнены: изменение имени и MAC устройства. |
 | 1.2 | Обработка и передача событий open/close со счетчиком с вывода маркированного "RX2" (для THB2 - "RX1"). |
+| 1.3Beta | Добавление теста THB1. Следующий этап уменьшения потребления для версий с LCD дисплеем и опция отключения дисплея. |
+
 
 ## Прошивка:
 

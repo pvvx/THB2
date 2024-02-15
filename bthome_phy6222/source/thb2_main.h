@@ -54,7 +54,7 @@ extern "C"
 #define BATT_VALUE_EVT				0x0010  // Event for battery voltage value update
 #define ADV_BROADCAST_EVT			0x0020  // Advent. Event Done Notice
 #define	WRK_NOTIFY_EVT				0x0040  // work notify
-#define	PIN_INPYT_EVT				0x0080  // pin input event
+#define	PIN_INPUT_EVT				0x0080  // pin input event
 
 /*********************************************************************
  * MACROS

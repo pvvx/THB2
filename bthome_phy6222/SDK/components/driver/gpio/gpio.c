@@ -662,8 +662,8 @@ int hal_gpioretention_register(gpio_pin_e pin)
         return PPlus_ERR_NOT_SUPPORTED;
 #endif
 
-		hal_gpio_pin_init(pin, GPIO_OUTPUT);
-	  m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_OUT;
+	hal_gpio_pin_init(pin, GPIO_OUTPUT);
+	m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_OUT;
 
     m_gpioCtx.pin_retention_status |= BIT(pin);
     return PPlus_SUCCESS;

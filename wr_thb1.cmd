@@ -1,0 +1,1 @@
+python3 rdwr_phy62x2.py -p COM11 -e -r wh ./bin/BOOT_THB1_v13.hex

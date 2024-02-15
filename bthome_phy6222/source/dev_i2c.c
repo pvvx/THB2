@@ -13,21 +13,23 @@
 
 #define I2C_WAIT_ms		3
 
-void init_i2c(i2c_speed_e speed400khz) {
-	hal_gpio_fmux_set(I2C_SCL, FMUX_IIC0_SCL);
-	hal_gpio_fmux_set(I2C_SDA, FMUX_IIC0_SDA);
-
-	//hal_i2c_init(I2C_0, I2C_CLOCK_400K):
-
-	int pclk = clk_get_pclk();
-
+void init_i2c(pdev_i2c_t pi2c_dev) {
 	AP_I2C_TypeDef* pi2cdev = AP_I2C0;
-	hal_clk_gate_enable(MOD_I2C0);
+	if(pi2c_dev->i2c_num)
+		pi2cdev = AP_I2C1;
+	pi2c_dev->pi2cdev = pi2cdev;
+	hal_gpio_fmux_set(pi2c_dev->scl, FMUX_IIC0_SCL + (pi2c_dev->i2c_num<<1)); // FMUX_IIC1_SCL
+	hal_gpio_fmux_set(pi2c_dev->sda, FMUX_IIC0_SDA + (pi2c_dev->i2c_num<<1)); // FMUX_IIC1_SDA
+
+//	int pclk = clk_get_pclk();
+
+	hal_clk_gate_enable(MOD_I2C0 + pi2c_dev->i2c_num); // MOD_I2C1
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_CON = 0x61;
-	if(speed400khz) {
+	if(pi2c_dev->speed) {
 		// SET_I2C_SPEED 400 kHz
 		pi2cdev->IC_CON = ((pi2cdev->IC_CON) & 0xfffffff9) | (0x02 << 1); // SPEED_FAST
+#if 0
 		if (pclk == 16000000) {
 			pi2cdev->IC_FS_SCL_HCNT = 10;
 			pi2cdev->IC_FS_SCL_LCNT = 17;
@@ -44,9 +46,14 @@ void init_i2c(i2c_speed_e speed400khz) {
 			pi2cdev->IC_FS_SCL_HCNT = 105;
 			pi2cdev->IC_FS_SCL_LCNT = 113;
 		}
+#else
+		pi2cdev->IC_FS_SCL_HCNT = 10;
+		pi2cdev->IC_FS_SCL_LCNT = 17;
+#endif
 	} else {
 		// SET_I2C_SPEED 100 kHz
 		pi2cdev->IC_CON = ((pi2cdev->IC_CON) & 0xfffffff9) | (0x01 << 1); // SPEED_STANDARD
+#if 0
 		if (pclk == 16000000) {
 			pi2cdev->IC_SS_SCL_HCNT = 70;  //16
 			pi2cdev->IC_SS_SCL_LCNT = 76;  //32)
@@ -63,6 +70,10 @@ void init_i2c(i2c_speed_e speed400khz) {
 			pi2cdev->IC_SS_SCL_HCNT = 460;  //16
 			pi2cdev->IC_SS_SCL_LCNT = 470;  //32)
 		}
+#else
+		pi2cdev->IC_SS_SCL_HCNT = 70;  //16
+		pi2cdev->IC_SS_SCL_LCNT = 76;  //32)
+#endif
 	}
 //	pi2cdev->IC_TAR = I2C_MASTER_ADDR_DEF;
 	pi2cdev->IC_INTR_MASK = 0;
@@ -71,20 +82,20 @@ void init_i2c(i2c_speed_e speed400khz) {
 //	pi2cdev->IC_ENABLE = 1;
 }
 
-void deinit_i2c(void) {
-	AP_I2C_TypeDef * pi2cdev = AP_I2C0;
+void deinit_i2c(pdev_i2c_t pi2c_dev) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	pi2cdev->IC_ENABLE = 0;
-	hal_clk_gate_disable(MOD_I2C0);
-	hal_gpio_pin_init(I2C_SCL, IE);
-	hal_gpio_pin_init(I2C_SDA, IE);
+	hal_clk_gate_disable(MOD_I2C0 + pi2c_dev->i2c_num); // MOD_I2C1
+	hal_gpio_pin_init(pi2c_dev->scl, IE);
+	hal_gpio_pin_init(pi2c_dev->sda, IE);
 }
 
 extern volatile uint32 osal_sys_tick;
 
 /* size max = 7 ! */
-int read_i2c_bytes(uint8 addr, uint8 reg, uint8 * data, uint8 size) {
+int read_i2c_bytes(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint8 * data, uint8 size) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	int i = size;
-	AP_I2C_TypeDef * pi2cdev = AP_I2C0;
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_TAR = addr;
 
@@ -112,9 +123,9 @@ int read_i2c_bytes(uint8 addr, uint8 reg, uint8 * data, uint8 size) {
 	return 0;
 }
 
-int read_i2c_nabuf(uint8 addr, uint8 * data, uint8 size) {
+int read_i2c_nabuf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * data, uint8 size) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	int i = size;
-	AP_I2C_TypeDef * pi2cdev = AP_I2C0;
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_TAR = addr;
 
@@ -139,8 +150,8 @@ int read_i2c_nabuf(uint8 addr, uint8 * data, uint8 size) {
 	return 0;
 }
 
-int send_i2c_byte(uint8 addr, uint8 data) {
-	AP_I2C_TypeDef * pi2cdev = AP_I2C0;
+int send_i2c_byte(pdev_i2c_t pi2c_dev, uint8 addr, uint8 data) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_TAR = addr;
 	HAL_ENTER_CRITICAL_SECTION();
@@ -158,8 +169,8 @@ int send_i2c_byte(uint8 addr, uint8 data) {
 	return 0;
 }
 
-int send_i2c_wreg(uint8 addr, uint8 reg, uint16 data) {
-	AP_I2C_TypeDef * pi2cdev = AP_I2C0;
+int send_i2c_wreg(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint16 data) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_TAR = addr;
 	HAL_ENTER_CRITICAL_SECTION();
@@ -180,8 +191,8 @@ int send_i2c_wreg(uint8 addr, uint8 reg, uint16 data) {
 	return 0;
 }
 
-int send_i2c_buf(uint8 addr, uint8 * pdata, int len) {
-	AP_I2C_TypeDef * pi2cdev = AP_I2C0;
+int send_i2c_buf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * pdata, int len) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_TAR = addr;
 	HAL_ENTER_CRITICAL_SECTION();

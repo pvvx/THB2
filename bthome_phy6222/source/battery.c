@@ -10,13 +10,14 @@
 #include "pwrmgr.h"
 #include "jump_function.h"
 #include "sensors.h"
-
+/*
 #ifndef ADC_PIN
 #define ADC_PIN GPIO_P11
 #endif
-#ifndef ADC_CHL
-#define ADC_CHL ADC_CH1N_P11
+#ifndef ADC_VBAT_CHL
+#define ADC_VBAT_CHL ADC_CH1N_P11
 #endif
+*/
 #define MIN_ADC_CH 2
 
 static void init_adc_batt(void);
@@ -26,10 +27,14 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 	//int status = AP_ADCC->intr_status;
 	AP_ADCC->intr_mask = 0; // MASK coresponding channel
 	for (i = 0; i < (MAX_ADC_SAMPLE_SIZE - 2); i++) {
-		adc_sum +=
-				(uint16_t) (read_reg(
-						ADC_CH_BASE + ((ADC_CH1N_P11+1) * 0x80) + ((i+2) * 4))
-						& 0xfff);
+		adc_sum += (uint16_t) (read_reg(ADC_CH_BASE
+				+ (
+#if (ADC_VBAT_CHL & 1)
+					(ADC_VBAT_CHL-1)
+#else
+					(ADC_VBAT_CHL+1)
+#endif
+						* 0x80) + ((i+2) * 4))	& 0xfff);
 	}
 	AP_ADCC->intr_clear = 0x1FF;
 	// stop_adc_batt
@@ -82,14 +87,46 @@ void batt_start_measure(void) {
 	// start_adc_bat
 	hal_pwrmgr_lock(MOD_ADCC);
 	JUMP_FUNCTION(ADCC_IRQ_HANDLER) = (uint32_t) &hal_ADC_IRQHandler;
-
+#if ADC_VBAT_CHL == VBAT_ADC_P11
 	AP_PCRM->ADC_CTL1 |= BIT(20);
+#elif ADC_VBAT_CHL == VBAT_ADC_P23
+	AP_PCRM->ADC_CTL1 |= BIT(4);
+#elif ADC_VBAT_CHL == VBAT_ADC_P24
+	AP_PCRM->ADC_CTL2 |= BIT(20);
+#elif ADC_VBAT_CHL == VBAT_ADC_P14
+	AP_PCRM->ADC_CTL2 |= BIT(4);
+#elif ADC_VBAT_CHL == VBAT_ADC_P15
+	AP_PCRM->ADC_CTL3 |= BIT(20);
+#elif ADC_VBAT_CHL == VBAT_ADC_P20
+	AP_PCRM->ADC_CTL3 |= BIT(4);
+#endif
 	AP_PCRM->ANA_CTL |= BIT(3); //ENABLE_ADC;
 	AP_PCRM->ANA_CTL |= BIT(0); //new
 
 	NVIC_SetPriority((IRQn_Type) ADCC_IRQn, IRQ_PRIO_HAL);
 	NVIC_EnableIRQ((IRQn_Type) ADCC_IRQn); //ADC_IRQ_ENABLE;
-	AP_ADCC->intr_mask = BIT(ADC_CHL + 1); //ENABLE_ADC_INT;
+#if (ADC_VBAT_CHL & 1)
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL - 1); // ENABLE_ADC_INT;
+#else
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
+#endif
+
+#if 0
+#if ADC_VBAT_CHL == VBAT_ADC_P11
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
+#elif ADC_VBAT_CHL == VBAT_ADC_P23
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL - 1); // ENABLE_ADC_INT;
+#elif ADC_VBAT_CHL == VBAT_ADC_P24
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
+#elif ADC_VBAT_CHL == VBAT_ADC_P14
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL - 1); // ENABLE_ADC_INT;
+#elif ADC_VBAT_CHL == VBAT_ADC_P15
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
+#elif ADC_VBAT_CHL == VBAT_ADC_P20
+	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL - 1); // ENABLE_ADC_INT;
+#endif
+#endif
+
 }
 
 static void init_adc_batt(void) {
@@ -114,7 +151,7 @@ static void init_adc_batt(void) {
 //  AP_PCRM->ADC_CTL4 |= BIT(4); // mannual mode
 	AP_PCRM->ADC_CTL4 &= ~BIT(4); //enable auto mode
 	AP_PCRM->ADC_CTL4 |= BIT(0);
-	AP_AON->PMCTL2_1 = BIT((ADC_CHL - MIN_ADC_CH) + 8);
+	AP_AON->PMCTL2_1 = BIT((ADC_VBAT_CHL - MIN_ADC_CH) + 8);
 	AP_PCRM->ADC_CTL0 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ADC_CTL1 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ADC_CTL2 &= ~(BIT(20) | BIT(4));

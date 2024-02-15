@@ -1,5 +1,5 @@
 @set PATH=D:\MCU\GNU_Tools_ARM_Embedded\13.2.rel1\bin;%PATH%
-@set SWVER=_v12
+@set SWVER=_v13
 @del /Q "build\THB2%SWVER%.hex"
 @del /Q "build\THB2%SWVER%.bin"
 @mkdir .\bin
@@ -34,6 +34,10 @@
 @make -s -j PROJECT_NAME=BOOT_TH05%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_TH05"
 @if not exist "build\BOOT_TH05%SWVER%.hex" goto :error
 @copy "build\BOOT_TH05%SWVER%.hex" .\bin
+@make -s clean
+@make -s -j PROJECT_NAME=BOOT_THB1%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_THB1"
+@if not exist "build\BOOT_THB1%SWVER%.hex" goto :error
+@copy "build\BOOT_THB1%SWVER%.hex" .\bin
 @exit
 :error
 @echo "Error!" 

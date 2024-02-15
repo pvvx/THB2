@@ -105,8 +105,8 @@ extern void WaitRTCCount(uint32_t rtcDelyCnt);
 extern int clk_spif_ref_clk(sysclk_t spif_ref_sel);
 extern uint32_t getMcuPrecisionCount(void);
 
-#define CHIP_RFEQ_OFF_FLASH_ADDRESS	0x11001e08
-#define CHIP_XTAK_CAP_FLASH_ADDRESS	0x11001e0c
+#define CHIP_RFEQ_OFF_FLASH_ADDRESS	0x11001e08 // было 0x11004008
+#define CHIP_XTAK_CAP_FLASH_ADDRESS	0x11001e0c // было 0x1100400c
 void hal_rfPhyFreqOff_Set(void);
 void hal_xtal16m_cap_Set(void);
 

@@ -132,6 +132,7 @@ struct __attribute__((packed)) _cht8305_config_t{
 #define AHT2x_CMD_TMS	0x0AC  // Trigger Measurement Command
 #define AHT2x_DATA_TMS	0x3300  // Trigger Measurement data
 #define AHT2x_CMD_RST	0x0BA  // Soft Reset Command
+#define AHT2x_DATA_LPWR	0x0800 // go into low power mode
 
 
 typedef struct __attribute__((packed)) _measured_flg_t {

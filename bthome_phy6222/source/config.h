@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x12	// BCD
+#define APP_VERSION	0x13	// BCD
 #endif
 
 /*
@@ -33,14 +33,16 @@
 #define BOARD_MHO_C122				11
 #define BOARD_TNK					16 // Water tank controller (not yet published at the moment)
 #define BOARD_TS0201_TZ3000			17
-#define BOARD_TS0202_TZ3000			18 // ?
+#define BOARD_TS0202_TZ3000			18
+#define BOARD__TH03Z   				22 // ZigBee TH03Z
 */
 #define DEVICE_THB2		19
 #define DEVICE_BTH01	20
 #define DEVICE_TH05		21
+#define DEVICE_THB1		23
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB2
+#define DEVICE		DEVICE_THB1
 #endif
 
 // supported services by the device (bits)
@@ -91,9 +93,9 @@
 )
 #endif
 
-#define ADC_PIN_USE_OUT		0
-#define ADC_PIN 	GPIO_P11
-#define ADC_CHL 	ADC_CH1N_P11
+#define ADC_PIN_USE_OUT		0 //  есть резистор 0 к +Vbat
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
 
 #define I2C_SDA 	GPIO_P18
 #define I2C_SCL 	GPIO_P20
@@ -127,12 +129,12 @@
 #endif
 
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
-#define ADC_PIN 	GPIO_P11
-#define ADC_CHL 	ADC_CH1N_P11
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
 
-#define I2C_SDA 	GPIO_P33 // CHT8305_SDA
-#define I2C_SCL 	GPIO_P34 // CHT8305_SCL
-#define GPIO_SPWR	GPIO_P00 // питание сенсора CHT8305_VDD
+#define I2C_SDA 	GPIO_P33 // SDA
+#define I2C_SCL 	GPIO_P34 // SCL
+#define GPIO_SPWR	GPIO_P00 // питание сенсора
 #define GPIO_KEY	GPIO_P14
 #define GPIO_LED	GPIO_P15
 #define LED_ON		1
@@ -169,16 +171,19 @@
 #endif
 
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
-#define ADC_PIN 	GPIO_P11
-#define ADC_CHL 	ADC_CH1N_P11
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
 
 #define USE_TH_SENSOR	1
-#define USE_RS_SENSOR	0
 #define USE_SECREEN		1
 
-#define I2C_SDA 	GPIO_P33 // AHT20_SDA
-#define I2C_SCL 	GPIO_P34 // AHT20_SCL
-#define GPIO_SPWR	GPIO_P00 // питание сенсора CHT8305_VDD
+#define I2C_SDA 	GPIO_P33 // SDA
+#define I2C_SCL 	GPIO_P34 // SCL
+
+#define I2C_LCD_SDA GPIO_P33 // SDA
+#define I2C_LCD_SCL GPIO_P34 // SCL
+
+#define GPIO_SPWR	GPIO_P00 // питание сенсора
 #define GPIO_KEY	GPIO_P14
 #define GPIO_LPWR	GPIO_P02 // питание LCD драйвера
 
@@ -191,6 +196,51 @@
 
 #define DEF_MODEL_NUMBER_STR		"TH05"
 #define DEF_HARDWARE_REVISION		"0014"
+#define DEF_MANUFACTURE_NAME_STR	"Tuya"
+
+#elif DEVICE == DEVICE_THB1
+/* Model: THB1/BT1 */
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+		| SERVICE_HISTORY \
+		| SERVICE_TH_TRG \
+		| SERVICE_RDS \
+)
+#endif
+
+#if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
+#error "Not SERVICE_TH_TRG!"
+#endif
+
+#define ADC_PIN_USE_OUT		1	// нет подключения к +Vbat
+#define ADC_PIN				GPIO_P14
+#define ADC_VBAT_CHL		VBAT_ADC_P14
+
+#define USE_TH_SENSOR	1
+#define USE_SECREEN		1
+
+#define I2C_SDA 	GPIO_P18 // SDA
+#define I2C_SCL 	GPIO_P20 // SCL
+
+#define I2C_LCD_SDA GPIO_P34 // SDA
+#define I2C_LCD_SCL GPIO_P33 // SCL
+
+#define GPIO_KEY	GPIO_P01
+
+#define GPIO_TRG	GPIO_P09 // mark TX
+#define GPIO_INP	GPIO_P10 // mark RX
+
+#define DEF_MODEL_NUMBER_STR		"THB1"
+#define DEF_HARDWARE_REVISION		"0017"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #else
@@ -226,7 +276,8 @@ extern const cfg_t def_cfg;
 #define FLG_SHOW_TIME		0x00000002	// включить показ часов на LCD
 #define FLG_SHOW_SMILEY		0x00000004	// включить показ смайлика
 #define FLG_SHOW_TRG		0x00000008	// смайлик поаказывает TRG
-//#define FLG_ADV_CRYPT		0x00000010	// Зашифрованная BLE реклама (bindkey)
+#define FLG_DISPLAY_OFF		0x00000010	// отключить дисплей
+//#define FLG_ADV_CRYPT		0x00000100	// Зашифрованная BLE реклама (bindkey)
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;

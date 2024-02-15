@@ -48,7 +48,7 @@ work_parm_t wrk;
 adv_work_t adv_wrk;
 
 const cfg_t def_cfg = {
-		.flg = 1,
+		.flg = FLG_MEAS_NOTIFY | FLG_SHOW_SMILEY,
 		.rf_tx_power = RF_PHY_TX_POWER_0DBM,
 		.advertising_interval = 80, // 80 * 62.5 = 5000 ms
 		.measure_interval = 2,  // 5 * 2 = 10 sec

@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.1</title>
+<title>PHY62x2 BTHome v1.2</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -742,6 +742,8 @@ function auxControls(state)
 	if ( devSrv.services & SERVICE_SCREEN ) {
 		$('tblChkCfg').style.display  = "block";
 	    $('tblComfort').style.display = "block";
+
+	    
 	} else {
 		$('tblChkCfg').style.display  = "none";
 	    $('tblComfort').style.display = "none";
@@ -1245,6 +1247,7 @@ function showConfig() {
 	$('chkCfgClock').checked  = (devCfg.flg & 2) != 0;
 	$('chkCfgSmiley').checked = (devCfg.flg & 4) != 0;
 	$('chkCfgTrg').checked    = (devCfg.flg & 8) != 0;
+	$('chkCfgLcdOff').checked = (devCfg.flg & 16) != 0;
 	let txPwr = 31;
 	el = $('selTxPwr');
 	for(let n = 0; n < el.options.length; n++) if(el.options[n].value >= devCfg.tx_power) txPwr = el.options[n].value;
@@ -1608,10 +1611,12 @@ function getDevName() {
 
 function chkDevCfg() {
 		if(devCfg.flg == null) return;
-	    devCfg.flg  = ($('chkCfgNotify').checked) ? 1 : 0;
+		devCfg.flg &= 0xffffffe0;
+	    devCfg.flg |= ($('chkCfgNotify').checked) ? 1 : 0;
 	    devCfg.flg |= ($('chkCfgClock').checked) ? 2 : 0;
 	    devCfg.flg |= ($('chkCfgSmiley').checked) ? 4 : 0;
 	    devCfg.flg |= ($('chkCfgTrg').checked) ? 8 : 0;
+	    devCfg.flg |= ($('chkCfgLcdOff').checked) ? 16 : 0;
 		devCfg.tx_power = $('selTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inpLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
@@ -2143,6 +2148,7 @@ window.onload = function() {
     <td><label><input type="checkbox" id="chkCfgClock"/>Показывать время</label></td>
     <td><label><input type="checkbox" id="chkCfgSmiley"/>Отображать смайлик</label></td>
     <td><label><input type="checkbox" id="chkCfgTrg"/>Отображать триггер</label></td>
+    <td><label><input type="checkbox" id="chkCfgLcdOff"/>Отключить дисплей</label></td>
   </tr>
 </table>
 <table>
@@ -2283,7 +2289,7 @@ window.onload = function() {
   <tr>
 	<td style="width:100px;">Команда:</td>
 	<td><button type="button" id="btnSendCommand" onclick="sendCommand()" style="width:120px;">Выполнить</button></td>
-	<td><input type="text" id="inpCmdData" value="55" maxlength="16"></td>
+	<td><input type="text" id="inpCmdData" value="55" maxlength="40"></td>
   </tr>
 </table>
 <hr>

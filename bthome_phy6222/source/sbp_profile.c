@@ -26,7 +26,7 @@
 #include "ble_ota.h"
 #include "logger.h"
 #include "hci.h"
-#include "lcd_th05.h"
+#include "lcd.h"
 #include "sensors.h"
 
 /*********************************************************************

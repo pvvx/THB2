@@ -13,13 +13,21 @@ typedef enum {
 	I2C_400KHZ
 }i2c_speed_e;
 
-void init_i2c(i2c_speed_e speed400khz);
-void deinit_i2c(void);
-int send_i2c_byte(uint8_t addr, uint8_t data);
-int send_i2c_wreg(uint8 addr, uint8 reg, uint16 data);
-int send_i2c_buf(uint8 addr, uint8 * pdata, int len);
-int read_i2c_bytes(uint8 addr, uint8 reg, uint8 * data, uint8 size);
-int read_i2c_nabuf(uint8 addr, uint8 * data, uint8 size);
+typedef struct _dev_i2c_t {
+	AP_I2C_TypeDef * pi2cdev;
+	uint8_t scl;	// gpio_pin_e
+	uint8_t sda;	// gpio_pin_e
+	uint8_t	speed;	// i2c_speed_e
+	uint8_t i2c_num;
+} dev_i2c_t, * pdev_i2c_t;
+
+void init_i2c(pdev_i2c_t pi2c_dev);
+void deinit_i2c(pdev_i2c_t pi2c_dev);
+int send_i2c_byte(pdev_i2c_t pi2c_dev, uint8_t addr, uint8_t data);
+int send_i2c_wreg(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint16 data);
+int send_i2c_buf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * pdata, int len);
+int read_i2c_bytes(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint8 * data, uint8 size);
+int read_i2c_nabuf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * data, uint8 size);
 
 
 #endif /* _DEV_I2C_H_ */

@@ -2,7 +2,7 @@
  patch.c
 
  SDK_LICENSE
-
+MIN_SLEEP_TIME
 ************************************************************/
 
 #include <stdlib.h>
@@ -7893,24 +7893,24 @@ void init_config(void)
     //--------------------------------------------------------------------
     JUMP_FUNCTION(LL_HW_GO)                         =   (uint32_t)&ll_hw_go1;
     JUMP_FUNCTION(V4_IRQ_HANDLER)                   =   (uint32_t)&LL_IRQHandler1;
-    //JUMP_FUNCTION(V11_IRQ_HANDLER)                  =   (uint32_t)&hal_UART0_IRQHandler;
+    //JUMP_FUNCTION(V11_IRQ_HANDLER)                =   (uint32_t)&hal_UART0_IRQHandler;
     extern void rf_calibrate1(void);
     JUMP_FUNCTION(RF_CALIBRATTE)                    =   (uint32_t)&rf_calibrate1;
     JUMP_FUNCTION(RF_PHY_CHANGE)                    =   (uint32_t)&rf_phy_change_cfg0;
-    //JUMP_FUNCTION(LL_GEN_TRUE_RANDOM)               =   (uint32_t)&LL_ENC_GenerateTrueRandNum1;
+    //JUMP_FUNCTION(LL_GEN_TRUE_RANDOM)             =   (uint32_t)&LL_ENC_GenerateTrueRandNum1;
     JUMP_FUNCTION(LL_AES128_ENCRYPT)                =   (uint32_t)&LL_ENC_AES128_Encrypt1;
     JUMP_FUNCTION(LL_ENC_ENCRYPT)                   =   (uint32_t)&LL_ENC_Encrypt1;
     JUMP_FUNCTION(LL_ENC_DECRYPT)                   =   (uint32_t)&LL_ENC_Decrypt1;
     //JUMP_FUNCTION(LL_PROCESS_SLAVE_CTRL_PROC)     =   (uint32_t)&llProcessSlaveControlProcedures1;
     //JUMP_FUNCTION(LL_PROCESS_TX_DATA)             =   (uint32_t)&llProcessTxData1;
-    //JUMP_FUNCTION(OSAL_POWER_CONSERVE)              =   (uint32_t)&osal_pwrmgr_powerconserve1;
-    //JUMP_FUNCTION(ENTER_SLEEP_OFF_MODE)              =   (uint32_t)&enter_sleep_off_mode1;
-    //JUMP_FUNCTION(ENTER_SLEEP_PROCESS)              =   (uint32_t)&enterSleepProcess1;
+    //JUMP_FUNCTION(OSAL_POWER_CONSERVE)            =   (uint32_t)&osal_pwrmgr_powerconserve1;
+    //JUMP_FUNCTION(ENTER_SLEEP_OFF_MODE)           =   (uint32_t)&enter_sleep_off_mode1;
+    //JUMP_FUNCTION(ENTER_SLEEP_PROCESS)            =   (uint32_t)&enterSleepProcess1;
     JUMP_FUNCTION(CONFIG_RTC)                       =   (uint32_t)&config_RTC1;
-    //JUMP_FUNCTION(V20_IRQ_HANDLER)                  =   (uint32_t)&TIM1_IRQHandler1;
-//    JUMP_FUNCTION(LL_SCHEDULER)                     =   (uint32_t)&ll_scheduler1;
-    //JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE)               =   (uint32_t)&drv_enable_irq1;
-    //JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE)              =   (uint32_t)&drv_disable_irq1;
+    //JUMP_FUNCTION(V20_IRQ_HANDLER)                =   (uint32_t)&TIM1_IRQHandler1;
+//    JUMP_FUNCTION(LL_SCHEDULER)                   =   (uint32_t)&ll_scheduler1;
+    //JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE)             =   (uint32_t)&drv_enable_irq1;
+    //JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE)            =   (uint32_t)&drv_disable_irq1;
     JUMP_FUNCTION(WAKEUP_INIT)                      =   (uint32_t)&wakeup_init1;
     JUMP_FUNCTION(WAKEUP_PROCESS)                   =   (uint32_t)&wakeupProcess1;
     extern void l2capPocessFragmentTxData(uint16 connHandle);
@@ -7925,7 +7925,7 @@ void init_config(void)
 #endif
     JUMP_FUNCTION(LL_PROCESS_TX_DATA)               =   (uint32_t)&llProcessTxData1;
     JUMP_FUNCTION(LL_GENERATE_TX_BUFFER)            =   (uint32_t)&ll_generateTxBuffer1;
-    JUMP_FUNCTION(LL_ADP_ADJ_NEXT_TIME)            =   (uint32_t)&ll_adptive_adj_next_time1;
+    JUMP_FUNCTION(LL_ADP_ADJ_NEXT_TIME)             =   (uint32_t)&ll_adptive_adj_next_time1;
     JUMP_FUNCTION(LL_CONN_TERMINATE)                =   (uint32_t)&llConnTerminate1;
     JUMP_FUNCTION(LL_SET_DEFAULT_CONN_PARAM)        =   (uint32_t)&LL_set_default_conn_params1;
 // ====================
@@ -7938,8 +7938,8 @@ void init_config(void)
 void ll_patch_slave(void)
 {
     JUMP_FUNCTION(LL_SET_ADV_PARAM)                 =   (uint32_t)&LL_SetAdvParam1;
-    JUMP_FUNCTION(LL_CALC_MAX_SCAN_TIME)            = (uint32_t)&llCalcMaxScanTime1;
-    JUMP_FUNCTION(LL_SEC_ADV_ALLOW)                 = (uint32_t)&llSecAdvAllow1;
+    JUMP_FUNCTION(LL_CALC_MAX_SCAN_TIME)            =   (uint32_t)&llCalcMaxScanTime1;
+    JUMP_FUNCTION(LL_SEC_ADV_ALLOW)                 =   (uint32_t)&llSecAdvAllow1;
     JUMP_FUNCTION(LL_SET_ADV_CONTROL)               =   (uint32_t)&LL_SetAdvControl1;
     JUMP_FUNCTION(LL_SETUP_SEC_ADV_ENTRY)           =   (uint32_t)&llSetupSecAdvEvt1;
     JUMP_FUNCTION(LL_SCHEDULER)                     =   (uint32_t)&ll_scheduler2;
@@ -7950,11 +7950,11 @@ void ll_patch_master(void)
 {
     JUMP_FUNCTION(LL_SET_ADV_PARAM)                 =   (uint32_t)&LL_SetAdvParam1;
     JUMP_FUNCTION(LL_SET_ADV_CONTROL)               =   (uint32_t)&LL_SetAdvControl1;
-    JUMP_FUNCTION(LL_MASTER_EVT_ENDOK)              = (uint32_t)&llMasterEvt_TaskEndOk1;
-    JUMP_FUNCTION(LL_SET_SCAN_PARAM)                = (uint32_t)&LL_SetScanParam1;
-    JUMP_FUNCTION(LL_SET_SCAN_CTRL)                 = (uint32_t)&LL_SetScanControl1;
+    JUMP_FUNCTION(LL_MASTER_EVT_ENDOK)              =   (uint32_t)&llMasterEvt_TaskEndOk1;
+    JUMP_FUNCTION(LL_SET_SCAN_PARAM)                =   (uint32_t)&LL_SetScanParam1;
+    JUMP_FUNCTION(LL_SET_SCAN_CTRL)                 =   (uint32_t)&LL_SetScanControl1;
 #if USE_CODED_PHY
-    JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PKT)     = (uint32_t)&llProcessMasterControlPacket1;
+    JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PKT)       =   (uint32_t)&llProcessMasterControlPacket1;
 #endif
     JUMP_FUNCTION(LL_CREATE_CONN)                   =   (uint32_t)&LL_CreateConn1;
     JUMP_FUNCTION(LL_START_ENCRYPT)                 =   (uint32_t)&LL_StartEncrypt1;

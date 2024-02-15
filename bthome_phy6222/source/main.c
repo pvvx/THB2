@@ -115,7 +115,7 @@ const ioinit_cfg_t ioInit[] = {
 #ifdef GPIO_TRG
 		{ GPIO_P02, GPIO_FLOATING }, // TX2 - GPIO_TRG
 #else
-		{ GPIO_P09, GPIO_PULL_UP }, // TX
+		{ GPIO_P02, GPIO_PULL_UP }, // TX2
 #endif
 		{ GPIO_P03, GPIO_PULL_DOWN },
 		{ GPIO_P07, GPIO_PULL_UP }, // KEY
@@ -201,7 +201,36 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P31, GPIO_PULL_DOWN },
 		{ GPIO_P32, GPIO_PULL_DOWN },
 		{ GPIO_P33, GPIO_FLOATING }, // I2C_SDA
-		{ GPIO_P34, GPIO_FLOATING } // // I2C_SCL
+		{ GPIO_P34, GPIO_FLOATING }  // I2C_SCL
+
+#elif (DEVICE == DEVICE_THB1)
+		{ GPIO_P00, GPIO_PULL_DOWN },
+		{ GPIO_P01, GPIO_PULL_UP }, // KEY - GPIO_KEY
+		{ GPIO_P02, GPIO_PULL_DOWN },
+		{ GPIO_P03, GPIO_PULL_DOWN },
+		{ GPIO_P07, GPIO_PULL_DOWN },
+#ifdef GPIO_TRG
+		{ GPIO_P09, GPIO_FLOATING }, // TX - GPIO_TRG
+#else
+		{ GPIO_P09, GPIO_PULL_UP }, // TX
+#endif
+		{ GPIO_P10, GPIO_PULL_UP }, // RX - GPIO_INP
+		{ GPIO_P11, GPIO_FLOATING }, // ADC Vbat с делителем! Не используется - Выкусить резистор R3!
+		{ GPIO_P14, GPIO_PULL_UP }, // назначен как ADC_PIN, т.к. вывод P11 подключен к делителю
+		{ GPIO_P15, GPIO_PULL_DOWN },
+		{ GPIO_P16, GPIO_PULL_DOWN },
+		{ GPIO_P17, GPIO_PULL_DOWN },
+		{ GPIO_P18, GPIO_FLOATING }, // I2C_SDA CHT8310
+		{ GPIO_P20, GPIO_FLOATING }, // I2C_SCL CHT8310
+		{ GPIO_P23, GPIO_PULL_DOWN },
+		{ GPIO_P24, GPIO_PULL_DOWN },
+		{ GPIO_P25, GPIO_PULL_DOWN },
+		{ GPIO_P26, GPIO_PULL_DOWN },
+		{ GPIO_P27, GPIO_PULL_DOWN },
+		{ GPIO_P31, GPIO_PULL_DOWN },
+		{ GPIO_P32, GPIO_PULL_DOWN },
+		{ GPIO_P33, GPIO_PULL_UP }, // I2C_SDA CNV1972
+		{ GPIO_P34, GPIO_PULL_UP }  // I2C_SCL CNV1972
 #else
 #error "DEVICE Not released!"
 #endif
@@ -266,10 +295,10 @@ static void ble_mem_init_config(void) {
 #endif
 	osal_mem_set_heap((osalMemHdr_t*) g_largeHeap, LARGE_HEAP_SIZE);
 	LL_InitConnectContext(pConnContext, g_pConnectionBuffer,
-	BLE_MAX_ALLOW_CONNECTION,
-	BLE_MAX_ALLOW_PKT_PER_EVENT_TX,
-	BLE_MAX_ALLOW_PKT_PER_EVENT_RX,
-	BLE_PKT_VERSION);
+			BLE_MAX_ALLOW_CONNECTION,
+			BLE_MAX_ALLOW_PKT_PER_EVENT_TX,
+			BLE_MAX_ALLOW_PKT_PER_EVENT_RX,
+			BLE_PKT_VERSION);
 #if ( MAX_CONNECTION_SLAVE_NUM > 0 )
 	static ALIGN4_U8	g_llDevList[BLE_CONN_LL_DEV_LIST_SIZE];
 	ll_multi_conn_llDevList_Init(g_llDevList);
@@ -297,9 +326,9 @@ static void hal_rfphy_init(void) {
 	//============config BLE_PHY TYPE
 	g_rfPhyPktFmt = PKT_FMT_BLE1M;
 	//============config RF Frequency Offset
-	g_rfPhyFreqOffSet = RF_PHY_FREQ_FOFF_00KHZ;
+	g_rfPhyFreqOffSet = RF_PHY_FREQ_FOFF_00KHZ; //	hal_rfPhyFreqOff_Set();
 	//============config xtal 16M cap
-	XTAL16M_CAP_SETTING(0x09);
+	XTAL16M_CAP_SETTING(0x09); 					//	hal_xtal16m_cap_Set();
 	XTAL16M_CURRENT_SETTING(0x01);
 
 	hal_rc32k_clk_tracking_init();
@@ -327,7 +356,7 @@ static void hal_init(void) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
-	g_system_clk = SYS_CLK_XTAL_16M; // SYS_CLK_DBL_32M, SYS_CLK_XTAL_16M, SYS_CLK_DLL_64M
+	g_system_clk = SYS_CLK_XTAL_16M; // SYS_CLK_XTAL_16M, SYS_CLK_DBL_32M, SYS_CLK_DLL_64M
 	g_clk32K_config = CLK_32K_RCOSC; // CLK_32K_XTAL, CLK_32K_RCOSC
 
 #if 0 // defined ( __GNUC__ ) // -> *.ld
@@ -372,6 +401,7 @@ int main(void) {
 	extern void ll_patch_slave(void);
 	ll_patch_slave();
 #endif
+
 	hal_rfphy_init();
 	hal_init();
 

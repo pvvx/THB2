@@ -26,7 +26,7 @@
 #include "devinfoservice.h"
 #include "ble_ota.h"
 #include "thb2_peripheral.h"
-#include "lcd_th05.h"
+#include "lcd.h"
 #include "logger.h"
 #include "trigger.h"
 /*********************************************************************/
@@ -57,14 +57,28 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			if (--len > sizeof(cfg))
 				len = sizeof(cfg);
 			if (len) {
+#if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
+				tmp ^= cfg.flg;
+#endif
 				memcpy(&cfg, &ibuf[1], len);
+#if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
+				if(tmp & FLG_DISPLAY_OFF)
+					init_lcd();
+#endif
 				test_config();
 				flash_write_cfg(&cfg, EEP_ID_CFG, sizeof(cfg));
 			}
 			memcpy(&obuf[1], &cfg, sizeof(cfg));
 			olen = sizeof(cfg) + 1;
 		} else if (cmd == CMD_ID_CFG_DEF) { // Set default device config
+#if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
+			tmp = cfg.flg ^ def_cfg.flg;
+#endif
 			memcpy(&cfg, &def_cfg, sizeof(cfg));
+#if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
+			if(tmp & FLG_DISPLAY_OFF)
+				init_lcd();
+#endif
 			test_config();
 			flash_write_cfg(&cfg, EEP_ID_CFG, sizeof(cfg));
 			memcpy(&obuf[1], &cfg, sizeof(cfg));
@@ -238,6 +252,12 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			memcpy(obuf, ibuf, 5);
 			memcpy(&obuf[5], &tmp, 4);
 			olen = 1 + 4 + 4;
+#if (DEV_SERVICES & SERVICE_SCREEN)
+		} else if (cmd == CMD_ID_DEBUG) { // debug - send to lcd
+			if (--len) {
+				send_to_lcd(&ibuf[1], len);
+			}
+#endif
 		} else {
 			obuf[1] = 0xff; // Error cmd
 			olen = 2;
