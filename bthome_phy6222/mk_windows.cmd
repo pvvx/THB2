@@ -19,6 +19,12 @@
 @make -s -j PROJECT_NAME=TH05%SWVER% POJECT_DEF="-DDEVICE=DEVICE_TH05"
 @if not exist "build\TH05%SWVER%.hex" goto :error
 @copy "build\TH05%SWVER%.bin" .\bin
+@del /Q "build\THB1%SWVER%.hex"
+@del /Q "build\THB1%SWVER%.bin"
+@make -s clean
+@make -s -j PROJECT_NAME=THB1%SWVER% POJECT_DEF="-DDEVICE=DEVICE_THB1"
+@if not exist "build\THB1%SWVER%.hex" goto :error
+@copy "build\THB1%SWVER%.bin" .\bin
 @del /Q "build\BOOT_THB2%SWVER%.hex"
 @make -s clean
 @make -s -j PROJECT_NAME=BOOT_THB2%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_THB2"
@@ -34,6 +40,7 @@
 @make -s -j PROJECT_NAME=BOOT_TH05%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_TH05"
 @if not exist "build\BOOT_TH05%SWVER%.hex" goto :error
 @copy "build\BOOT_TH05%SWVER%.hex" .\bin
+@del /Q "build\BOOT_THB1%SWVER%.hex"
 @make -s clean
 @make -s -j PROJECT_NAME=BOOT_THB1%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_THB1"
 @if not exist "build\BOOT_THB1%SWVER%.hex" goto :error
