@@ -24,6 +24,7 @@ SRC_PRJ += thb2_peripheral.c
 SRC_PRJ += thservice.c
 SRC_PRJ += flash_eep.c
 SRC_PRJ += lcd_th05.c
+SRC_PRJ += lcd_th05v13.c
 SRC_PRJ += lcd_thb1.c
 SRC_PRJ += ble_ota.c
 SRC_PRJ += logger.c
@@ -36,7 +37,7 @@ DEFINES = -D__GCC
 DEFINES += $(POJECT_DEF)
 DEFINES += -DDEBUG_INFO=0
 DEFINES += -DMTU_SIZE=247
-DEFINES += -DTEST_RTC_DELTA=1
+#DEFINES += -DTEST_RTC_DELTA=1
 DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
 DEFINES += -DADV_NCONN_CFG=0x01
 DEFINES += -DADV_CONN_CFG=0x02

@@ -5602,8 +5602,8 @@ void config_RTC1(uint32 time)
     sleep_tick = AP_AON->RTCCNT;          // *(volatile uint32_t*) 0x4000f028; read current RTC counter
 
 #endif
-    g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount>(AP_TIM3->CurrentCount))
-                                   ? (g_TIM2_IRQ_TIM3_CurrCount-(AP_TIM3->CurrentCount)): 0;
+    g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount > (AP_TIM3->CurrentCount))
+                                   ? (g_TIM2_IRQ_TIM3_CurrCount - (AP_TIM3->CurrentCount)) : 0;
     AP_AON->RTCCC0 = sleep_tick + time;  //set RTC comparatr0 value
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 20;           //enable comparator0 envent
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 18;           //counter overflow interrupt
@@ -5751,18 +5751,9 @@ void wakeupProcess1(void)
         // sleep_total =   ((((dlt_tick &0xffff0000)>>16)*counter_tracking)<<9)
         //                 + (((dlt_tick &0xffff)*counter_tracking)>>7);
         //counter_tracking default 16 cycle
-#if TEST_RTC_DELTA
-    	// надо перевести в systick 625us
-    	// dlt_tick - в 1/32768
-    	// counter_tracking - в 16/32768
-    	// sleep_total = ;
-    	//counter_tracking = STD_RC32_8_CYCLE_16MHZ_CYCLE;
+// TEST_RTC_DELTA
         sleep_total =   ((((dlt_tick &0xffff0000)>>16)*counter_tracking)<<8)
                         + (((dlt_tick &0xffff)*counter_tracking)>>8);
-#else
-        sleep_total =   ((((dlt_tick &0xffff0000)>>16)*counter_tracking)<<8)
-                        + (((dlt_tick &0xffff)*counter_tracking)>>8);
-#endif
     }
     else
     {
@@ -8301,37 +8292,33 @@ hciStatus_t HCI_LE_ConnUpdateCmd( uint16 connHandle,
 }
 
 __ATTR_SECTION_XIP__
-CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b,uint32_t w)
+CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b, uint32_t w)
 {
-    uint16 dh = w>>16;
-    uint16 dl = w&0xffff;
-    uint16 h1,h0,l1,l0;
-    h0=l0=0xff;
-    h1=l1=0;
+    uint16 dh = w >> 16;
+    uint16 dl = w & 0xffff;
+    uint16 h1, h0, l1, l0;
+    h0 = l0 = 0xff;
+    h1 = l1 = 0;
 
-    for(int i=0; i<16; i++)
+    for(int i = 0; i < 16; i++)
     {
-        l1+=((dl&(1<<i))>>i);
+        l1 += ((dl & (1 << i)) >> i);
 
-        if(l0==0xff && l1==1)
-        {
-            l0=i;
-        }
+        if(l0 == 0xff && l1 == 1)
+            l0 = i;
 
-        h1+=((dh&(1<<i))>>i);
+        h1 += ((dh & (1 << i)) >> i);
 
-        if(h0==0xff && h1==1)
-        {
-            h0=i;
-        }
+        if(h0 == 0xff && h1 == 1)
+            h0 = i;
     }
 
-    if(l1==1 && h1==1)
+    if(l1 == 1 && h1 == 1)
     {
-        *b=((h0<<4)+l0);
+        *b = ((h0 << 4) + l0);
         return CHIP_ID_VALID;
     }
-    else if(l1==16 && h1==16)
+    else if(l1 == 16 && h1 == 16)
     {
         return CHIP_ID_EMPTY;
     }
@@ -8356,6 +8343,7 @@ CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b,uint32_t w)
 
     @return      None.
 */
+/*
 void LL_PLUS_LoadMACFromFlash(uint32_t addr)
 {
     volatile uint8_t* p_ownPublicAddr = (volatile uint8_t*)0x1fff0965;
@@ -8369,7 +8357,7 @@ void LL_PLUS_LoadMACFromFlash(uint32_t addr)
     *(p_ownPublicAddr++) = BREAK_UINT32(macAddr[1],1);
     *(p_ownPublicAddr++) = BREAK_UINT32(macAddr[1],0);
 }
-
+*/
 
 /*******************************************************************************
     @fn          pplus_LoadMACFromChipMAddr

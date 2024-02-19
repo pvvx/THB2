@@ -1223,7 +1223,7 @@ extern uint16 ATT_GetParamValue( void );
 extern uint16 ATT_GetCurrentMTUSize( uint16 connHandle );
 extern void ATT_UpdateMtuSize(uint16 connHandle, uint16 mtuSize);
 extern void ATT_SetMTUSizeMax(uint16 mtuSize);
-extern void ATT_MTU_SIZE_UPDATE(uint8 mtuSize);
+//extern void ATT_MTU_SIZE_UPDATE(uint8 mtuSize);
 
 extern void ATT_InitMtuSize(void);
 

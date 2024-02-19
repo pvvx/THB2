@@ -231,6 +231,34 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P32, GPIO_PULL_DOWN },
 		{ GPIO_P33, GPIO_PULL_UP }, // I2C_SDA CNV1972
 		{ GPIO_P34, GPIO_PULL_UP }  // I2C_SCL CNV1972
+#elif (DEVICE == DEVICE_TH05V13)
+		{ GPIO_P00, GPIO_PULL_DOWN }, // LED - не припаян R1 Q10 ...
+		{ GPIO_P01, GPIO_PULL_DOWN },
+		{ GPIO_P02, GPIO_PULL_UP }, // KEY - GPIO_KEY
+		{ GPIO_P03, GPIO_PULL_DOWN },
+		{ GPIO_P07, GPIO_PULL_UP }, // CHT8305 Alert
+#ifdef GPIO_TRG
+		{ GPIO_P09, GPIO_FLOATING }, // TX - GPIO_TRG
+#else
+		{ GPIO_P09, GPIO_PULL_UP }, // TX
+#endif
+		{ GPIO_P10, GPIO_PULL_UP }, // RX - GPIO_INP
+		{ GPIO_P11, GPIO_FLOATING }, // BL55072 SDA
+		{ GPIO_P14, GPIO_FLOATING }, // BL55072 SCL
+		{ GPIO_P15, GPIO_PULL_DOWN }, // назначен как ADC_PIN, т.к. вывод P20 подключен к делителю
+		{ GPIO_P16, GPIO_PULL_DOWN },
+		{ GPIO_P17, GPIO_PULL_DOWN },
+		{ GPIO_P18, GPIO_FLOATING }, // I2C_SDA CHT8310
+		{ GPIO_P20, GPIO_FLOATING }, // ADC Vbat с делителем! Не используется - Выкусить резистор R18!
+		{ GPIO_P23, GPIO_PULL_DOWN },
+		{ GPIO_P24, GPIO_PULL_DOWN },
+		{ GPIO_P25, GPIO_PULL_DOWN },
+		{ GPIO_P26, GPIO_PULL_DOWN },
+		{ GPIO_P27, GPIO_PULL_DOWN },
+		{ GPIO_P31, GPIO_FLOATING }, // CHT8305 SDA
+		{ GPIO_P32, GPIO_FLOATING }, // CHT8305 SCL
+		{ GPIO_P33, GPIO_PULL_DOWN },
+		{ GPIO_P34, GPIO_PULL_DOWN }
 #else
 #error "DEVICE Not released!"
 #endif

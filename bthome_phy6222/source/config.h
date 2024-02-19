@@ -40,9 +40,10 @@
 #define DEVICE_BTH01	20
 #define DEVICE_TH05		21
 #define DEVICE_THB1		23
+#define DEVICE_TH05V13	24
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB1
+#define DEVICE		DEVICE_TH05V13
 #endif
 
 // supported services by the device (bits)
@@ -199,7 +200,7 @@
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #elif DEVICE == DEVICE_THB1
-/* Model: THB1/BT1 */
+/* Model: THB1 */
 #if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_SCREEN \
@@ -241,6 +242,51 @@
 
 #define DEF_MODEL_NUMBER_STR		"THB1"
 #define DEF_HARDWARE_REVISION		"0017"
+#define DEF_MANUFACTURE_NAME_STR	"Tuya"
+
+#elif DEVICE == DEVICE_TH05V13
+/* Model: TH05 v1.2 */
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+		| SERVICE_HISTORY \
+		| SERVICE_TH_TRG \
+		| SERVICE_RDS \
+)
+#endif
+
+#if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
+#error "Not SERVICE_TH_TRG!"
+#endif
+
+#define ADC_PIN_USE_OUT		1	// нет подключения к +Vbat
+#define ADC_PIN				GPIO_P15
+#define ADC_VBAT_CHL		VBAT_ADC_P15
+
+#define USE_TH_SENSOR	1
+#define USE_SECREEN		1
+
+#define I2C_SDA 	GPIO_P31 // SDA
+#define I2C_SCL 	GPIO_P32 // SCL
+
+#define I2C_LCD_SDA GPIO_P11 // SDA
+#define I2C_LCD_SCL GPIO_P14 // SCL
+
+#define GPIO_KEY	GPIO_P02
+
+#define GPIO_TRG	GPIO_P09 // mark TX
+#define GPIO_INP	GPIO_P10 // mark RX
+
+#define DEF_MODEL_NUMBER_STR		"TH05"
+#define DEF_HARDWARE_REVISION		"0018"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #else

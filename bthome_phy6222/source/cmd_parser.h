@@ -27,7 +27,8 @@ typedef enum {
 	CMD_ID_SEN_ID	= 0x05,	// Get sensor ID
 	CMD_ID_FLASH_ID	= 0x06,	// Get Flash JEDEC ID
 	CMD_ID_SERIAL	= 0x07, // Get serial string
-	CMD_ID_DEV_MAC	= 0x10, // Get/Set MAC [+RandMAC], [size][mac[6][randmac[2]]]
+	CMD_ID_DEV_MAC	= 0x10, // Get/Set MAC [+RandMAC], [size]<mac[6][randmac[2]]>
+	CMD_ID_FIX_MAC	= 0x11, // Fixed MAC (не безопасная операция, переписывает сектор 0x1000 Flash)
 	CMD_ID_BKEY		= 0x18, // Get/Set beacon bindkey in EEP
 	CMD_ID_COMFORT  = 0x20, // Get/Set comfort parameters
 	CMD_ID_EXTDATA  = 0x22, // Get/Set show ext. data

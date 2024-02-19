@@ -124,11 +124,12 @@ extern void spif_rddata(uint8_t* data, uint8_t len);
 extern int spif_config(sysclk_t ref_clk, uint8_t div,  uint32_t rd_instr,  uint8_t mode_bit, uint8_t QE);
 int hal_spif_cache_init(sysclk_t spif_ref_clk, uint32_t rd_instr);
 //static void hal_cache_tag_flush(void);
-#if(FLASH_PROTECT_FEATURE == 1)
+//#if(FLASH_PROTECT_FEATURE == 1)
+	int hal_flash_wr_status(uint8_t status);
     int hal_flash_lock(void);
     int hal_flash_unlock(void);
     uint8_t hal_flash_get_lock_state(void);
-#endif
+//#endif
 int hal_flash_write(uint32_t addr, uint8_t* data, uint32_t size);
 int hal_flash_write_by_dma(uint32_t addr, uint8_t* data, uint32_t size);
 int hal_flash_read(uint32_t addr, uint8_t* data, uint32_t size);
@@ -138,9 +139,9 @@ int flash_write_word(unsigned int offset, uint32_t  value);
 
 CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b,uint32_t w);
 
-void LL_PLUS_LoadMACFromFlash(uint32_t addr);
+//void LL_PLUS_LoadMACFromFlash(uint32_t addr);
 
-CHIP_ID_STATUS_e LL_PLUS_LoadMACFromChipMAddr(void);
+//CHIP_ID_STATUS_e LL_PLUS_LoadMACFromChipMAddr(void);
 
 CHIP_ID_STATUS_e read_chip_mAddr(uint8_t * mAddr);
 int hal_get_flash_info(void);

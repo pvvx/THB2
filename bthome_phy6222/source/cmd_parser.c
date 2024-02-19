@@ -43,6 +43,56 @@ const dev_id_t dev_id = {
 		.services = DEV_SERVICES
 };
 
+#if (OTA_TYPE == OTA_TYPE_BOOT)
+
+#define FLASH_ADDR_RINFO  FLASH_BASE_ADDR
+#define OFFSET_ADDR_RMAC  0x900
+#define FLASH_ADDR_RMAC  (FLASH_BASE_ADDR + OFFSET_ADDR_RMAC)
+
+static void write_fix_mac(uint32_t *pdata) {
+	uint32_t idx, tmp;
+	uint8_t buf_sector[FLASH_SECTOR_SIZE];
+	hal_flash_read(FLASH_ADDR_RINFO, buf_sector, FLASH_SECTOR_SIZE);
+	memcpy(&buf_sector[OFFSET_ADDR_RMAC], pdata, CHIP_MADDR_LEN*4);
+	tmp = phy_flash.Capacity;
+	phy_flash.Capacity |= FLASH_MAX_SIZE;
+	*(volatile int*) 0x1fff0898 = phy_flash.Capacity;
+	hal_flash_unlock();
+	hal_flash_erase_sector(FLASH_ADDR_RINFO + phy_flash.Capacity);
+	for(idx = 0; idx < FLASH_SECTOR_SIZE; idx += 256)
+		hal_flash_write(FLASH_ADDR_RINFO + phy_flash.Capacity + idx, &buf_sector[idx], 256);
+	phy_flash.Capacity = tmp;
+	*(volatile int*) 0x1fff0898 = phy_flash.Capacity;
+}
+
+void fix_mac(int write) {
+	int i;
+	uint32_t data[CHIP_MADDR_LEN];
+	if(write) {
+		if(read_chip_mAddr((uint8_t *)data) == CHIP_ID_VALID) {
+			if(memcmp(ownPublicAddr, data, CHIP_MADDR_LEN) == 0)
+				return;
+		}
+		for (i = 0; i < CHIP_MADDR_LEN; i++) {
+			data[CHIP_MADDR_LEN - 1 - i] = (1 << (((ownPublicAddr[i] & 0xf0) >> 4) + 16))
+					| (1 << (ownPublicAddr[i] & 0x0f));
+		}
+		write_fix_mac(data);
+
+	} else { // clear
+		hal_flash_read(FLASH_ADDR_RMAC, (uint8_t *)data, sizeof(data));
+		for(i = 0; i < CHIP_MADDR_LEN; i++) {
+			if(data[i] != 0xffffffff) {
+				memset(&data, 0xff, sizeof(data));
+				write_fix_mac(data);
+				break;
+			}
+		}
+	}
+}
+
+#endif
+
 int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 	int olen = 0;
 	if (len) {
@@ -139,9 +189,9 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			memcpy(&obuf[1], (uint8_t *)&phy_flash.IdentificationID, 8);
 			olen = 1 + 8;
 		} else if (cmd == CMD_ID_MTU) {
-			if (ibuf[1] <= MTU_SIZE)
+			if (ibuf[1] <= MTU_SIZE) {
 				ATT_UpdateMtuSize(gapRole_ConnectionHandle, ibuf[1]);
-			else
+			} else
 				obuf[1] = 0xff;
 			olen = 2;
 		} else if (cmd == CMD_ID_REBOOT) {
@@ -200,6 +250,11 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			}
 			memcpy(&obuf[1], ownPublicAddr, MAC_LEN);
 			olen = MAC_LEN + 1;
+#if (OTA_TYPE == OTA_TYPE_BOOT)
+		} else if (cmd == CMD_ID_FIX_MAC && len > 1) {
+			fix_mac(ibuf[1]);
+			olen = 2;
+#endif
 		} else if (cmd == CMD_ID_DNAME) {
 			if (len > 1 && len < B_MAX_ADV_LEN - 2) {
 				if(ibuf[1] == 0)

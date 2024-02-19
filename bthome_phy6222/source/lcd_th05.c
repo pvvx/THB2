@@ -2,7 +2,7 @@
  * lcd_th05.c
  *
  *  Created on: 23 янв. 2024 г.
- *      Author: pvvx
+ *      Author: pvvx, Shestoperd
  */
 #include <string.h>
 #include "types.h"
