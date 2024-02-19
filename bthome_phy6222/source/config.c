@@ -53,7 +53,7 @@ const cfg_t def_cfg = {
 		.advertising_interval = 80, // 80 * 62.5 = 5000 ms
 		.measure_interval = 2,  // 5 * 2 = 10 sec
 		.batt_interval = 60, // 60 sec
-		.connect_latency = 29,	// 30*30 = 900 ms
+		.connect_latency = DEFAULT_DESIRED_SLAVE_LATENCY,	// 30*(29+1) = 900 ms
 		.averaging_measurements = 180 // 180*10 = 1800 sec, 30 min
 };
 
@@ -93,16 +93,23 @@ void test_config(void) {
 		cfg.rf_tx_power = RF_PHY_TX_POWER_EXTRA_MAX;
 	g_rfPhyTxPower = cfg.rf_tx_power;
 	rf_phy_set_txPower(g_rfPhyTxPower);
-
+#if FIX_CONN_INTERVAL
 	gapRole_MinConnInterval = periConnParameters.intervalMin = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
 	gapRole_MaxConnInterval = periConnParameters.intervalMax = DEFAULT_DESIRED_MAX_CONN_INTERVAL;
 	gapRole_SlaveLatency = periConnParameters.latency = cfg.connect_latency;
 
-	periConnParameters.timeout = (cfg.connect_latency + 1) * 3 * 4;
-	if(periConnParameters.timeout > 2048)
-		periConnParameters.timeout = 2048; // 20.48 sec мax
-	gapRole_TimeoutMultiplier = periConnParameters.timeout;
-
+	gapRole_TimeoutMultiplier = (cfg.connect_latency + 1) * 3 * 4;
+	if(gapRole_TimeoutMultiplier > 2048)
+		gapRole_TimeoutMultiplier = 2048; // 20.48 sec мax
+	periConnParameters.timeout = gapRole_TimeoutMultiplier;
+#else
+	gapRole_MinConnInterval = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
+	gapRole_MaxConnInterval = DEFAULT_DESIRED_MAX_CONN_INTERVAL;
+	gapRole_SlaveLatency = cfg.connect_latency;
+	gapRole_TimeoutMultiplier = (cfg.connect_latency + 1) * 3 * 4;
+	if(gapRole_TimeoutMultiplier > 2048)
+		gapRole_TimeoutMultiplier = 2048; // 20.48 sec мax
+#endif
 	if(cfg.advertising_interval == 0)
 		cfg.advertising_interval = 1;
 	else if(cfg.advertising_interval > 160)

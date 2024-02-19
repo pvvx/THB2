@@ -288,7 +288,7 @@ const ioinit_cfg_t ioInit[] = {
 #endif
 	DCDC_CONFIG_SETTING(0x0a);
 	DCDC_REF_CLK_SETTING(1);
-	DIG_LDO_CURRENT_SETTING(0x01);
+	DIG_LDO_CURRENT_SETTING(1);
 #if defined ( __GNUC__ )
 	extern uint32 g_irqstack_top;
 	// Check IRQ STACK (1KB) location
@@ -394,6 +394,7 @@ int main(void) {
 	wrk.boot_flg = (uint8_t)read_reg(OTA_MODE_SELECT_REG);
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
 #if (DEV_SERVICES & SERVICE_KEY)
+	hal_gpio_pin_init(GPIO_KEY, IE);
     if (hal_gpio_read(GPIO_KEY) == 0
     	|| wrk.boot_flg == BOOT_FLG_OTA
     	|| wrk.boot_flg == BOOT_FLG_FW0) {
