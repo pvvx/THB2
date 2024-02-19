@@ -3,6 +3,8 @@ Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [THB1](https://pvv
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
+* Прошивки [Boot-OTA](https://github.com/pvvx/THB2/issues/10) имеет минимум функций. Boot-OTA используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
+
 Прошивка Boot-OTA для THB2 (файл bin\BOOT_THB2_v12.hex). 
 
 Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v12.hex). 
