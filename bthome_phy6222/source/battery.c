@@ -38,7 +38,7 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 	}
 	AP_ADCC->intr_clear = 0x1FF;
 	// stop_adc_batt
-	AP_AON->PMCTL2_1 = 0x00;
+	AP_AON->PMCTL2_1 = 0;
 	NVIC_DisableIRQ((IRQn_Type) ADCC_IRQn);
 //  JUMP_FUNCTION(ADCC_IRQ_HANDLER) = 0;    
 //	AP_ADCC->intr_clear = 0x1FF;	
@@ -46,22 +46,17 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 	if (g_system_clk != SYS_CLK_DBL_32M) {
 		AP_PCRM->CLKHF_CTL1 &= ~BIT(13);
 	}
-	AP_IOMUX->Analog_IO_en &= ~BIT(ADC_PIN - P11); // hal_gpio_cfg_analog_io(ADC_PIN, Bit_DISABLE);
-#if !ADC_PIN_USE_OUT
-//	hal_gpio_pin_init(ADC_PIN, GPIO_INPUT);    // ie=0, oen=1 set to imput
-//	hal_gpio_pull_set(ADC_PIN, GPIO_FLOATING);
-#endif
-	AP_PCRM->ANA_CTL &= ~BIT(0); 						// Power down analog LDO
+	AP_IOMUX->Analog_IO_en = 0; /// &= ~BIT(ADC_PIN - P11); // hal_gpio_cfg_analog_io(ADC_PIN, Bit_DISABLE);
+	AP_PCRM->ANA_CTL &= ~BIT(0); // Power down analog LDO
 	hal_clk_reset(MOD_ADCC);
 	hal_clk_gate_disable(MOD_ADCC);
-	hal_pwrmgr_unlock(MOD_ADCC);
-
-	// 3280/3764 = 0.8714
-	// 30*3764 = 112920
-	// 112920 * 1904 = 214999680
-	// 214999680 >> 16 = 3280
+	AP_IOMUX->pad_ps0 &= ~BIT(ADC_PIN); // hal_gpio_ds_control(ADC_PIN, Bit_ENABLE);
 	LOG("ADC_measure = %d\n", adc_sum);
+#if ADC_VBAT_CHL == VBAT_ADC_P15
+	measured_data.battery_mv = (adc_sum * 1710) >> 16; // 3200*65536/(30*4096)=1706.666
+#else
 	measured_data.battery_mv = (adc_sum * 1904) >> 16;
+#endif
 	if (measured_data.battery_mv < 3000)
 		if (measured_data.battery_mv > 2000)
 			measured_data.battery = (measured_data.battery_mv - 2000) / 10;
@@ -72,6 +67,8 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 #if ((DEV_SERVICES & SERVICE_THS) == 0)
 	measured_data.count++;
 #endif
+	hal_pwrmgr_unlock(MOD_ADCC);
+
 	extern uint8 gapRole_AdvEnabled;
 	if (!gapRole_AdvEnabled)
 		osal_set_event(simpleBLEPeripheral_TaskID, BATT_VALUE_EVT);
@@ -110,23 +107,6 @@ void batt_start_measure(void) {
 #else
 	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
 #endif
-
-#if 0
-#if ADC_VBAT_CHL == VBAT_ADC_P11
-	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
-#elif ADC_VBAT_CHL == VBAT_ADC_P23
-	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL - 1); // ENABLE_ADC_INT;
-#elif ADC_VBAT_CHL == VBAT_ADC_P24
-	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
-#elif ADC_VBAT_CHL == VBAT_ADC_P14
-	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL - 1); // ENABLE_ADC_INT;
-#elif ADC_VBAT_CHL == VBAT_ADC_P15
-	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL + 1); // ENABLE_ADC_INT;
-#elif ADC_VBAT_CHL == VBAT_ADC_P20
-	AP_ADCC->intr_mask = BIT(ADC_VBAT_CHL - 1); // ENABLE_ADC_INT;
-#endif
-#endif
-
 }
 
 static void init_adc_batt(void) {
@@ -151,14 +131,20 @@ static void init_adc_batt(void) {
 //  AP_PCRM->ADC_CTL4 |= BIT(4); // mannual mode
 	AP_PCRM->ADC_CTL4 &= ~BIT(4); //enable auto mode
 	AP_PCRM->ADC_CTL4 |= BIT(0);
+#if	ADC_VBAT_CHL == VBAT_ADC_P20
+	AP_AON->PMCTL2_1 = BIT(7 + 8);
+	//AP_AON->PMCTL2_1 |= BIT(7); // -> 0.8V, else 3.2V
+#else
 	AP_AON->PMCTL2_1 = BIT((ADC_VBAT_CHL - MIN_ADC_CH) + 8);
+	// AP_AON->PMCTL2_1 |= BIT(ADC_VBAT_CHL - MIN_ADC_CH); // -> 0.8V, else 3.2V
+#endif
 	AP_PCRM->ADC_CTL0 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ADC_CTL1 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ADC_CTL2 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ADC_CTL3 &= ~(BIT(20) | BIT(4));
 	AP_PCRM->ANA_CTL &= ~BIT(23); //disable micbias
 #if ADC_PIN_USE_OUT
-	hal_gpio_pin_init(ADC_PIN, GPIO_OUTPUT);
+	hal_gpio_pull_set(ADC_PIN, GPIO_PULL_UP);
 	hal_gpio_write(ADC_PIN, 1);
 	AP_IOMUX->pad_ps0 |= BIT(ADC_PIN); // hal_gpio_ds_control(ADC_PIN, Bit_ENABLE);
 #else

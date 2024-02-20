@@ -192,9 +192,9 @@ void show_battery(uint8_t level) {
 	if(level > 84)
 		display_buff[4] |=  BIT(5);
 	if(level > 68)
-		display_buff[3] |=  BIT(1);
-	if(level > 52)
 		display_buff[3] |=  BIT(2);
+	if(level > 52)
+		display_buff[3] |=  BIT(1);
 	if(level > 36)
 		display_buff[3] |=  BIT(5);
 	if(level > 20)

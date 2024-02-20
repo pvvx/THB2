@@ -93,7 +93,7 @@ void test_config(void) {
 		cfg.rf_tx_power = RF_PHY_TX_POWER_EXTRA_MAX;
 	g_rfPhyTxPower = cfg.rf_tx_power;
 	rf_phy_set_txPower(g_rfPhyTxPower);
-#if FIX_CONN_INTERVAL
+#if  1 // FIX_CONN_INTERVAL
 	gapRole_MinConnInterval = periConnParameters.intervalMin = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
 	gapRole_MaxConnInterval = periConnParameters.intervalMax = DEFAULT_DESIRED_MAX_CONN_INTERVAL;
 	gapRole_SlaveLatency = periConnParameters.latency = cfg.connect_latency;

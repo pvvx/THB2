@@ -43,7 +43,7 @@
 #define DEVICE_TH05V13	24
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05V13
+#define DEVICE		DEVICE_THB1
 #endif
 
 // supported services by the device (bits)
@@ -266,6 +266,10 @@
 #if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
 #error "Not SERVICE_TH_TRG!"
 #endif
+
+//#define GPIO_LED	GPIO_P00 // не припаян
+//#define LED_ON		1
+//#define LED_OFF		0
 
 #define ADC_PIN_USE_OUT		1	// нет подключения к +Vbat
 #define ADC_PIN				GPIO_P15

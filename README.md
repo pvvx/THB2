@@ -1,20 +1,22 @@
-# BTHome THB2, BTH01, TH-05
-Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [THB1](https://pvvx.github.io/THB1), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.4](https://pvvx.github.io/TH-05). 
+# BTHome THB1, THB2, BTH01, TH05(HW: v1.3..1.6) 
+Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [THB1](https://pvvx.github.io/THB1), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.3](https://pvvx.github.io/TH05-v1.3), [TH05_V1.4](https://pvvx.github.io/TH-05). 
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
+
+## Прошивки Boot-OTA:
+
 * Прошивки [Boot-OTA](https://github.com/pvvx/THB2/issues/10) имеет минимум функций. Boot-OTA используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
 
-Прошивка Boot-OTA для THB2 (файл bin\BOOT_THB2_v12.hex). 
+THB2 - файл bin\BOOT_THB2_v13.hex 
 
-Прошивка Boot-OTA для BTH01 (файл bin\BOOT_BTH01_v12.hex). 
+BTH01 - файл bin\BOOT_BTH01_v13.hex 
 
-Прошивка Boot-OTA для TH05 (файл bin\BOOT_TH05_v12.hex) для версий указанных на печатной плате: TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028
+TH05 - файл bin\BOOT_TH05_v13.hex для версий указанных на печатной плате: [TH05_V1.4](https://pvvx.github.io/TH-05), TH05_V1.5, TH05_V1.6 с чипом BL55028
 
-Boot-OTA для THB1 (файл bin\BOOT_BTH1_v13.hex) 
+TH05V13 - файл bin\BOOT_TH05V13_v13.hex для [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) с чипом BL55072
 
-Тестовые версии 1.3 пока не рекомендуются к установке (!)
-
+THB1 - файл bin\BOOT_BTH1_v13.hex 
 
 ## Основные характеристики:
 

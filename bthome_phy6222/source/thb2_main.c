@@ -809,7 +809,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 			LOG("Gaprole_Disconnection\n");
 			osal_stop_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT);
 			bthome_data_beacon((void *) gapRole_AdvertData);
-#if FIX_CONN_INTERVAL
+#if 1 //FIX_CONN_INTERVAL
 			gapRole_SlaveLatency = periConnParameters.latency = cfg.connect_latency;
 #else
 			gapRole_SlaveLatency = cfg.connect_latency;

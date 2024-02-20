@@ -235,7 +235,7 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P00, GPIO_PULL_DOWN }, // LED - не припаян R1 Q10 ...
 		{ GPIO_P01, GPIO_PULL_DOWN },
 		{ GPIO_P02, GPIO_PULL_UP }, // KEY - GPIO_KEY
-		{ GPIO_P03, GPIO_PULL_DOWN },
+		{ GPIO_P03, GPIO_PULL_UP },
 		{ GPIO_P07, GPIO_PULL_UP }, // CHT8305 Alert
 #ifdef GPIO_TRG
 		{ GPIO_P09, GPIO_FLOATING }, // TX - GPIO_TRG
@@ -245,7 +245,7 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P10, GPIO_PULL_UP }, // RX - GPIO_INP
 		{ GPIO_P11, GPIO_FLOATING }, // BL55072 SDA
 		{ GPIO_P14, GPIO_FLOATING }, // BL55072 SCL
-		{ GPIO_P15, GPIO_PULL_DOWN }, // назначен как ADC_PIN, т.к. вывод P20 подключен к делителю
+		{ GPIO_P15, GPIO_PULL_UP }, // назначен как ADC_PIN, т.к. вывод P20 подключен к делителю
 		{ GPIO_P16, GPIO_PULL_DOWN },
 		{ GPIO_P17, GPIO_PULL_DOWN },
 		{ GPIO_P18, GPIO_FLOATING }, // I2C_SDA CHT8310
@@ -278,8 +278,10 @@ const ioinit_cfg_t ioInit[] = {
 #endif
 	};
 
-	for (uint8_t i = 0; i < sizeof(ioInit) / sizeof(ioinit_cfg_t); i++)
+	for (uint8_t i = 0; i < sizeof(ioInit) / sizeof(ioinit_cfg_t); i++) {
 		hal_gpio_pull_set(ioInit[i].pin, ioInit[i].type);
+		//hal_gpio_pin_init(ioInit[i].pin, GPIO_INPUT);
+	}
 #ifdef GPIO_SPWR
 	hal_gpio_write(GPIO_SPWR, 1);
 #endif
@@ -301,6 +303,7 @@ const ioinit_cfg_t ioInit[] = {
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1);
     } else {
 		hal_pwrmgr_RAM_retention(RET_SRAM0); // RET_SRAM0|RET_SRAM1|RET_SRAM2
+//test		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
 	}
 #else
 
@@ -312,7 +315,8 @@ const ioinit_cfg_t ioInit[] = {
 
 #endif
 	hal_pwrmgr_RAM_retention_set();
-	hal_pwrmgr_LowCurrentLdo_enable();
+	subWriteReg(0x4000f014,26,26, 1); // hal_pwrmgr_LowCurrentLdo_enable();
+	//hal_pwrmgr_LowCurrentLdo_disable();
 }
 
 static void ble_mem_init_config(void) {
@@ -394,8 +398,8 @@ int main(void) {
 	wrk.boot_flg = (uint8_t)read_reg(OTA_MODE_SELECT_REG);
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
 #if (DEV_SERVICES & SERVICE_KEY)
-	hal_gpio_pin_init(GPIO_KEY, IE);
-    if (hal_gpio_read(GPIO_KEY) == 0
+	hal_gpio_pin_init(GPIO_KEY, GPIO_INPUT);
+	if (hal_gpio_read(GPIO_KEY) == 0
     	|| wrk.boot_flg == BOOT_FLG_OTA
     	|| wrk.boot_flg == BOOT_FLG_FW0) {
 #else
