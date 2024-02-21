@@ -1,5 +1,8 @@
 # BTHome THB1, THB2, BTH01, TH05(HW: v1.3..1.6) 
-Custom firmware for Tuya [THB2](https://pvvx.github.io/THB2), [THB1](https://pvvx.github.io/THB1), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.3](https://pvvx.github.io/TH05-v1.3), [TH05_V1.4](https://pvvx.github.io/TH-05). 
+Custom firmware for Tuya devices on the PHY622x2 chipset
+| [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) |
+|:---:|:---:|:---:|:---:|:---:|
+| ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) |
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
