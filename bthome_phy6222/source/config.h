@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x13	// BCD
+#define APP_VERSION	0x14	// BCD
 #endif
 
 /*
@@ -43,7 +43,7 @@
 #define DEVICE_TH05V13	24
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB1
+#define DEVICE		DEVICE_TH05V13
 #endif
 
 // supported services by the device (bits)
@@ -302,7 +302,7 @@
 // Maximum connection interval (units of 1.25ms, 800=1000ms) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_MAX_CONN_INTERVAL		24 // 30 ms
 // Slave latency to use if automatic parameter update request is enabled
-#define DEFAULT_DESIRED_SLAVE_LATENCY			29 // (29+1)*30 = 900 ms
+#define DEFAULT_DESIRED_SLAVE_LATENCY			29 // (29+1)*30 = 900 ms, max MAX_SLAVE_LATENCY 500
 // Supervision timeout value (units of 10ms, 1000=10s) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_CONN_TIMEOUT			400 // 4s
 

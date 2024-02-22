@@ -247,7 +247,12 @@ uint8 llCheckForLstoDuringSL( llConnState_t *connPtr );
 
 // function in ll_hwItf.c
 void ll_hw_process_RTO(uint32 ack_num);
-void ll_debug_output(uint32 state);
+#if defined(LL_DEBUG_NONE) && (LL_DEBUG_NONE == 1)
+#define ll_debug_output(a)
+#else
+void _ll_debug_output(uint32 state);
+#define ll_debug_output(a) _ll_debug_output(a)
+#endif
 
 void llAdjSlaveLatencyValue( llConnState_t *connPtr );
 

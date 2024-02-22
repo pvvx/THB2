@@ -231,63 +231,38 @@ typedef struct
     __IO uint8_t  LCR;   //0xc
     uint8_t  RESERVED1[3];//Reserved
     __IO uint32_t MCR; //0x10
-
     __I  uint8_t  LSR;  //0x14
     uint8_t  RESERVED2[3];//Reserved
     __IO uint32_t MSR;   //0x18
-
     __IO uint8_t  SCR;   //0x1c
     uint8_t  RESERVED3[3];//Reserved
-
     __IO uint32_t LPDLL;  //0x20
-
     __IO uint32_t LPDLH;  //0x24
-
     __IO uint32_t  recerved[2];
-
     union
     {
         __IO uint32_t SRBR[16];  // 0x30~60xc
         __IO uint32_t STHR[16];
     };
     __IO uint32_t  FAR;  //0x70
-
     __IO uint32_t  TFR;  //0x74
-
     __IO uint32_t  RFW;  // 0x78
-
     __IO uint32_t  USR;  // 0x7c
-
     __IO uint32_t  TFL;
-
     __IO uint32_t  RFL;
-
     __IO uint32_t  SRR;
-
     __IO uint32_t  SRTS;
-
     __IO uint32_t  SBCR;
-
     __IO uint32_t  SDMAM;
-
     __IO uint32_t  SFE;
-
     __IO uint32_t  SRT;
-
     __IO uint32_t  STET;  //0xa0
-
     __IO uint32_t  HTX;
-
     __IO uint32_t  DMASA;  //0xa8
-
     __IO uint32_t  reserved[18];
-
     __IO uint32_t  CPR;  //0xf4
-
     __IO uint32_t  UCV;
-
     __IO uint32_t  CTR;
-
 } AP_UART_TypeDef;
 
 
@@ -494,8 +469,8 @@ typedef struct
     __IO uint32_t    reserved0[5];	//0x48 4c 50 54 58
     __IO uint32_t    RTCCFG2;		//0x5C - [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k
     __IO uint32_t    reserved1; 	//0x60
-    __IO uint32_t    RTCTRWPCNT;	//0x64 counter_tracking_wakeup
-    __IO uint32_t    RTCTRCNT;		//0x68 RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
+    __IO uint32_t    RTCTRCCNT;		//0x64 RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle, counter_tracking_wakeup
+    __IO uint32_t    RTCTRCNT;		//0x68
     __IO uint32_t    reserved2[13]; //0x6c 70 74 78 7c 80 84 88 8c 90 94 98 9c
     __IO uint32_t    REG_S9;        //0xa0
     __IO uint32_t    REG_S10;       //0xa4

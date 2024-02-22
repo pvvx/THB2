@@ -69,9 +69,13 @@ void restore_utc_time_sec(void) {
 uint32_t get_utc_time_sec(void) {
 	uint32_t new_time_tik;
 	HAL_ENTER_CRITICAL_SECTION();
+#if TEST_RTC_DELTA
 	do {
 		new_time_tik = AP_AON->RTCCNT;
 	} while(new_time_tik != AP_AON->RTCCNT);
+#else
+	new_time_tik = AP_AON->RTCCNT;
+#endif
 	if(new_time_tik <= clkt.utc_time_tik)
 		clkt.utc_time_add += new_time_tik - clkt.utc_time_tik;
 	else

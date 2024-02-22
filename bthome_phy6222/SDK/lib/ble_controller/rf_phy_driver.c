@@ -305,7 +305,7 @@ void rf_phy_ana_cfg(void)
     }
 
     subWriteReg(0x4000f044, 19, 18, 0x03);    // Rx adc clk en, rf phy clk en
-    #if 0
+#if 0
 
     //Reserved?????
     //20190111 ZQ
@@ -320,7 +320,7 @@ void rf_phy_ana_cfg(void)
         subWriteReg(0x4000f044,26,25, 0x00);
     }
 
-    #endif
+#endif
 
     if(g_rfPhyClkSel==RF_PHY_CLK_SEL_16M_XTAL && g_system_clk == SYS_CLK_DLL_48M)
         subWriteReg( 0x4003008c,23,23,0x01);
@@ -508,7 +508,7 @@ void rf_phy_bb_cfg(uint8_t pktFmt)
     PHY_REG_WT(0x4003006c, 0x4c2b3137);
     PHY_REG_WT(0x40030070, 0x343a4046);
     PHY_REG_WT(0x40030074, 0x1c22282e);
-    #if 0
+#if 0
     PHY_REG_WT( 0x40030054,0x545c9ca4 );
     PHY_REG_WT( 0x40030058,0x03040c4c );
     PHY_REG_WT( 0x4003005c,0x464c5202 );
@@ -518,8 +518,8 @@ void rf_phy_bb_cfg(uint8_t pktFmt)
     PHY_REG_WT( 0x4003006c,0x4c23292f );
     PHY_REG_WT( 0x40030070,0x343a4046 );
     PHY_REG_WT( 0x40030074,0x191f252b );
-    #endif
-    #if(RF_PHY_EXT_PREAMBLE_US)
+#endif
+#if(RF_PHY_EXT_PREAMBLE_US)
 
     //ext preamble for BLE 1M/2M, nByte
     if(pktFmt==PKT_FMT_BLE1M)
@@ -596,7 +596,7 @@ void rf_phy_change_cfg0(uint8_t pktFmt)
         PHY_REG_WT( 0x40030050,0x22085580);
     }
 
-    #if(RF_PHY_EXT_PREAMBLE_US)
+#if(RF_PHY_EXT_PREAMBLE_US)
 
     //ext preamble for BLE 1M/2M, nByte
     if(pktFmt==PKT_FMT_BLE1M)
@@ -612,7 +612,7 @@ void rf_phy_change_cfg0(uint8_t pktFmt)
         subWriteReg(0x40030040, 7, 5, (0) );
     }
 
-    #endif
+#endif
 }
 /**************************************************************************************
     @fn          rf_tp_cal
@@ -662,7 +662,8 @@ uint8_t rf_tp_cal(uint8_t rfChn, uint8_t fDev)
     // Wait to Read Reslut
     // When HCLK 16M --> 10000*3/16 around 2ms
     volatile int timeOut = 10000;
-
+#if defined(CLK_16M_ONLY) &&  CLK_16M_ONLY != 0
+#else
     switch (g_system_clk)
     {
 //    case SYS_CLK_XTAL_16M:
@@ -673,19 +674,19 @@ uint8_t rf_tp_cal(uint8_t rfChn, uint8_t fDev)
     case SYS_CLK_DBL_32M:
         timeOut <<= 1;
         break;
-        #if (PHY_MCU_TYPE == MCU_BUMBEE_M0 || PHY_MCU_TYPE == MCU_BUMBEE_CK802)
+#if (PHY_MCU_TYPE == MCU_BUMBEE_M0 || PHY_MCU_TYPE == MCU_BUMBEE_CK802)
 
     case SYS_CLK_4M:
         break;
 
     case SYS_CLK_8M:
         break;
-        #elif ((PHY_MCU_TYPE == MCU_PRIME_A1) ||(PHY_MCU_TYPE == MCU_PRIME_A2))
+#elif ((PHY_MCU_TYPE == MCU_PRIME_A1) ||(PHY_MCU_TYPE == MCU_PRIME_A2))
 
     case SYS_CLK_DBL_32M:
         timeOut <<= 1;
         break;
-        #endif
+#endif
 
     case SYS_CLK_DLL_48M:
         timeOut = (timeOut << 1) + timeOut;
@@ -699,7 +700,7 @@ uint8_t rf_tp_cal(uint8_t rfChn, uint8_t fDev)
         //timeOut = timeOut;
         break;
     }
-
+#endif
     while(timeOut--) {};
 
     uint8_t kCal = (0xff0000 & PHY_REG_RD(0x400300f4))>>16;
@@ -714,7 +715,7 @@ uint8_t rf_tp_cal(uint8_t rfChn, uint8_t fDev)
 
     PHY_REG_WT( 0x40030040,0x00032800);
 
-    #if(RF_PHY_EXT_PREAMBLE_US)
+#if(RF_PHY_EXT_PREAMBLE_US)
 
     //ext preamble for BLE 1M/2M, nByte
     if(g_rfPhyPktFmt==PKT_FMT_BLE1M)
@@ -730,7 +731,7 @@ uint8_t rf_tp_cal(uint8_t rfChn, uint8_t fDev)
         subWriteReg(0x40030040, 7, 5, (0) );
     }
 
-    #endif
+#endif
 
     if(g_rfPhyClkSel==RF_PHY_CLK_SEL_16M_XTAL && g_system_clk == SYS_CLK_DLL_48M)
         subWriteReg( 0x4003008c,23,23,0x01);
@@ -1710,7 +1711,7 @@ void rf_phy_dtm_trigged(void)
             //DCDC_CONFIG_SETTING(0x08);
             if(!(g_rfPhyPktFmt==PKT_FMT_ZIGBEE))
             {
-                #if 0
+#if 0
 
                 //[15:8] payload Len [7:5] preamble len, [4] tx mode, [3:0] payload type
                 //PHY_REG_WT(0x40030040,(0x00030010|(g_dtmLength<<8)|(preambleLen<<5)|(0x0f & g_dtmPKT)) );
@@ -1727,11 +1728,11 @@ void rf_phy_dtm_trigged(void)
                     PHY_REG_WT(0x40030040,(0x00030010|((g_dtmLength)<<8)|(preambleLen<<5)|(0x0f & g_dtmPKT)) );
                 }
 
-                #else
+#else
                 ll_hw_rst_tfifo();
                 extern void rf_phy_dtm_ble_pkt_gen(void);
                 rf_phy_dtm_ble_pkt_gen();
-                #endif
+#endif
             }
             else
             {
@@ -1986,7 +1987,6 @@ void rf_phy_set_txPower  (uint8 txPower)
         RF_PHY_LNA_LDO_SETTING(1);
         RF_PHY_PA_VTRIM_SETTING(0);
     }
-
     PHY_REG_WT(0x400300b8,(PHY_REG_RD(0x400300b8)&0x0fff) | ((txPower&0x1f)<<12));
 }
 
@@ -2023,16 +2023,16 @@ uint8 rc32k_calibration(void)
 
     uint8 delay = 10;
     uint32_t  temp=0;
-    *(volatile uint32_t*) 0x4000f05c &= 0xfffffffe;                   // disable RC32K calibration
+    *(volatile uint32_t*) 0x4000f05c &= 0xfffffffe;	// disable RC32K calibration
     WaitRTCCount(6);
     // calibrate RC32K clock
-    *(volatile uint32_t*) 0x4000f018 |= 0x80;                   // set capbank controlled by calibration
-    *(volatile uint32_t*) 0x4000f05c |= 0x01;                   // enable RC32K calibration
+    *(volatile uint32_t*) 0x4000f018 |= 0x80;	// set capbank controlled by calibration
+    *(volatile uint32_t*) 0x4000f05c |= 0x01;	// enable RC32K calibration
 
-    while (!(*(volatile uint32_t*) 0x4000f068 & 0x200)          // check RC32K calibration OK flag, normally need >200us
-            && delay -- > 0)
+    while (!(*(volatile uint32_t*) 0x4000f068 & 0x200)	// check RC32K calibration OK flag, normally need >200us
+            && delay-- > 0)
     {
-        WaitRTCCount(8);//30.125*8 us each loop
+        WaitRTCCount(8); // 30.125*8 us each loop
     }
 
     if (delay > 0)

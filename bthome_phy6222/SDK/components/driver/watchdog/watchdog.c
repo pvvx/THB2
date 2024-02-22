@@ -15,7 +15,7 @@ void hal_WATCHDOG_IRQHandler(void)
 {
 //    volatile uint32_t a;
 //    a = AP_WDT->EOI;
-		AP_WDT->EOI;
+	AP_WDT->EOI;
     AP_WDT->CRR = 0x76;
     //LOG("WDT IRQ[%08x]\n",rtc_get_counter());
 }

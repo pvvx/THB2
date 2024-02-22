@@ -21,7 +21,7 @@
 	static uint8_t mPwrMode = PWR_MODE_NO_SLEEP;
 #elif(CFG_SLEEP_MODE == PWR_MODE_SLEEP)
 	static uint8_t mPwrMode = PWR_MODE_SLEEP;
-	#elif(CFG_SLEEP_MODE == PWR_MODE_PWROFF_NO_SLEEP)
+#elif(CFG_SLEEP_MODE == PWR_MODE_PWROFF_NO_SLEEP)
 	static uint8_t mPwrMode = PWR_MODE_PWROFF_NO_SLEEP;
 #else
 	#error "CFG_SLEEP_MODE define incorrect"
@@ -57,6 +57,7 @@ uint32_t s_config_swClk1 = DEF_CLKG_CONFIG_1;
 
 #if(CFG_SLEEP_MODE == PWR_MODE_SLEEP)
 	uint32_t s_gpio_wakeup_src_group1,s_gpio_wakeup_src_group2;
+	extern void config_RTC1(uint32 time);
 #endif
 
 // /*
@@ -423,7 +424,7 @@ int hal_pwrmgr_LowCurrentLdo_enable(void)
 	{
 		subWriteReg(0x4000f014,26,26, 1);
 	}
-
+	subWriteReg(0x4000f014,26,26, 1);
 	return PPlus_SUCCESS;
 #else
 	subWriteReg(0x4000f014,26,26, 0);
@@ -470,7 +471,7 @@ __ATTR_SECTION_SRAM__ void hal_pwrmgr_enter_sleep_rtc_reset(uint32_t sleepRtcTic
 {
 	HAL_ENTER_CRITICAL_SECTION();
 	subWriteReg(0x4000f01c,6,6,0x00);	//disable software control
-	config_RTC(sleepRtcTick);
+	config_RTC1(sleepRtcTick);
 	// clear sram retention
 	hal_pwrmgr_RAM_retention_clr();
 	/**
@@ -478,7 +479,7 @@ __ATTR_SECTION_SRAM__ void hal_pwrmgr_enter_sleep_rtc_reset(uint32_t sleepRtcTic
 		reset path walkaround dwc
 	*/
 	AON_CLEAR_XTAL_TRACKING_AND_CALIB;
-	AP_AON->SLEEP_R[0]=4;
+	AP_AON->SLEEP_R[0] = 4;
 	enter_sleep_off_mode(SYSTEM_SLEEP_MODE);
 
 	while(1) {};

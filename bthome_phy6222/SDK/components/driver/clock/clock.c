@@ -199,7 +199,7 @@ void hal_system_soft_reset(void)
         config reset casue as RSTC_WARM_NDWC
         reset path walkaround dwc
     */
-    AP_AON->SLEEP_R[0]=4;
+    AP_AON->SLEEP_R[0] = 4;
 
     AON_CLEAR_XTAL_TRACKING_AND_CALIB;
 
@@ -212,8 +212,10 @@ void hal_rc32k_clk_tracking_init(void)
 {
     extern uint32 counter_tracking;
     extern uint32_t g_counter_traking_avg;
-    counter_tracking = g_counter_traking_avg = STD_RC32_16_CYCLE_16MHZ_CYCLE;
-    AON_CLEAR_XTAL_TRACKING_AND_CALIB;
+    if(g_counter_traking_avg == 0) {
+    	counter_tracking = g_counter_traking_avg = STD_RC32_16_CYCLE_16MHZ_CYCLE;
+    	AON_CLEAR_XTAL_TRACKING_AND_CALIB;
+    }
 }
 
 __ATTR_SECTION_XIP__  void hal_rfPhyFreqOff_Set(void)

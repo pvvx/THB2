@@ -80,6 +80,7 @@ uint8_t PHY_Varify_Platform()
 }
 
 extern int flash_load_parition(unsigned char* pflash, int size, unsigned char* micIn,unsigned char* run_addr);
+
 bool _efuse_chip_version_check(void)
 {
     uint32_t buf[2];
@@ -103,12 +104,14 @@ bool _efuse_chip_version_check(void)
         return 0;
     }
 }
+
 void efuse_init(void)
 {
     write_reg(0x4000f054,0x0);
     write_reg(0x4000f140,0x0);
     write_reg(0x4000f144,0x0);
 }
+
 void _rom_sec_boot_init(void)
 {
     efuse_init();

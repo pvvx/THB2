@@ -231,7 +231,7 @@ int hal_gpio_pin_init(gpio_pin_e pin, gpio_dir_t type)
     {
         AP_GPIO->swporta_ddr &= ~BIT(pin);
         m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_IN;
-			  m_gpioCtx.pin_retention_status &= ~BIT(pin);
+        m_gpioCtx.pin_retention_status &= ~BIT(pin);
     }
 
     return PPlus_SUCCESS;

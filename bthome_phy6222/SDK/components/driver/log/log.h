@@ -109,4 +109,4 @@ uint32_t log_get_debug_level(void);
 
 #endif
 
-#endif
+#endif // ENABLE_LOG_ROM

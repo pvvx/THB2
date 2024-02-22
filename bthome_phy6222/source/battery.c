@@ -42,12 +42,15 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 	NVIC_DisableIRQ((IRQn_Type) ADCC_IRQn);
 //  JUMP_FUNCTION(ADCC_IRQ_HANDLER) = 0;    
 //	AP_ADCC->intr_clear = 0x1FF;	
-	AP_PCRM->ANA_CTL &= ~BIT(3);
+	AP_PCRM->ANA_CTL &= ~(BIT(3) | BIT(0)); // ADC disable, Power down analog LDO
+#if defined(CLK_16M_ONLY) &&  CLK_16M_ONLY != 0
+	AP_PCRM->CLKHF_CTL1 &= ~BIT(13);
+#else
 	if (g_system_clk != SYS_CLK_DBL_32M) {
 		AP_PCRM->CLKHF_CTL1 &= ~BIT(13);
 	}
+#endif
 	AP_IOMUX->Analog_IO_en = 0; /// &= ~BIT(ADC_PIN - P11); // hal_gpio_cfg_analog_io(ADC_PIN, Bit_DISABLE);
-	AP_PCRM->ANA_CTL &= ~BIT(0); // Power down analog LDO
 	hal_clk_reset(MOD_ADCC);
 	hal_clk_gate_disable(MOD_ADCC);
 	AP_IOMUX->pad_ps0 &= ~BIT(ADC_PIN); // hal_gpio_ds_control(ADC_PIN, Bit_ENABLE);
@@ -97,8 +100,7 @@ void batt_start_measure(void) {
 #elif ADC_VBAT_CHL == VBAT_ADC_P20
 	AP_PCRM->ADC_CTL3 |= BIT(4);
 #endif
-	AP_PCRM->ANA_CTL |= BIT(3); //ENABLE_ADC;
-	AP_PCRM->ANA_CTL |= BIT(0); //new
+	AP_PCRM->ANA_CTL |= BIT(3) | BIT(0); // ADC enable, Power on analog LDO
 
 	NVIC_SetPriority((IRQn_Type) ADCC_IRQn, IRQ_PRIO_HAL);
 	NVIC_EnableIRQ((IRQn_Type) ADCC_IRQn); //ADC_IRQ_ENABLE;
@@ -110,9 +112,8 @@ void batt_start_measure(void) {
 }
 
 static void init_adc_batt(void) {
-	AP_AON->PMCTL2_1 = 0x00;
-	AP_PCRM->ANA_CTL &= ~BIT(0);
-	AP_PCRM->ANA_CTL &= ~BIT(3);
+	AP_AON->PMCTL2_1 = 0;
+	AP_PCRM->ANA_CTL &= ~(BIT(0) | BIT(3)); // ADC disable, Power down analog LDO
 	hal_clk_gate_disable(MOD_ADCC);
 	hal_clk_reset(MOD_ADCC);
 	hal_clk_gate_enable(MOD_ADCC);

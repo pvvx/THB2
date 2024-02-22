@@ -5226,7 +5226,8 @@ void ll_scheduler1(uint32 time)
 
     HAL_EXIT_CRITICAL_SECTION();
 }
-
+#if defined(CLK_16M_ONLY) &&  CLK_16M_ONLY != 0
+#else
 #define   CRY32_2_CYCLE_16MHZ_CYCLE_MAX    (976 + 98)     // tracking value range std +/- 20%
 #define   CRY32_2_CYCLE_16MHZ_CYCLE_MIN    (976 - 98)
 #define   CRY32_2_CYCLE_DELTA_LMT          (19)
@@ -5259,11 +5260,11 @@ static void check_16MXtal_by_rcTracking(void)
     AP_AON->RTCCFG2 = (AP_AON->RTCCFG2 & 0xfffefe00) | 0x0028;
     WaitRTCCount(3);
     // 0x4000f064 - RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
-    temp31 = AP_AON->RTCTRCNT & 0x1ffff;
+    temp31 = AP_AON->RTCTRCCNT & 0x1ffff;
     WaitRTCCount(3);
-    temp32 = AP_AON->RTCTRCNT & 0x1ffff;
+    temp32 = AP_AON->RTCTRCCNT & 0x1ffff;
     WaitRTCCount(3);
-    temp33 = AP_AON->RTCTRCNT & 0x1ffff;
+    temp33 = AP_AON->RTCTRCCNT & 0x1ffff;
 
     while(1)
     {
@@ -5291,7 +5292,7 @@ static void check_16MXtal_by_rcTracking(void)
         temp31= temp32;
         temp32 = temp33;
         WaitRTCCount(3);
-        temp33 = AP_AON->RTCTRCNT & 0x1ffff;
+        temp33 = AP_AON->RTCTRCCNT & 0x1ffff;
         //check tracking cost
         uint32_t tracking_end = rtc_get_counter();
         uint32_t tracking_16M_tick = (tracking_end>=tracking_start) ? (tracking_end-tracking_start) : (0xffffffff-tracking_start+tracking_end);
@@ -5317,7 +5318,7 @@ static void check_16MXtal_by_rcTracking(void)
     }
 
     WaitRTCCount(20);
-    temp = AP_AON->RTCTRCNT & 0x1ffff;
+    temp = AP_AON->RTCTRCCNT & 0x1ffff;
     //disable tracking
     AP_AON->RTCCFG2 &= ~BIT(3); // subWriteReg(0x4000f05C,3,3,0);
     g_xtal16M_tmp = temp;
@@ -5328,6 +5329,7 @@ static void check_16MXtal_by_rcTracking(void)
 
 uint32_t g_xtal96M_temp=0;
 uint32_t DLL_enable_num=1;
+
 static void check_96MXtal_by_rcTracking(void)
 {
     uint32_t temp,temp1;
@@ -5368,7 +5370,7 @@ static void check_96MXtal_by_rcTracking(void)
             // [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k
             AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0028 | BIT(16);
             WaitRTCCount(3);
-            temp1 = AP_AON->RTCTRCNT & 0x1ffff;
+            temp1 = AP_AON->RTCTRCCNT & 0x1ffff;
             AP_AON->RTCCFG2 &= ~BIT(3); //disable tracking subWriteReg(0x4000f05C,3,3,0);
             if( (g_xtal16M_tmp*6 >=temp1 ? (g_xtal16M_tmp*6 -temp1):(temp1-g_xtal16M_tmp*6))<TRACKING_96M_16M_MULTI6_DELTA_LIMIT)
             {
@@ -5399,14 +5401,12 @@ static void check_96MXtal_by_rcTracking(void)
         AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0028 ;
         WaitRTCCount(3);
         // RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
-        g_xtal16M_tmp = AP_AON->RTCTRCNT & 0x1ffff;
+        g_xtal16M_tmp = AP_AON->RTCTRCCNT & 0x1ffff;
         AP_AON->RTCCFG2 &= ~BIT(3); //disable tracking subWriteReg(0x4000f05C,3,3,0);
     }
 }
-
-#if 0
-    uint32_t rtcCntTemp[10];
 #endif
+
 // now we split the initial fucntion to 3 kinds:
 //    1. boot init function: which should be init when system boot. note: not include wakeup init function
 //    2. wakeup init function: which should be init when wakeup from system sleep
@@ -5420,10 +5420,15 @@ static void check_96MXtal_by_rcTracking(void)
 uint32_t tracking_cnt=0;
 void wakeup_init1()
 {
+    uint8_t pktFmt = PKT_FMT_BLE1M;    // packet format 1: BLE 1M
+    uint32  temp;
     efuse_init();
     __wdt_init();
-    uint8_t pktFmt = 1;    // packet format 1: BLE 1M
-    uint32  temp;
+
+    //sdk 3.1.3
+    //hal_system_clock_change_process();
+
+
     //int int_state;
     // =========== clk gate for low power
     //*(volatile uint32_t *) 0x40000008 = 0x01e92190;
@@ -5461,24 +5466,13 @@ void wakeup_init1()
 #endif
     //each rtc count is about 30.5us
     //after 15count , xtal will be feedout to dll and doubler
-    //WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
-#if 0
-    volatile uint32_t delay=0;
-
-    for(uint8_t i=0; i<10; i++)
-    {
-        delay=500;
-        rtcCntTemp[i]=rtc_get_counter();
-
-        while(delay -- > 0) {};
-    }
-
-#endif
-
+    temp = AP_AON->RTCCFG2;
+    AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;  //[16] 16M [8:4] cnt [3] track_en_rc32k
+#if defined(CLK_16M_ONLY) &&  CLK_16M_ONLY != 0
+    WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
+#else
     if(g_system_clk == SYS_CLK_XTAL_16M )
-    {
         WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
-    }
     else
     {
         uint32_t tracking_c1,tracking_c2;
@@ -5512,7 +5506,7 @@ void wakeup_init1()
         tracking_cnt = (tracking_c2>=tracking_c1) ? (tracking_c2-tracking_c1) : (0xffffffff-tracking_c1+tracking_c2);
         pGlobal_config[WAKEUP_ADVANCE] =1650+30*tracking_cnt;
     }
-
+#endif
     // ============ config BB Top
     *(volatile uint32_t*) 0x40030000 = 0x3d068001;  // set tx pkt =2
     *(volatile uint32_t*) 0x400300bc = 0x834;       //[7:0] pll_tm [11:8] rxafe settle
@@ -5523,7 +5517,7 @@ void wakeup_init1()
 //    switch (pGlobal_config[CLOCK_SETTING])
 //    {
 //        case SYS_CLK_XTAL_16M:
-////            *(int *) 0x4000f03C = 0x18001;                  // clock selection
+////           *(int *) 0x4000f03C = 0x18001;                  // clock selection
 //            *(int *) 0x4000f03C = 0x10002;                    // clock selection
 //        break;
 //        case SYS_CLK_DBL_32M:
@@ -5545,6 +5539,15 @@ void wakeup_init1()
 //    }
     // ========== init timers
     set_timer(AP_TIM2, 625);      // OSAL 625us tick
+
+    if (1) { //sdk3.1.3
+        //restart the 625 timer
+        AP_TIM2->ControlReg = 0x0; //[0x40001014+8]=0
+        AP_TIM2->ControlReg = 0x2; //[0x40001014+8]=2
+        AP_TIM2->LoadCount = 2499; //[0x40001014]=2499
+        AP_TIM2->ControlReg = 0x3; //[0x40001014+8]=3
+    }
+
     set_timer(AP_TIM3, BASE_TIME_UNITS);   // 1s timer
     // =========== open interrupt mask
     //int_state = 0x14;
@@ -5553,7 +5556,7 @@ void wakeup_init1()
     NVIC_EnableIRQ(BB_IRQn);
     NVIC_EnableIRQ(TIM1_IRQn);
     NVIC_EnableIRQ(TIM2_IRQn);
-    NVIC_EnableIRQ(TIM4_IRQn);
+    NVIC_EnableIRQ(TIM4_IRQn); // нет в sdk3.1.3
     // =========== ll HW setting
     set_max_length(0xff);
     ll_hw_set_empty_head(0x0001);
@@ -5570,17 +5573,17 @@ void wakeup_init1()
 //      ll_hw_set_rx_tx_interval(       57);        //T_IFS=150us for BLE 1M
 //      ll_hw_set_tx_rx_interval(       65);        //T_IFS=150us for BLE 1M
 //      ll_hw_set_trx_settle    (57, 8, 52);        //TxBB,RxAFE,PLL
-    ll_hw_set_timing(pktFmt);
+    ll_hw_set_timing(pktFmt); // =PKT_FMT_BLE1M
     ll_hw_ign_rfifo(LL_HW_IGN_SSN | LL_HW_IGN_CRC | LL_HW_IGN_EMP);
     // ======== enable tracking 32KHz RC timer with 16MHz crystal clock
-    temp = AP_AON->RTCCFG2;
-    AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;  //[16] 16M [8:4] cnt [3] track_en_rc32k
+//    temp = AP_AON->RTCCFG2;
+//    AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;  //[16] 16M [8:4] cnt [3] track_en_rc32k
     //get wakeup tracking counter
 #if 0
     if (pGlobal_config[LL_SWITCH] & RC32_TRACKINK_ALLOW)
     {
         WaitRTCCount(17);
-        uint32_t  counter_tracking_wakeup = AP_AON->RTCTRWPCNT; // *(volatile uint32_t *)0x4000f064 & 0x1ffff;
+        uint32_t  counter_tracking_wakeup = AP_AON->RTCTRCCNT; // *(volatile uint32_t *)0x4000f064 & 0x1ffff;
         counter_tracking = (counter_tracking_wakeup + counter_tracking)>>1;
     }
 #endif
@@ -5591,29 +5594,30 @@ void config_RTC1(uint32 time)
 //    *((volatile uint32_t *)(0xe000e100)) |= INT_BIT_RTC;   // remove, we don't use RTC interrupt
     //align to rtc clock edge
     WaitRTCCount(1);
-    //update for cal ll next time after wakeup
-    ll_remain_time = read_LL_remainder_time();
-    // comparator configuration
 #if TEST_RTC_DELTA
     do
     	sleep_tick = AP_AON->RTCCNT;          // read current RTC counter
     while(sleep_tick != AP_AON->RTCCNT);
 #else
     sleep_tick = AP_AON->RTCCNT;          // *(volatile uint32_t*) 0x4000f028; read current RTC counter
-
 #endif
+    //update for cal ll next time after wakeup
+    ll_remain_time = read_LL_remainder_time();
+    // comparator configuration
     g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount > (AP_TIM3->CurrentCount))
                                    ? (g_TIM2_IRQ_TIM3_CurrCount - (AP_TIM3->CurrentCount)) : 0;
     AP_AON->RTCCC0 = sleep_tick + time;  //set RTC comparatr0 value
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 20;           //enable comparator0 envent
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 18;           //counter overflow interrupt
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 15;           //enable comparator0 inerrupt
-    //*(volatile uint32_t *) 0x4000f024 |= 0x148000;          // combine above 3 statement to save MCU time
-    AP_AON->RTCCTL |= BIT(15)|BIT(18)|BIT(20);
+    AP_AON->RTCCTL |= BIT(15)|BIT(18)|BIT(20); // |= 0x148000 combine above 3 statement to save MCU time
 
     //compensate for cal wakeup next_time
     if (llState != LL_STATE_IDLE)
     {
+#if defined(CLK_16M_ONLY) &&  CLK_16M_ONLY != 0
+        ll_remain_time -= 15;
+#else
         if(g_system_clk == SYS_CLK_XTAL_16M)
         {
             ll_remain_time -= 15;
@@ -5630,6 +5634,7 @@ void config_RTC1(uint32 time)
         {
             ll_remain_time -= 3;
         }
+#endif
     }
 
 #if 0
@@ -5670,26 +5675,26 @@ void wakeupProcess1(void)
     //restore initial_sp according to the app_initial_sp : 20180706 ZQ
     __set_MSP(pGlobal_config[INITIAL_STACK_PTR]);
     HAL_CRITICAL_SECTION_INIT();
-    // All memory on
-    hal_pwrmgr_RAM_retention_clr();
 
     //====  20180416 commented by ZQ
     //      to enable flash access after wakeup
     //      current consumption has been checked. No big different
     //rom_set_flash_deep_sleep();
 
+#ifdef STACK_MAX_SRAM
     //=======fix sram_rent issue 20180323
+    // All memory on
     //hal_pwrmgr_RAM_retention_clr();
-    //subWriteReg(0x4000f01c,21,17,0);
-
+    subWriteReg(0x4000f01c,21,17,0);
+#endif
     if (sleep_flag != SLEEP_MAGIC)
     {
         // enter this branch not in sleep/wakeup scenario
         set_sleep_flag(0);
         // software reset
         *(volatile uint32*)0x40000010 &= ~0x2;     // bit 1: M0 cpu reset pulse, bit 0: M0 system reset pulse.
-    }
-
+    } else
+    	set_sleep_flag(0); // sdk 3.1.3
     // restore HW registers
     wakeup_init1();
     //===20180417 added by ZQ
@@ -5699,30 +5704,31 @@ void wakeupProcess1(void)
     //config the tx2rx timing according to the g_rfPhyPktFmt
     ll_hw_tx2rx_timing_config(g_rfPhyPktFmt);
     // 20200812 ZQ
-    // DO NOT Turn OFF 32K Xtal
-    //  if (pGlobal_config[LL_SWITCH] & LL_RC32K_SEL)
-    //  {
-    //      subWriteReg(0x4000f01c,16,7,0x3fb);   //software control 32k_clk
-    //      subWriteReg(0x4000f01c,6,6 ,0x01);    //enable software control
-    //  }
-    //  else
-    //  {
-    //      subWriteReg(0x4000f01c,9,8,0x03);   //software control 32k_clk
-    //      subWriteReg(0x4000f01c,6,6,0x00);   //disable software control
-    //  }
+#if 0    // DO NOT Turn OFF 32K Xtal
+    if (pGlobal_config[LL_SWITCH] & LL_RC32K_SEL)
+    {
+         subWriteReg(0x4000f01c,16,7,0x3fb);   //software control 32k_clk
+         subWriteReg(0x4000f01c,6,6 ,0x01);    //enable software control
+    }
+    else
+    {
+         subWriteReg(0x4000f01c,9,8,0x03);   //software control 32k_clk
+         subWriteReg(0x4000f01c,6,6,0x00);   //disable software control
+    }
+#endif
     //20181201 by ZQ
     //restart the TIM2 to align the RTC
     //----------------------------------------------------------
     //stop the 625 timer
-    AP_TIM2->ControlReg=0x0;
-    AP_TIM2->ControlReg=0x2;
-    AP_TIM2->LoadCount = 2500;
+    AP_TIM2->ControlReg = 0x0;
+    AP_TIM2->ControlReg = 0x2;
+    AP_TIM2->LoadCount = 2499;
     //----------------------------------------------------------
     //wait rtc cnt change
     WaitRTCCount(1);
     //----------------------------------------------------------
     //restart the 625 timer
-    AP_TIM2->ControlReg=0x3;
+    AP_TIM2->ControlReg = 0x3;
     current_RTC_tick = rtc_get_counter();
     //g_TIM2_wakeup_delay= (AP_TIM2->CurrentCount)+12; //12 is used to align the rtc_tick
     wakeup_time0 = read_current_fine_time();
@@ -5730,59 +5736,52 @@ void wakeupProcess1(void)
     // rf initial entry, will be set in app
     rf_phy_ini();
 
-    if(current_RTC_tick>sleep_tick)
-    {
+    if(current_RTC_tick > sleep_tick)
         dlt_tick = current_RTC_tick - sleep_tick;
-    }
     else
-    {
-        //dlt_tick = current_RTC_tick+0x00ffffff - sleep_tick;
-        dlt_tick = (0xffffffff - sleep_tick)+current_RTC_tick;
-    }
+        dlt_tick = (0xffffffff - sleep_tick) + current_RTC_tick;
+
+    //dlt_tick += 2; //dlt_tick/190;
 
     //dlt_tick should not over 24bit
     //otherwise, sleep_total will overflow !!!
-    if(dlt_tick>0x3fffff)
-        dlt_tick &=0x3fffff;
-
+    if(dlt_tick > 0x3fffff)
+        dlt_tick &= 0x3fffff;
+    // calculate sleep_total in us
     if (pGlobal_config[LL_SWITCH] & RC32_TRACKINK_ALLOW)
     {
-        //sleep_total = ((current_RTC_tick - sleep_tick) * counter_tracking) >> 7; // shift 4 for 16MHz -> 1MHz, shift 3 for we count 8 RTC tick
-        // sleep_total =   ((((dlt_tick &0xffff0000)>>16)*counter_tracking)<<9)
-        //                 + (((dlt_tick &0xffff)*counter_tracking)>>7);
+    	// TEST_RTC_DELTA?
         //counter_tracking default 16 cycle
-// TEST_RTC_DELTA
-        sleep_total =   ((((dlt_tick &0xffff0000)>>16)*counter_tracking)<<8)
-                        + (((dlt_tick &0xffff)*counter_tracking)>>8);
+        sleep_total = ((((dlt_tick & 0xffff0000) >> 16) * counter_tracking) << 8)
+                       + (((dlt_tick & 0xffff) * counter_tracking) >> 8);
     }
     else
     {
         // time = tick * 1000 0000 / f (us). f = 32000Hz for RC, f = 32768Hz for crystal. We also calibrate 32KHz RC to 32768Hz
         //sleep_total =  ((current_RTC_tick - sleep_tick) * TIMER_TO_32K_CRYSTAL) >> 2;
         //fix sleep timing error
-        sleep_total = ( ( (dlt_tick<<7)-(dlt_tick<<2)-(dlt_tick<<1) +2)       >>2 )   /* dlt_tick * (128-4-2)/4 */
-                      +( ( (dlt_tick<<3)+ dlt_tick +128)                       >>9 ) ; /* dlt_tick *9/512 */
+        sleep_total = ( ( (dlt_tick << 7) - (dlt_tick << 2) - (dlt_tick << 1) + 2) >> 2 )   /* dlt_tick * (128-4-2)/4 */
+                      +( ( (dlt_tick << 3) + dlt_tick +128) >> 9 ) ; /* dlt_tick *9/512 */
         //+2,+128 for zero-mean quanization noise
     }
-
     // restore systick
-    g_osal_tick_trim = (pGlobal_config[OSAL_SYS_TICK_WAKEUP_TRIM]+g_TIM2_IRQ_to_Sleep_DeltTick+2500-g_TIM2_IRQ_PendingTick)>>2;        //16 is used to compensate the cal delay
-    g_osalTickTrim_mod+=(pGlobal_config[OSAL_SYS_TICK_WAKEUP_TRIM]+g_TIM2_IRQ_to_Sleep_DeltTick+2500-g_TIM2_IRQ_PendingTick)&0x03;     //16 is used to compensate the cal delay
+    g_osal_tick_trim = (pGlobal_config[OSAL_SYS_TICK_WAKEUP_TRIM] + g_TIM2_IRQ_to_Sleep_DeltTick + 2500 - g_TIM2_IRQ_PendingTick) >> 2; //16 is used to compensate the cal delay
+    g_osalTickTrim_mod += (pGlobal_config[OSAL_SYS_TICK_WAKEUP_TRIM] + g_TIM2_IRQ_to_Sleep_DeltTick + 2500 - g_TIM2_IRQ_PendingTick) & 0x03; //16 is used to compensate the cal delay
 
-    if(g_osalTickTrim_mod>4)
+    if(g_osalTickTrim_mod > 4)
     {
-        g_osal_tick_trim+=1;
-        g_osalTickTrim_mod = g_osalTickTrim_mod%4;
+        g_osal_tick_trim += 1;
+        g_osalTickTrim_mod = g_osalTickTrim_mod % 4;
     }
 
     // restore systick
-    osal_sys_tick += (sleep_total+g_osal_tick_trim) / 625;      // convert to 625us systick
-    rtc_mod_value += ((sleep_total+g_osal_tick_trim)%625);
+    osal_sys_tick += (sleep_total + g_osal_tick_trim) / 625;      // convert to 625us systick
+    rtc_mod_value += ((sleep_total + g_osal_tick_trim) % 625);
 
     if(rtc_mod_value > 625)
     {
         osal_sys_tick += 1;
-        rtc_mod_value = rtc_mod_value%625;
+        rtc_mod_value = rtc_mod_value % 625;
     }
 
     osalTimeUpdate();
@@ -5832,16 +5831,19 @@ void wakeupProcess1(void)
 
         g_llSleepContext.isTimer4RecoverRequired = FALSE;
     }
-
+#ifdef STACK_MAX_SRAM
     __set_MSP((uint32_t)(&g_stack));
+#endif
     // app could add operation after wakeup
     app_wakeup_process();
 //    uart_tx0(" 111 ");
+
     ll_debug_output(DEBUG_WAKEUP);
+
     set_sleep_flag(0);
     // ==== measure value, from RTC counter meet comparator 0 -> here : 260us ~ 270us
     // start task loop
-    osal_start_system();
+    osal_start_system(); // No Return from here
 }
 
 
@@ -7663,6 +7665,46 @@ llStatus_t LL_StartEncrypt1( uint16 connId,
     return( LL_STATUS_SUCCESS );
 }
 
+////////////////////////////
+// process of enter system sleep mode
+/*******************************************************************************
+    @fn          enterSleepProcess
+
+    @brief       enter system sleep process function.
+
+
+    input parameters
+
+    @param       time  - sleep RTC ticks
+
+    output parameters
+
+    @param       None.
+
+    @return      None.
+*/
+void enterSleepProcess1(uint32 time)
+{
+	uint32_t regtrck, regctl, temp;
+	int x;
+	regtrck = AP_AON->RTCTRCCNT  & 0x1ffff; // [0x4000f064]
+	regctl = AP_AON->PMCTL1; // [0x4000F018]
+	if(regtrck >= 8203)
+		x = -2;
+	else if(regtrck <= 7420)
+		x = 2;
+	else {
+		enterSleepProcess0(time);
+		return;
+	}
+//	if (regctl & 0x7e) {
+		temp = regctl + x;
+		temp &= 0x7e;
+		if (temp)
+			AP_AON->PMCTL1 = (regctl & (~0x7e)) | temp;
+//	}
+	enterSleepProcess0(time);
+}
 
 // global configuration in SRAM, it could be change by application
 // ================== VARIABLES  ==================================
@@ -7682,13 +7724,13 @@ void init_config(void)
     //save the app initial_sp  which will be used in wakeupProcess 20180706 by ZQ
     pGlobal_config[INITIAL_STACK_PTR] = (uint32_t)(&g_irqstack_top);
     // LL switch setting
-    pGlobal_config[LL_SWITCH] = LL_DEBUG_ALLOW | SLAVE_LATENCY_ALLOW | LL_WHITELIST_ALLOW
-                              | SIMUL_CONN_ADV_ALLOW | SIMUL_CONN_SCAN_ALLOW; //RC32_TRACKINK_ALLOW
+    pGlobal_config[LL_SWITCH] = /*LL_DEBUG_ALLOW |*/ SLAVE_LATENCY_ALLOW | LL_WHITELIST_ALLOW
+                              | SIMUL_CONN_ADV_ALLOW | SIMUL_CONN_SCAN_ALLOW;
 
     if(g_clk32K_config == CLK_32K_XTAL)
         pGlobal_config[LL_SWITCH] &= 0xffffffee;
     else
-        pGlobal_config[LL_SWITCH] |= LL_RC32K_SEL | RC32_TRACKINK_ALLOW; // TODO: RTC 32000 Hz or 32768 Hz ?
+        pGlobal_config[LL_SWITCH] |= LL_RC32K_SEL | RC32_TRACKINK_ALLOW;
 
     // sleep delay
     pGlobal_config[MIN_TIME_TO_STABLE_32KHZ_XOSC] = 10;      // 10ms, temporary set
@@ -7703,25 +7745,19 @@ void init_config(void)
     // WAKEUP_ADVANCE should be larger than t1+t2+t3+t4
     //------------------------------------------------------------------------
     // wakeup advance time, in us
-    pGlobal_config[WAKEUP_ADVANCE] = 1850;//650;//600;//310;
+    pGlobal_config[WAKEUP_ADVANCE] = 1850; //1850;//650;//600;//310;
 
-    if(g_system_clk==SYS_CLK_XTAL_16M)
-    {
+    pGlobal_config[WAKEUP_DELAY] = 16; //16;
+/*
+    if(g_system_clk==SYS_CLK_XTAL_16M) 12520 e803
         pGlobal_config[WAKEUP_DELAY] = 16;
-    }
     else if(g_system_clk==SYS_CLK_DBL_32M)
-    {
         pGlobal_config[WAKEUP_DELAY] = 16;
-    }
     else if(g_system_clk==SYS_CLK_DLL_48M)
-    {
         pGlobal_config[WAKEUP_DELAY] = 16;
-    }
     else if(g_system_clk==SYS_CLK_DLL_64M)
-    {
         pGlobal_config[WAKEUP_DELAY] = 16;
-    }
-
+*/
     // sleep time, in us
     pGlobal_config[MAX_SLEEP_TIME] = 30000000;
     pGlobal_config[MIN_SLEEP_TIME] = 1600;
@@ -7775,31 +7811,11 @@ void init_config(void)
     pGlobal_config[ADV_CHANNEL_INTERVAL] = 1400;//6250;
     pGlobal_config[NON_ADV_CHANNEL_INTERVAL] = 666;//6250;
 
-    //20201207 Jie modify
-    if(g_system_clk==SYS_CLK_XTAL_16M)
-    {
-        // scan req -> scan rsp timing
-        pGlobal_config[SCAN_RSP_DELAY] = 13+RF_PHY_EXT_PREAMBLE_US;//23;
-    }
-    else if(g_system_clk==SYS_CLK_DBL_32M)
-    {
-        pGlobal_config[SCAN_RSP_DELAY] = 8+RF_PHY_EXT_PREAMBLE_US;//23;
-    }
-    else if(g_system_clk==SYS_CLK_DLL_48M)
-    {
-        // scan req -> scan rsp timing
-        pGlobal_config[SCAN_RSP_DELAY] = 6+RF_PHY_EXT_PREAMBLE_US;//20201207 set           //4;        // 12    //  2019/3/19 A2: 12 --> 9
-    }
-    else if(g_system_clk == SYS_CLK_DLL_64M)        //  2019/3/26 add
-    {
-        pGlobal_config[SCAN_RSP_DELAY] = 4+RF_PHY_EXT_PREAMBLE_US;//2020.12.07 set         //3;
-    }
-
     // conn_req -> slave connection event calibration time, will advance the receive window
-    pGlobal_config[CONN_REQ_TO_SLAVE_DELAY] = 300;//192;//500;//192;
+    pGlobal_config[CONN_REQ_TO_SLAVE_DELAY] = 500; //было:300;//192;//500;//192;
     // calibration time for 2 connection event, will advance the next conn event receive window
     // SLAVE_CONN_DELAY for sync catch, SLAVE_CONN_DELAY_BEFORE_SYNC for sync not catch
-    pGlobal_config[SLAVE_CONN_DELAY] = 300;//0;//1500;//0;//3000;//0;          ---> update 11-20
+    pGlobal_config[SLAVE_CONN_DELAY] = 1000; //было:300;//0;//1500;//0;//3000;//0;          ---> update 11-20
     pGlobal_config[SLAVE_CONN_DELAY_BEFORE_SYNC] = 500;//160 NG//500 OK
     // RTLP timeout
     pGlobal_config[LL_HW_RTLP_LOOP_TIMEOUT] = 50000;
@@ -7826,28 +7842,40 @@ void init_config(void)
     pGlobal_config[LL_SMART_WINDOW_FIRST_WINDOW]    = 5000;
     g_smartWindowSize = pGlobal_config[LL_HW_RTLP_1ST_TIMEOUT] ;
 
+#if defined(CLK_16M_ONLY) &&  CLK_16M_ONLY != 0
+    // scan req -> scan rsp timing
+    pGlobal_config[SCAN_RSP_DELAY] = 13+RF_PHY_EXT_PREAMBLE_US;//21;
+    pGlobal_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 18+RF_PHY_EXT_PREAMBLE_US;//26;      //  2019/3/19 A2: 20 --> 18
+    pGlobal_config[LL_ADV_TO_CONN_REQ_DELAY]    = 25+RF_PHY_EXT_PREAMBLE_US;//33;      //  2019/3/19 A2: 27 --> 25
+#else
     //====== A2 metal change add, for scanner & initiator
     if(g_system_clk==SYS_CLK_XTAL_16M)
     {
-        pGlobal_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 18+RF_PHY_EXT_PREAMBLE_US;//20;      //  2019/3/19 A2: 20 --> 18
-        pGlobal_config[LL_ADV_TO_CONN_REQ_DELAY]    = 25+RF_PHY_EXT_PREAMBLE_US;//27;      //  2019/3/19 A2: 27 --> 25
+        // scan req -> scan rsp timing
+        pGlobal_config[SCAN_RSP_DELAY] = 13+RF_PHY_EXT_PREAMBLE_US;//21;
+        pGlobal_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 18+RF_PHY_EXT_PREAMBLE_US;//26;      //  2019/3/19 A2: 20 --> 18
+        pGlobal_config[LL_ADV_TO_CONN_REQ_DELAY]    = 25+RF_PHY_EXT_PREAMBLE_US;//33;      //  2019/3/19 A2: 27 --> 25
     }
     else if(g_system_clk==SYS_CLK_DBL_32M)
     {
+        pGlobal_config[SCAN_RSP_DELAY] = 8+RF_PHY_EXT_PREAMBLE_US;//16;
         pGlobal_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 12+RF_PHY_EXT_PREAMBLE_US;                //  2019/3/26 add
         pGlobal_config[LL_ADV_TO_CONN_REQ_DELAY]    = 16+RF_PHY_EXT_PREAMBLE_US;
     }
     else if(g_system_clk==SYS_CLK_DLL_48M)
     {
+        // scan req -> scan rsp timing
+        pGlobal_config[SCAN_RSP_DELAY] = 6+RF_PHY_EXT_PREAMBLE_US;//20201207 set           //14;        // 12    //  2019/3/19 A2: 12 --> 9
         pGlobal_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 8+RF_PHY_EXT_PREAMBLE_US;//12;       //  2019/3/19 A2: 12 --> 10
         pGlobal_config[LL_ADV_TO_CONN_REQ_DELAY]    = 11+RF_PHY_EXT_PREAMBLE_US;
     }
     else if(g_system_clk==SYS_CLK_DLL_64M)
     {
+        pGlobal_config[SCAN_RSP_DELAY] = 4+RF_PHY_EXT_PREAMBLE_US;//2020.12.07 set         //12;
         pGlobal_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 6+RF_PHY_EXT_PREAMBLE_US;                //  2019/3/26 add
         pGlobal_config[LL_ADV_TO_CONN_REQ_DELAY]    = 8+RF_PHY_EXT_PREAMBLE_US;
     }
-
+#endif
     // TRLP timeout
     pGlobal_config[LL_HW_TRLP_LOOP_TIMEOUT] = 50000;    // enough for 8Tx + 8Rx : (41 * 8 + 150) * 16 - 150 = 7498us
     pGlobal_config[LL_HW_TRLP_TO_GAP]       = 1000;
@@ -7857,7 +7885,7 @@ void init_config(void)
     pGlobal_config[LL_MASTER_PROCESS_TARGET] = 200;   // reserve time for preparing master conn event, delay should be insert if needn't so long time
     pGlobal_config[LL_MASTER_TIRQ_DELAY] = 0;         // timer IRQ -> timer ISR delay
     pGlobal_config[OSAL_SYS_TICK_WAKEUP_TRIM] = 56;  // 0.125us
-    pGlobal_config[MAC_ADDRESS_LOC] = 0x11001F00;
+    pGlobal_config[MAC_ADDRESS_LOC] = (uint32_t)ownPublicAddr; //0x11001F00;
     // for simultaneous conn & adv/scan
     pGlobal_config[LL_NOCONN_ADV_EST_TIME] = 1400*3;
     pGlobal_config[LL_NOCONN_ADV_MARGIN] = 600;
@@ -7896,7 +7924,9 @@ void init_config(void)
     //JUMP_FUNCTION(LL_PROCESS_TX_DATA)             =   (uint32_t)&llProcessTxData1;
     //JUMP_FUNCTION(OSAL_POWER_CONSERVE)            =   (uint32_t)&osal_pwrmgr_powerconserve1;
     //JUMP_FUNCTION(ENTER_SLEEP_OFF_MODE)           =   (uint32_t)&enter_sleep_off_mode1;
-    //JUMP_FUNCTION(ENTER_SLEEP_PROCESS)            =   (uint32_t)&enterSleepProcess1;
+#if TEST_RTC_DELTA
+    JUMP_FUNCTION(ENTER_SLEEP_PROCESS)              =   (uint32_t)&enterSleepProcess1;
+#endif
     JUMP_FUNCTION(CONFIG_RTC)                       =   (uint32_t)&config_RTC1;
     //JUMP_FUNCTION(V20_IRQ_HANDLER)                =   (uint32_t)&TIM1_IRQHandler1;
 //    JUMP_FUNCTION(LL_SCHEDULER)                   =   (uint32_t)&ll_scheduler1;
@@ -7926,6 +7956,7 @@ void init_config(void)
     setSleepMode(SYSTEM_SLEEP_MODE);
 }
 
+//__ATTR_SECTION_XIP__
 void ll_patch_slave(void)
 {
     JUMP_FUNCTION(LL_SET_ADV_PARAM)                 =   (uint32_t)&LL_SetAdvParam1;
@@ -7937,6 +7968,7 @@ void ll_patch_slave(void)
     JUMP_FUNCTION(LL_SETUP_NEXT_SLAVE_EVT)          =   (uint32_t)&llSetupNextSlaveEvent1;
 }
 
+//__ATTR_SECTION_XIP__
 void ll_patch_master(void)
 {
     JUMP_FUNCTION(LL_SET_ADV_PARAM)                 =   (uint32_t)&LL_SetAdvParam1;
@@ -7952,21 +7984,23 @@ void ll_patch_master(void)
     JUMP_FUNCTION(LL_ENC_DECRYPT)                   =   (uint32_t)&LL_ENC_Decrypt1;
     JUMP_FUNCTION(LL_PROCESS_MASTER_CTRL_PROC)      =   (uint32_t)&llProcessMasterControlProcedures1;
     JUMP_FUNCTION(LL_PROCESS_SLAVE_CTRL_PROC)       =   (uint32_t)&llProcessSlaveControlProcedures1;
-    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SRX)           =   (uint32_t )&ll_processBasicIRQ_SRX0;
-    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SCANTRX)       =   (uint32_t )&ll_processBasicIRQ_ScanTRX0;
-    JUMP_FUNCTION(LL_SETUP_SEC_SCAN)                =   (uint32_t )&llSetupSecScan1;
+    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SRX)           =   (uint32_t)&ll_processBasicIRQ_SRX0;
+    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SCANTRX)       =   (uint32_t)&ll_processBasicIRQ_ScanTRX0;
+    JUMP_FUNCTION(LL_SETUP_SEC_SCAN)                =   (uint32_t)&llSetupSecScan1;
 }
 
+//__ATTR_SECTION_XIP__
 void ll_patch_multi(void)
 {
     ll_patch_slave();
     ll_patch_master();
     JUMP_FUNCTION(LL_SCHEDULER)                     =   (uint32_t)&ll_scheduler1;
-    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SECADVTRX)     =   (uint32_t )&ll_processBasicIRQ_secondaryAdvTRX0;
-    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SECSCANSRX)    =   (uint32_t )&ll_processBasicIRQ_secondaryScanSRX0;
-    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SECINITSRX)    =   (uint32_t )&ll_processBasicIRQ_secondaryInitSRX0;
+    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SECADVTRX)     =   (uint32_t)&ll_processBasicIRQ_secondaryAdvTRX0;
+    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SECSCANSRX)    =   (uint32_t)&ll_processBasicIRQ_secondaryScanSRX0;
+    JUMP_FUNCTION(LL_PROCESSBASICIRQ_SECINITSRX)    =   (uint32_t)&ll_processBasicIRQ_secondaryInitSRX0;
 }
 
+//__ATTR_SECTION_XIP__
 void hal_rom_boot_init(void)
 {
     extern void _rom_sec_boot_init();
@@ -8291,7 +8325,7 @@ hciStatus_t HCI_LE_ConnUpdateCmd( uint16 connHandle,
     return( HCI_SUCCESS );
 }
 
-__ATTR_SECTION_XIP__
+//__ATTR_SECTION_XIP__
 CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b, uint32_t w)
 {
     uint16 dh = w >> 16;
@@ -8395,36 +8429,39 @@ extern const char* s_company_id;
 __attribute__((aligned(4))) static uint8_t s_trng_seed[16];
 __attribute__((aligned(4))) static uint8_t s_trng_iv[16];
 
-__ATTR_SECTION_XIP__ static void TRNG_Output(uint32_t* buf, uint8_t len)
+//__ATTR_SECTION_XIP__
+static void TRNG_Output(uint32_t* buf, uint8_t len)
 {
     uint32_t temp,temp1,status;
     temp = AP_AON->RTCCFG2;
     AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;
 
-    for(uint8_t j=0; j<len; j++)
+    for(uint8_t j=0; j < len; j++)
     {
         status = 0;
 
-        for(uint8_t i = 0; i<16; i++)
+        for(uint8_t i = 0; i < 16; i++)
         {
             WaitRTCCount(17);
-            temp1 = AP_AON->RTCTRCNT;
+            temp1 = AP_AON->RTCTRCCNT;
             status |= ((temp1 & 0x03)<<(i<<1));
         }
-
         *buf++ = status;
     }
-
     return;
 }
-__ATTR_SECTION_XIP__ static void TRNG_IV_Updata()
+
+//__ATTR_SECTION_XIP__
+static void TRNG_IV_Updata()
 {
     *(uint32*)(&s_trng_iv[0]) +=read_current_fine_time();
     *(uint32*)(&s_trng_iv[4]) +=read_current_fine_time();
     *(uint32*)(&s_trng_iv[8]) +=read_current_fine_time();
     *(uint32*)(&s_trng_iv[12])+=read_current_fine_time();
 }
-__ATTR_SECTION_XIP__ void TRNG_INIT(void)
+
+//__ATTR_SECTION_XIP__
+void TRNG_INIT(void)
 {
     static uint8_t init_flag = 0;
 
@@ -8438,7 +8475,8 @@ __ATTR_SECTION_XIP__ void TRNG_INIT(void)
     return;
 }
 
-__ATTR_SECTION_XIP__ uint8_t TRNG_Rand(uint8_t* buf,uint8_t len)
+//__ATTR_SECTION_XIP__
+uint8_t TRNG_Rand(uint8_t* buf,uint8_t len)
 {
     uint32_t t0=0;
     uint8_t i;

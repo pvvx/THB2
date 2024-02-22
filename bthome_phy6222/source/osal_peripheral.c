@@ -9,7 +9,7 @@
 											  INCLUDES
  **************************************************************************************************/
 #include "config.h"
-#if (APP_CFG == 0)
+//#if (APP_CFG == 0)
 #include "OSAL.h"
 #include "OSAL_Tasks.h"
 
@@ -132,5 +132,5 @@ void osalInitTasks( void )
 	/* Application */
 	SimpleBLEPeripheral_Init( taskID++ );
 }
-#endif
+//#endif // (APP_CFG == 0)
 

@@ -138,7 +138,7 @@ void enterSleepProcess0(uint32 time)
     if (pGlobal_config[LL_SWITCH] & RC32_TRACKINK_ALLOW)
     {
         // 1. read RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
-        temp = *(volatile uint32_t*)0x4000f064 & 0x1ffff;
+        temp = AP_AON->RTCTRCCNT & 0x1ffff; // *(volatile uint32_t*)0x4000f064 & 0x1ffff;
 //         //====== assume the error cnt is (n+1/2) cycle,for this case, it should be 9 or 10
 // //LOG("c %d\n",temp);
 //         error_delt = (temp>STD_CRY32_8_CYCLE_16MHZ_CYCLE)
@@ -160,26 +160,27 @@ void enterSleepProcess0(uint32 time)
 //             temp = ((temp<<9)-(temp<<6)-(temp<<5)-(temp<<3)+(temp<<1)+2048)>>12;
 //         }
         //check for the abnormal temp value
-        counter_tracking = (temp>CRY32_16_CYCLE_16MHZ_CYCLE_MAX) ? counter_tracking : temp;
+        counter_tracking = (temp > CRY32_16_CYCLE_16MHZ_CYCLE_MAX) ? counter_tracking : temp;
         //20181204 filter the counter_tracking spur, due to the N+1 issue
 
-        if(g_counter_traking_cnt<1000)
+        if(g_counter_traking_cnt < 1000)
         {
             //before traking converage use hard limitation
-            counter_tracking =  (counter_tracking>CRY32_16_CYCLE_16MHZ_CYCLE_MAX || counter_tracking<CRY32_16_CYCLE_16MHZ_CYCLE_MIN)
+            counter_tracking =  (counter_tracking > CRY32_16_CYCLE_16MHZ_CYCLE_MAX
+            		|| counter_tracking < CRY32_16_CYCLE_16MHZ_CYCLE_MIN)
                                 ? g_counter_traking_avg : counter_tracking;
             g_counter_traking_cnt++;
         }
         else
         {
             //after tracking converage use soft limitation
-            counter_tracking =  (   counter_tracking > g_counter_traking_avg+(g_counter_traking_avg>>8)
-                                    ||  counter_tracking < g_counter_traking_avg-(g_counter_traking_avg>>8) )
+            counter_tracking =  (   counter_tracking > g_counter_traking_avg + (g_counter_traking_avg >> 8)
+                                    ||  counter_tracking < g_counter_traking_avg - (g_counter_traking_avg >> 8) )
                                 ? g_counter_traking_avg : counter_tracking;
         }
 
         //one order filer to tracking the average counter_tracking
-        g_counter_traking_avg = (7*g_counter_traking_avg+counter_tracking)>>3 ;
+        g_counter_traking_avg = (7 * g_counter_traking_avg + counter_tracking) >> 3;
         // 2.  adjust the time according to the bias
         step = (counter_tracking) >> 3;           // accurate step = 500 for 32768Hz timer
 
@@ -191,7 +192,7 @@ void enterSleepProcess0(uint32 time)
             while (total > step)
             {
                 total -= step;
-                time --;
+                time--;
             }
         }
         else    // RTC is faster, should sleep more RTC tick
@@ -202,7 +203,7 @@ void enterSleepProcess0(uint32 time)
             while (total > step)
             {
                 total -= step;
-                time ++;
+                time++;
             }
         }
     }
@@ -259,8 +260,8 @@ void config_RTC0(uint32 time)
 #endif
     //align to rtc clock edge
     WaitRTCCount(1);
-    g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount>(AP_TIM3->CurrentCount))
-                                   ? (g_TIM2_IRQ_TIM3_CurrCount-(AP_TIM3->CurrentCount)): 0;
+    g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount > (AP_TIM3->CurrentCount))
+                                   ? (g_TIM2_IRQ_TIM3_CurrCount - (AP_TIM3->CurrentCount)) : 0;
     AP_AON->RTCCC0 = sleep_tick + time;  //set RTC comparatr0 value
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 20;           //enable comparator0 envent
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 18;           //counter overflow interrupt

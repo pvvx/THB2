@@ -574,6 +574,7 @@ int hal_adc_stop(void)
     AP_PCRM->ANA_CTL &= ~BIT(3);
 	
 #include "rf_phy_driver.h"
+
     if(g_system_clk != SYS_CLK_DBL_32M)
 	{
 		AP_PCRM->CLKHF_CTL1 &= ~BIT(13);

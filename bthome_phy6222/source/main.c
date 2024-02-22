@@ -32,7 +32,7 @@
  */
 
 extern void init_config(void);
-extern int app_main(void);
+extern void app_main(void);
 extern void hal_rom_boot_init(void);
 /*********************************************************************
  CONNECTION CONTEXT RELATE DEFINITION
@@ -280,7 +280,6 @@ const ioinit_cfg_t ioInit[] = {
 
 	for (uint8_t i = 0; i < sizeof(ioInit) / sizeof(ioinit_cfg_t); i++) {
 		hal_gpio_pull_set(ioInit[i].pin, ioInit[i].type);
-		//hal_gpio_pin_init(ioInit[i].pin, GPIO_INPUT);
 	}
 #ifdef GPIO_SPWR
 	hal_gpio_write(GPIO_SPWR, 1);
@@ -292,8 +291,12 @@ const ioinit_cfg_t ioInit[] = {
 	DCDC_REF_CLK_SETTING(1);
 	DIG_LDO_CURRENT_SETTING(1);
 #if defined ( __GNUC__ )
+#if 0 // test
+	hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
+#else
 	extern uint32 g_irqstack_top;
 	// Check IRQ STACK (1KB) location
+
 /*
 	if ((uint32_t) &g_irqstack_top > 0x1fffc000) {
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
@@ -303,16 +306,14 @@ const ioinit_cfg_t ioInit[] = {
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1);
     } else {
 		hal_pwrmgr_RAM_retention(RET_SRAM0); // RET_SRAM0|RET_SRAM1|RET_SRAM2
-//test		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
 	}
+#endif
 #else
-
 #if DEBUG_INFO || SDK_VER_RELEASE_ID != 0x03010102
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
 #else
 		hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
 #endif
-
 #endif
 	hal_pwrmgr_RAM_retention_set();
 	subWriteReg(0x4000f014,26,26, 1); // hal_pwrmgr_LowCurrentLdo_enable();
@@ -414,7 +415,9 @@ int main(void) {
 	}
 #endif // OTA_TYPE == OTA_TYPE_BOOT
 
-	watchdog_config(WDG_2S);
+#if CFG_SLEEP_MODE == PWR_MODE_SLEEP
+//	watchdog_config(WDG_32S);
+#endif
 
 //	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
 
@@ -429,16 +432,22 @@ int main(void) {
 	init_config();
 #if ( HOST_CONFIG & OBSERVER_CFG )
 	extern void ll_patch_advscan(void);
-	ll_patch_advscan();
+//	ll_patch_advscan();
 #else
-	extern void ll_patch_slave(void);
-	ll_patch_slave();
+//	extern void ll_patch_slave(void);
+//	ll_patch_slave();
+//	extern void ll_patch_master(void);
+//	ll_patch_master();
 #endif
 
 	hal_rfphy_init();
 	hal_init();
 
 	restore_utc_time_sec();
+#if 0 //def STACK_MAX_SRAM
+        extern uint32 g_stack;
+    __set_MSP((uint32_t)(&g_stack));
+#endif
 	load_eep_config();
 
 	LOG("SDK Version ID %08x \n",SDK_VER_RELEASE_ID);
@@ -446,7 +455,8 @@ int main(void) {
 	LOG("sizeof(struct ll_pkt_desc) = %d, buf size = %d\n", sizeof(struct ll_pkt_desc), BLE_CONN_BUF_SIZE);
 	LOG("sizeof(g_pConnectionBuffer) = %d, sizeof(pConnContext) = %d, sizeof(largeHeap)=%d \n",
 		sizeof(g_pConnectionBuffer), sizeof(pConnContext),sizeof(g_largeHeap)); LOG("[REST CAUSE] %d\n ",g_system_reset_cause);
-	app_main();
+	app_main(); // No Return from here
+
 	return 0;
 }
 

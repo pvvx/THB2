@@ -109,10 +109,15 @@ static uint8 periConnParamCharProps = GATT_PROP_READ;
 // Peripheral Preferred Connection Parameters attribute (8 octets)
 gapPeriConnectParams_t periConnParameters = 
 { 
+#if 1 // FIX_CONN_INTERVAL
 	DEFAULT_DESIRED_MIN_CONN_INTERVAL, 
 	DEFAULT_DESIRED_MAX_CONN_INTERVAL,
 	DEFAULT_DESIRED_SLAVE_LATENCY,
-	DEFAULT_DESIRED_CONN_TIMEOUT };
+	DEFAULT_DESIRED_CONN_TIMEOUT
+#else
+	8,80,0,1500
+#endif
+};
 
 #endif // PERIPHERAL_CFG
 

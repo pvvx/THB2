@@ -30,6 +30,9 @@ void (*trap_c_callback)(void);
 extern void log_printf(const char* format, ...);
 void _hard_fault(uint32_t* arg)
 {
+#if DEBUG_INFO == 0
+	(void)arg;
+#else
     uint32_t* stk = (uint32_t*)((uint32_t)arg);
     log_printf("[Hard fault handler]\n");
 //    log_printf("R0   = 0x%08x\n", stk[9]);
@@ -50,7 +53,7 @@ void _hard_fault(uint32_t* arg)
     log_printf("PC   = 0x%08x\n", stk[15]);
     log_printf("PSR  = 0x%08x\n", stk[16]);
     log_printf("ICSR = 0x%08x\n", *(volatile uint32_t*)0xE000ED04);
-
+#endif
     if (trap_c_callback)
     {
         trap_c_callback();

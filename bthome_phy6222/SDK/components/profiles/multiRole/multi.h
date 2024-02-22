@@ -339,7 +339,7 @@ extern "C"
 
 /*  -------------------------------------------------------------------
     macro define -- multi advertising schedule data update info config
-    uint8  bit.Number  £º      meaning
+    uint8  bit.Number  ï¿½ï¿½      meaning
                             bit7-bit6:if set means advertising data or
                             sacn response data shall be updated before
                             make discoverable
@@ -479,7 +479,7 @@ typedef struct
         uint16  ExLatency;
         uint16  ExTimeOut;
     } common;
-    #if( MAX_CONNECTION_SLAVE_NUM > 0 )
+#if( MAX_CONNECTION_SLAVE_NUM > 0 )
     struct
     {
         uint8   EventType;
@@ -487,8 +487,8 @@ typedef struct
         uint8   FilterPolicy;
         uint8   UpdateEnable;
     } adv;
-    #endif
-    #if( MAX_CONNECTION_MASTER_NUM > 0 )
+#endif
+#if( MAX_CONNECTION_MASTER_NUM > 0 )
     struct
     {
         uint8 maxScanRes;
@@ -504,7 +504,7 @@ typedef struct
         // bit value
         uint16 actionAfterLink;
     } link;
-    #endif
+#endif
 } GAPMultiRoleParam_t;
 
 typedef enum
