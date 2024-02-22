@@ -6,8 +6,6 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
-_Внимание: На вариантах чипов с маркировкой в первой строке "PHY6222" без "QC" BLE соединение нестабильно при напряжении питания более 2.5В! Ищется решение этой проблемы..._
-
 ## Прошивки Boot-OTA:
 
 * Прошивки [Boot-OTA](https://github.com/pvvx/THB2/issues/10) имеет минимум функций. Boot-OTA используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
