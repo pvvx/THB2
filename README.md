@@ -12,7 +12,7 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 * Внешне отличить тип устройства возможно по символу смайлика на экране.
 
 | Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
-|:---:|:---:|:---:|
+|:---:|:---:|:---:|:---:|
 | [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v14.hex | THB1_v14.bin | нет |
 | [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v14.hex | THB2_v14.bin | нет |
 | [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v14.hex | BTH01_v14.bin | нет |
