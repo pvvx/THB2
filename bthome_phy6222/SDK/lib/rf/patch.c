@@ -7767,7 +7767,7 @@ void init_config(void)
     // LL engine settle time
     pGlobal_config[LL_HW_BB_DELAY] = 54;//54-8;
     pGlobal_config[LL_HW_AFE_DELAY] = 8;
-    pGlobal_config[LL_HW_PLL_DELAY] = 40;//45;//52;
+    pGlobal_config[LL_HW_PLL_DELAY] = 40; // sdk3.1.3 = 30//было 40;//45;//52;
     // Tx2Rx and Rx2Tx interval
     //Tx2Rx could be advanced a little
     //Rx2Tx should be ensure T_IFS within150us+-2us
@@ -7801,21 +7801,21 @@ void init_config(void)
     // Tx2Rx and Rx2Tx interval
     //Tx2Rx could be advanced a little
     //Rx2Tx should be ensure T_IFS within150us+-2us
-    pGlobal_config[LL_HW_Rx_TO_TX_INTV_125KPHY] = 5;
+    pGlobal_config[LL_HW_Rx_TO_TX_INTV_125KPHY] = 5; //sdk3.1.3 = 32
     pGlobal_config[LL_HW_Tx_TO_RX_INTV_125KPHY] = 66;//72
     // LL engine settle time, for advertisement
     pGlobal_config[LL_HW_BB_DELAY_ADV] = 90;
     pGlobal_config[LL_HW_AFE_DELAY_ADV] = 8;
     pGlobal_config[LL_HW_PLL_DELAY_ADV] = 60;
     // adv channel interval
-    pGlobal_config[ADV_CHANNEL_INTERVAL] = 1400;//6250;
+    pGlobal_config[ADV_CHANNEL_INTERVAL] = 1400; //sdk3.1.3 = 1600 //было:1400;//6250;
     pGlobal_config[NON_ADV_CHANNEL_INTERVAL] = 666;//6250;
 
     // conn_req -> slave connection event calibration time, will advance the receive window
     pGlobal_config[CONN_REQ_TO_SLAVE_DELAY] = 500; //было:300;//192;//500;//192;
     // calibration time for 2 connection event, will advance the next conn event receive window
     // SLAVE_CONN_DELAY for sync catch, SLAVE_CONN_DELAY_BEFORE_SYNC for sync not catch
-    pGlobal_config[SLAVE_CONN_DELAY] = 1000; //было:300;//0;//1500;//0;//3000;//0;          ---> update 11-20
+    pGlobal_config[SLAVE_CONN_DELAY] = 1500; //было:300;//0;//1500;//0;//3000;//0;          ---> update 11-20
     pGlobal_config[SLAVE_CONN_DELAY_BEFORE_SYNC] = 500;//160 NG//500 OK
     // RTLP timeout
     pGlobal_config[LL_HW_RTLP_LOOP_TIMEOUT] = 50000;
