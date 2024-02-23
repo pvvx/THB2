@@ -130,12 +130,13 @@ void hal_rtc_clock_config(CLK32K_e clk32Mode)
 }
 
 
-
+/* Step 625 us */
 uint32_t hal_systick(void)
 {
     return osal_sys_tick;
 }
 
+/* Step 625 us */
 uint32_t hal_ms_intv(uint32_t tick)
 {
     uint32_t diff = 0;

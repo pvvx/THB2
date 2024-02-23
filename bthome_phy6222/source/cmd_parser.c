@@ -208,9 +208,11 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			if (--len > sizeof(display_buff))
 				len = sizeof(display_buff);
 			if (len) {
+				wrk.lcd_ext_chow = 1;
 				memcpy(display_buff, &ibuf[1], len);
 				update_lcd();
-			}
+			} else
+				wrk.lcd_ext_chow = 0;
 			memcpy(&obuf[1], display_buff, sizeof(display_buff));
 			olen = 1 + sizeof(display_buff);
 #endif

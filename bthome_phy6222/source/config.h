@@ -38,12 +38,13 @@
 */
 #define DEVICE_THB2		19
 #define DEVICE_BTH01	20
-#define DEVICE_TH05		21
+#define DEVICE_TH05		21	// TH05_V1.4..1.6
 #define DEVICE_THB1		23
-#define DEVICE_TH05V13	24
+#define DEVICE_TH05D	24  // TH05_V1.3
+#define DEVICE_TH05F	25  // TH05Y_V1.2
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05V13
+#define DEVICE		DEVICE_TH05F
 #endif
 
 // supported services by the device (bits)
@@ -109,7 +110,7 @@
 #define GPIO_INP	GPIO_P10 // RX
 
 #define DEF_MODEL_NUMBER_STR		"THB2"
-#define DEF_HARDWARE_REVISION		"0001"
+#define DEF_HARDWARE_REVISION		"0013"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #elif DEVICE == DEVICE_BTH01
@@ -145,11 +146,11 @@
 #define GPIO_INP	GPIO_P18 // mark RX2
 
 #define DEF_MODEL_NUMBER_STR		"BTH01"
-#define DEF_HARDWARE_REVISION		"0001"
+#define DEF_HARDWARE_REVISION		"0014"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #elif DEVICE == DEVICE_TH05
-/* Model: TH05 */
+/* Model: TH05 v1.3*/
 #if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_SCREEN \
@@ -165,10 +166,6 @@
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
 )
-#endif
-
-#if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
-#error "Not SERVICE_TH_TRG!"
 #endif
 
 #define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
@@ -196,7 +193,7 @@
 //#define LED_OFF		0
 
 #define DEF_MODEL_NUMBER_STR		"TH05"
-#define DEF_HARDWARE_REVISION		"0014"
+#define DEF_HARDWARE_REVISION		"0015"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #elif DEVICE == DEVICE_THB1
@@ -216,10 +213,6 @@
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
 )
-#endif
-
-#if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
-#error "Not SERVICE_TH_TRG!"
 #endif
 
 #define ADC_PIN_USE_OUT		1	// нет подключения к +Vbat
@@ -244,8 +237,8 @@
 #define DEF_HARDWARE_REVISION		"0017"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
-#elif DEVICE == DEVICE_TH05V13
-/* Model: TH05 v1.2 */
+#elif DEVICE == DEVICE_TH05D
+/* Model: TH05 v1.3 */
 #if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_SCREEN \
@@ -261,10 +254,6 @@
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
 )
-#endif
-
-#if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
-#error "Not SERVICE_TH_TRG!"
 #endif
 
 //#define GPIO_LED	GPIO_P00 // не припаян
@@ -289,12 +278,63 @@
 #define GPIO_TRG	GPIO_P09 // mark TX
 #define GPIO_INP	GPIO_P10 // mark RX
 
-#define DEF_MODEL_NUMBER_STR		"TH05"
+#define DEF_MODEL_NUMBER_STR		"TH05C"
 #define DEF_HARDWARE_REVISION		"0018"
+#define DEF_MANUFACTURE_NAME_STR	"Tuya"
+
+#elif DEVICE == DEVICE_TH05F
+/* Model: TH05Y_V1.2/1.2 */
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+		| SERVICE_HISTORY \
+		| SERVICE_TH_TRG \
+		| SERVICE_RDS \
+)
+#endif
+
+//#define GPIO_LED	GPIO_P15 // не припаян
+//#define LED_ON		1
+//#define LED_OFF		0
+
+#define ADC_PIN_USE_OUT		1	// нет подключения к +Vbat
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
+
+#define USE_TH_SENSOR	1
+#define USE_SECREEN		1
+
+#define I2C_SDA 	GPIO_P33 // SDA
+#define I2C_SCL 	GPIO_P34 // SCL
+
+#define I2C_LCD_SDA GPIO_P26 // SDA
+#define I2C_LCD_SCL GPIO_P31 // SCL
+
+#define GPIO_SPWR	GPIO_P00 // питание сенсора
+#define GPIO_KEY	GPIO_P14
+#define GPIO_LPWR	GPIO_P02 // питание LCD драйвера
+
+#define GPIO_TRG	GPIO_P20 // mark TX2
+#define GPIO_INP	GPIO_P18 // mark RX2
+
+#define DEF_MODEL_NUMBER_STR		"TH05F"
+#define DEF_HARDWARE_REVISION		"0019"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #else
 #error "DEVICE Not released!"
+#endif
+
+#if ((DEV_SERVICES & SERVICE_THS) == 0) && (DEV_SERVICES & SERVICE_TH_TRG)
+#error "Not SERVICE_TH_TRG!"
 #endif
 
 // Minimum connection interval (units of 1.25ms, 80=100ms) if automatic parameter update request is enabled
@@ -351,6 +391,7 @@ typedef struct _work_parm_t {
 #if (DEV_SERVICES & SERVICE_SCREEN)
 	uint8_t lcd_count;
 #endif
+	uint8_t lcd_ext_chow; // показ TH/Clock отключен
 	uint8_t reboot; // reboot on disconnect, записывается в [OTA_MODE_SELECT_REG]
 	uint8_t boot_flg; // байт из [OTA_MODE_SELECT_REG]
 } work_parm_t;

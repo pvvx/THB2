@@ -64,7 +64,7 @@ uint8_t lcd_i2c_addr; // = 0x3E
 uint8_t display_buff[LCD_BUF_SIZE] = {
 		LCD_SYM_o, LCD_SYM_o, LCD_SYM_o,
 };
-uint8_t display_out_buff[LCD_BUF_SIZE+1];
+uint8_t display_out_buff[LCD_BUF_SIZE+1] = { 0 };
 /* blink off: display_out_buff[0] = 0xf0, on: display_out_buff[0] = 0xf2 */
 
 const uint8_t lcd_init_cmd[]	=	{

@@ -1,24 +1,24 @@
-# BTHome THB1, THB2, BTH01, TH05(HW: v1.3..1.6) 
+# BTHome THB1, THB2, BTH01, TH05(HW: v1.3..1.6), TH05F 
 Custom firmware for Tuya devices on the PHY622x2 chipset
-| [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) |
-|:---:|:---:|:---:|:---:|:---:|
-| ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) |
+| [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
 
-## Прошивки Boot-OTA:
+## Прошивки Boot и APP:
 
-* Прошивки [Boot-OTA](https://github.com/pvvx/THB2/issues/10) имеет минимум функций. Boot-OTA используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
+* Прошивка [Boot](https://github.com/pvvx/THB2/issues/10) имеет минимум функций. Boot используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
+* Внешне отличить тип устройства возможно по символу смайлика на экране.
 
-THB2 - файл bin\BOOT_THB2_v13.hex 
-
-BTH01 - файл bin\BOOT_BTH01_v13.hex 
-
-TH05 - файл bin\BOOT_TH05_v13.hex для версий указанных на печатной плате: [TH05_V1.4](https://pvvx.github.io/TH-05), TH05_V1.5, TH05_V1.6 с чипом BL55028
-
-TH05V13 - файл bin\BOOT_TH05V13_v13.hex для [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) с чипом BL55072
-
-THB1 - файл bin\BOOT_BTH1_v13.hex 
+| Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
+|:---:|:---:|:---:|
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v14.hex | THB1_v14.bin | нет |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v14.hex | THB2_v14.bin | нет |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v14.hex | BTH01_v14.bin | нет |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v14.hex | TH05_v1.4.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v14.hex | TH05D_v14.bin | RSH-TH05-V1.3 с чипом BL55072 |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v14.hex | TH05F_v14.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT |
 
 ## Основные характеристики:
 
@@ -43,8 +43,7 @@ THB1 - файл bin\BOOT_BTH1_v13.hex
 | 1.1 | Добавлен триггер - вывод TX2 срабатывающий по установленным значениям температуры и/или влажности с гистерезисами. Передача состояния вывода RX2 при connect. Для термометров с экраном добавлен показ смайлика с "комфортом". Дополнены: изменение имени и MAC устройства. |
 | 1.2 | Обработка и передача событий open/close со счетчиком с вывода маркированного "RX2" (для THB2 - "RX1"). |
 | 1.3 | Добавлен THB1 и TH05V1.3. Следующий этап уменьшения потребления для версий с LCD дисплеем и опция отключения дисплея. |
-| 1.4Beta | Стабилизация соединения для всех вариантов устройств. |
-
+| 1.4 | Стабилизация соединения для всех вариантов устройств. Добавлен [TH05F](https://pvvx.github.io/TH05F). Коррекция хода RTC. |
 
 ## Прошивка:
 

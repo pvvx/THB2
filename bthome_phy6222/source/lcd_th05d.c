@@ -7,7 +7,7 @@
 #include <string.h>
 #include "types.h"
 #include "config.h"
-#if (DEV_SERVICES & SERVICE_SCREEN)  && (DEVICE == DEVICE_TH05V13)
+#if (DEV_SERVICES & SERVICE_SCREEN)  && (DEVICE == DEVICE_TH05D)
 #include "OSAL.h"
 #include "gpio.h"
 #include "rom_sym_def.h"
@@ -128,7 +128,7 @@ uint8_t lcd_i2c_addr; // = 0x3E
 uint8_t display_buff[LCD_BUF_SIZE] = {
 		0, LCD_SYM12_o, LCD_SYM12_o, 0
 };
-uint8_t display_out_buff[LCD_BUF_SIZE+1];
+uint8_t display_out_buff[LCD_BUF_SIZE+1] = { 0 };
 
 const uint8_t lcd_init_cmd[]	=	{
 		// LCD controller initialize:

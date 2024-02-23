@@ -22,12 +22,19 @@
 @if not exist "build\TH05%SWVER%.hex" goto :error
 @copy "build\TH05%SWVER%.bin" .\bin
 @
-@del /Q "build\TH05V13%SWVER%.hex"
-@del /Q "build\TH05V13%SWVER%.bin"
+@del /Q "build\TH05D%SWVER%.hex"
+@del /Q "build\TH05D%SWVER%.bin"
 @make -s clean
-@make -s -j PROJECT_NAME=TH05V13%SWVER% POJECT_DEF="-DDEVICE=DEVICE_TH05V13"
-@if not exist "build\TH05V13%SWVER%.hex" goto :error
-@copy "build\TH05V13%SWVER%.bin" .\bin
+@make -s -j PROJECT_NAME=TH05D%SWVER% POJECT_DEF="-DDEVICE=DEVICE_TH05D"
+@if not exist "build\TH05D%SWVER%.hex" goto :error
+@copy "build\TH05D%SWVER%.bin" .\bin
+@
+@del /Q "build\TH05F%SWVER%.hex"
+@del /Q "build\TH05F%SWVER%.bin"
+@make -s clean
+@make -s -j PROJECT_NAME=TH05F%SWVER% POJECT_DEF="-DDEVICE=DEVICE_TH05F"
+@if not exist "build\TH05F%SWVER%.hex" goto :error
+@copy "build\TH05F%SWVER%.bin" .\bin
 @
 @del /Q "build\THB1%SWVER%.hex"
 @del /Q "build\THB1%SWVER%.bin"
@@ -54,11 +61,17 @@
 @if not exist "build\BOOT_TH05%SWVER%.hex" goto :error
 @copy "build\BOOT_TH05%SWVER%.hex" .\bin
 @
-@del /Q "build\BOOT_TH05V13%SWVER%.hex"
+@del /Q "build\BOOT_TH05D%SWVER%.hex"
 @make -s clean
-@make -s -j PROJECT_NAME=BOOT_TH05V13%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_TH05V13"
-@if not exist "build\BOOT_TH05V13%SWVER%.hex" goto :error
-@copy "build\BOOT_TH05V13%SWVER%.hex" .\bin
+@make -s -j PROJECT_NAME=BOOT_TH05D%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_TH05D"
+@if not exist "build\BOOT_TH05D%SWVER%.hex" goto :error
+@copy "build\BOOT_TH05D%SWVER%.hex" .\bin
+@
+@del /Q "build\BOOT_TH05F%SWVER%.hex"
+@make -s clean
+@make -s -j PROJECT_NAME=BOOT_TH05F%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_TH05F"
+@if not exist "build\BOOT_TH05F%SWVER%.hex" goto :error
+@copy "build\BOOT_TH05F%SWVER%.hex" .\bin
 @
 @del /Q "build\BOOT_THB1%SWVER%.hex"
 @make -s clean

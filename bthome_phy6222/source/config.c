@@ -57,6 +57,47 @@ const cfg_t def_cfg = {
 		.averaging_measurements = 180 // 180*10 = 1800 sec, 30 min
 };
 
+#if 1
+extern uint32_t g_counter_traking_avg;
+
+void restore_utc_time_sec(void) {
+	if(clkt.utc_set_time_sec == 0) {
+		clkt.utc_time_add = AP_AON->SLEEP_R[2] + 0x10000; // + 65.536 ms
+		clkt.utc_time_sec = AP_AON->SLEEP_R[3];
+	}
+	clkt.utc_time_tik = clock_time_rtc();
+}
+
+uint32_t get_utc_time_sec(void) {
+	uint32_t new_time_tik, delta;
+#if TEST_RTC_DELTA
+	do {
+		new_time_tik = AP_AON->RTCCNT;
+	} while(new_time_tik != AP_AON->RTCCNT);
+#else
+	new_time_tik = AP_AON->RTCCNT;
+#endif
+	if(new_time_tik <= clkt.utc_time_tik)
+		delta = new_time_tik - clkt.utc_time_tik;
+	else
+		delta = 0xffffffff - clkt.utc_time_tik + new_time_tik;
+	clkt.utc_time_tik = new_time_tik;
+	delta &= 0x1fffff; // 64 sec max
+	// delta in us
+	delta = ((((delta & 0xffff0000) >> 16) * g_counter_traking_avg) << 8)
+	                   + (((delta & 0xffff) * g_counter_traking_avg) >> 8);
+	clkt.utc_time_add += delta;
+	while(clkt.utc_time_add > 1000000) {
+			clkt.utc_time_add -= 1000000;
+			clkt.utc_time_sec++;
+	}
+	AP_AON->SLEEP_R[2] = clkt.utc_time_add; // сохранить для восстановления часов после перезагрузки
+	AP_AON->SLEEP_R[3] = clkt.utc_time_sec; // сохранить для восстановления часов после перезагрузки
+	return clkt.utc_time_sec;
+}
+
+#else
+
 void restore_utc_time_sec(void) {
 	if(clkt.utc_set_time_sec == 0) {
 		clkt.utc_time_add = (AP_AON->SLEEP_R[2] &((1<<15) - 1)) + 10;
@@ -81,7 +122,7 @@ uint32_t get_utc_time_sec(void) {
 	else
 		clkt.utc_time_add += 0xffffffff - clkt.utc_time_tik + new_time_tik;
 	clkt.utc_time_tik = new_time_tik;
-	clkt.utc_time_sec += clkt.utc_time_add >> 15; // div 32768
+	clkt.utc_time_sec += (clkt.utc_time_add >> 15) * counter_tracking; // div 32768
 	clkt.utc_time_add &= (1<<15) - 1;
 	AP_AON->SLEEP_R[2] = clkt.utc_time_add; // сохранить для восстановления часов после перезагрузки
 	AP_AON->SLEEP_R[3] = clkt.utc_time_sec; // сохранить для восстановления часов после перезагрузки
@@ -91,6 +132,7 @@ uint32_t get_utc_time_sec(void) {
 #endif
 	return clkt.utc_time_sec;
 }
+#endif
 
 void test_config(void) {
 	if (cfg.rf_tx_power > RF_PHY_TX_POWER_EXTRA_MAX)

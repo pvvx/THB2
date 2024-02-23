@@ -8,6 +8,9 @@
 #ifndef _LCD_TH05_H_
 #define _LCD_TH05_H_
 
+#include "config.h"
+#if (DEV_SERVICES & SERVICE_SCREEN)
+
 /*
  *  TH-05 v1.3 LCD buffer:  byte.bit
                --7.7--         --6.7--            --4.3--             
@@ -59,6 +62,32 @@
 */
 
 /*
+ *  THB05F LCD buffer:  byte.bit
+
+         --0.4--         --1.4--            --2.4--          BAT
+  |    |         |     |         |        |         |        3.5
+  |   0.5       0.0   1.5       1.0      2.5       2.0
+  |    |         |     |         |        |         |      o 3.6
+ 0.3     --0.1--         --1.1--            --2.1--          +--- 3.6
+  |    |         |     |         |        |         |     3.6|
+  |   0.6       0.2   1.6       1.2      2.6       2.2       ---- 3.7
+  |    |         |     |         |        |         |     3.6|
+         --0.7--         --1.7--     *      --2.7--          ---- 2.3
+                                    1.3
+                                        --4.4--         --5.4--
+                                      |         |     |         |     ooo
+          3.0      3.0               4.5       4.0   5.5       5.0    4.3
+          / \      / \                |         |     |         |
+    3.4(  \_/  3.1 \_/  )3.4            --4.1--         --5.1--
+          3.1  / \ 3.1                |         |     |         |
+               \_/                   4.6       4.2   5.6       5.2     %
+               3.0                    |         |     |         |     5.3
+                                        --4.7--         --5.7--
+
+ None:
+*/
+
+/*
  *  THB1 LCD buffer:  byte.bit
 
          --0.0--         --1.0--            --2.0--          BAT
@@ -81,15 +110,19 @@
                6.6                    |         |     |         |     5.7
                                         --4.3--         --5.3--
                            OO 1.7
- None:
 */
+
 
 #if (DEVICE == DEVICE_THB1)
 #define LCD_BUF_SIZE	7
-#elif (DEVICE == DEVICE_TH05V13)
+#elif (DEVICE == DEVICE_TH05D)
 #define LCD_BUF_SIZE	8
-#else
+#elif (DEVICE == DEVICE_TH05)
 #define LCD_BUF_SIZE	6
+#elif (DEVICE == DEVICE_TH05F)
+#define LCD_BUF_SIZE	6
+#else
+#error "DEVICE Not released!"
 #endif
 
 extern uint8_t lcd_i2c_addr; // LCD controller I2C address
@@ -146,4 +179,5 @@ void chow_lcd(int flg);
 void lcd_show_version(void);
 extern void send_to_lcd(uint8_t *pbuf, int len);
 
+#endif // (DEV_SERVICES & SERVICE_SCREEN)
 #endif /* _LCD_TH05_H_ */
