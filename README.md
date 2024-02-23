@@ -8,7 +8,7 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 
 ## Прошивки Boot и APP:
 
-* Прошивка [Boot](https://github.com/pvvx/THB2/issues/10) имеет минимум функций. Boot используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
+* Прошивка [Boot](https://github.com/pvvx/THB2?tab=readme-ov-file#fw-boot-%D0%B8-ota) имеет минимум функций. Boot используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
 * Внешне отличить тип устройства возможно по символу смайлика на экране.
 
 | Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
