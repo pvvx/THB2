@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.2</title>
+<title>PHY62x2 BTHome v1.3</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -1679,13 +1679,13 @@ function setSensCfg() {
 		devSens.temp_z = parseInt($('inpTempZ').value);
 		devSens.humi_z = parseInt($('inpHumZ').value);
 
-		blk = new Uint8Array([0x55, 
+		blk = new Uint8Array([0x25, 
 		    devSens.temp_k & 0xff, (devSens.temp_k >> 8) & 0xff, (devSens.temp_k >> 16) & 0xff, (devSens.temp_k >> 24) & 0xff,
 		    devSens.humi_k & 0xff, (devSens.humi_k >> 8) & 0xff, (devSens.humi_k >> 16) & 0xff, (devSens.humi_k >> 24) & 0xff,
 	    	devSens.temp_z & 0xff, (devSens.temp_z >> 8) & 0xff,
 		    devSens.humi_z & 0xff, (devSens.humi_z >> 8) & 0xff
 		    ]);
-		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("setSensCfg() error!"); });
+		cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setSensCfg() error!"); });
 	}
 }
 
