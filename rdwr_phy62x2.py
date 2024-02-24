@@ -78,8 +78,8 @@ class phyflasher:
 		try:
 			self._port = serial.Serial(self.port, self.baud)
 			self._port.timeout = 1
-		except:
-			print ('Error: Open %s, %d baud!' % (self.port, self.baud))
+		except Exception as e:
+			print ('Error: Open %s, %d baud! Error: %s' % (self.port, self.baud, e))
 			sys.exit(1)
 	def SetAutoErase(self, enable = True):
 		self.autoerase = enable
