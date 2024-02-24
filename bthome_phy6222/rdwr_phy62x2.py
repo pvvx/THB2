@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2 Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "25.01.24"
+__version__ = "24.02.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -78,9 +78,9 @@ class phyflasher:
 		try:
 			self._port = serial.Serial(self.port, self.baud)
 			self._port.timeout = 1
-		except:
-			print ('Error: Open %s, %d baud!' % (self.port, self.baud))
-			sys.exit(1)
+		except Exception as e:
+			print ('Error: Open %s, %d baud! Error: %s' % (self.port, self.baud, e))
+			sys.exit(1)			
 	def SetAutoErase(self, enable = True):
 		self.autoerase = enable
 	def AddSectionToHead(self, addr, size):
@@ -107,15 +107,73 @@ class phyflasher:
 			print('Error set ext.Flash size %08x!' % EXT_FLASH_ADD)
 			return False
 		return True
-	def wr_flash_cmd(self, cmd, data = 0, size = 0):
-		if size > 0:
+	def wr_flash_cmd(self, cmd, data = 0, wrlen = 0, addr = 0, addrlen = 0, rdlen = 0, mbit = 0, dummy = 0):
+		regcmd = cmd << 24
+		if wrlen > 0:
+			regcmd = regcmd | 0x8000 | ((wrlen - 1) << 12)
 			if not self.write_reg(0x4000c8a8, data): #Flash Command Write Data Register
 				print('Error write Flash Data Register!')
 				return False
-		if not self.write_reg(0x4000c890, (cmd << 24) | (size <<15) | 1):
+		if addrlen > 0:
+			regcmd = regcmd | 0x80000 | ((addrlen - 1) << 16)
+			if not self.write_reg(0x4000c894, addr): #Flash Command Write Addr Register
+				print('Error write Flash Address Register!')
+				return False
+		if rdlen > 0:
+			regcmd = regcmd | 0x800000 | ((rdlen - 1) << 20)
+		if mbit > 0:
+			regcmd = regcmd | 0x40000
+		if dummy > 0:
+			regcmd = regcmd | (dummy << 7);		 
+		if not self.write_reg(0x4000c890, regcmd | 1):
 			print('Error write Flash Command Register!')
 			return False
 		return True
+	def flash_wait_idle(self):
+		i = 5;
+		while i > 0:
+			r = self.read_reg(0x4000c890)
+			if r == None:
+				return False
+			if (r & 2) == 0:
+				i = 5
+				while i > 0:
+					r = self.read_reg(0x4000c800)
+					if r == None:
+						return False
+					if (r & 0x80000000) != 0:
+						return True
+					i -= 1
+				return False
+			i -= 1		
+		return False
+	def flash_read_unique_id(self):
+		if self.wr_flash_cmd(0x4B,0,0,0,4,8): # and self.flash_wait_idle(): 
+			r1 = self.read_reg(0x4000c8a0)
+			if r1 == None:
+				return None
+			r2 = self.read_reg(0x4000c8a4)
+			if r2 == None:
+				return None
+			ret = bytearray(8)
+			ret[0] = r1 & 0xff 
+			ret[1] = (r1 >> 8) & 0xff 
+			ret[2] = (r1 >> 16) & 0xff 
+			ret[3] = (r1 >> 24) & 0xff 
+			ret[4] = r2 & 0xff 
+			ret[5] = (r2 >> 8) & 0xff 
+			ret[6] = (r2 >> 16) & 0xff 
+			ret[7] = (r2 >> 24) & 0xff 
+			return ret 
+		return None
+	def flash_read_status(self):
+		#Flash cmd: Read status
+		if self.wr_flash_cmd(5,0,0,0,0,1): # and self.flash_wait_idle(): 
+			r = self.read_reg(0x4000c8a0)
+			if r == None:
+				return None
+			return r & 0x0ff
+		return None
 	def FlashUnlock(self):
 		#Flash cmd: Write Enable, Write Status Register 0x00 
 		return self.wr_flash_cmd(6) and self.wr_flash_cmd(1, 0, 1)	
@@ -146,7 +204,11 @@ class phyflasher:
 				self._port.close()
 				self.baud = baud
 				self._port.baudrate = baud
-				self._port.open();
+				try:
+					self._port.open();
+				except Exception as e:
+					print ('Error: Open %s, %d baud! Error: %s' % (self.port, self.baud, e))
+					sys.exit(1)			
 			else:
 				print ('error!')
 				print ('Error set %i baud on %s port!' % (baud, self.port))
@@ -156,13 +218,11 @@ class phyflasher:
 	def Connect(self, baud=DEF_RUN_BAUD):
 		self._port.setDTR(True) #TM   (lo)
 		self._port.setRTS(True) #RSTN (lo)
-		self._port.flushOutput()
-		self._port.flushInput()
-		time.sleep(0.5)
-		self._port.setDTR(False) #TM  (hi)
+		time.sleep(0.1)
 		self._port.flushOutput()
 		self._port.flushInput()
 		time.sleep(0.1)
+		self._port.setDTR(False) #TM  (hi)
 		self._port.setRTS(False) #RSTN (hi)
 		self._port.timeout = 0.04
 		ttcl = 50;
@@ -257,10 +317,17 @@ class phyflasher:
 	def cmd_erase_all_flash(self):
 		print ('Erase All Chip Flash...', end = ' '),
 		if self.wr_flash_cmd(6) and self.wr_flash_cmd(0x60): #Write Enable, Chip Erase
-			time.sleep(7)
-			print ('ok')
-			return True
-		print ('error!')
+			i = 77;
+			while i > 0:
+				r = self.flash_read_status()
+				if r == None:
+					print ('Error!')
+					return False
+				if (r & 1) == 0:
+					print ('ok')
+					return True
+				i -= 1	
+		print ('Timeout!')
 		return False
 	def EraseSectorsFlash(self, offset = 0, size = MAX_FLASH_SIZE):
 		count = int((size + PHY_FLASH_SECTOR_SIZE - 1) / PHY_FLASH_SECTOR_SIZE)
@@ -514,6 +581,19 @@ def main():
 		else:
 			print ("Use the 'Erase All Flash' (ea) command to exit FCT mode!")
 			exit(2)
+	if args.operation == 'i':
+		rs = phy.flash_read_status()
+		if rs == None:
+			print ('Error Flash read Status!')			
+			sys.exit(3)
+		print ('Flash Status: 0x%02x' % rs)
+		rb = phy.flash_read_unique_id()
+		if rb == None:
+			print ('Error Flash read Unique ID!')			
+			sys.exit(3)
+		print ('Flash Serial Number:', rb.hex()) # Unique ID
+							
+		exit(0)
 	if args.operation == 'rc':
 		#filename = "r%08x-%08x.bin" % (addr, length)
 		if args.size == 0:
