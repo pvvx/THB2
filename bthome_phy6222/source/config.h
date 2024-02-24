@@ -42,9 +42,10 @@
 #define DEVICE_THB1		23
 #define DEVICE_TH05D	24  // TH05_V1.3
 #define DEVICE_TH05F	25  // TH05Y_V1.2
+//#define DEVICE_THB3		26
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05F
+#define DEVICE		DEVICE_THB2
 #endif
 
 // supported services by the device (bits)
@@ -278,7 +279,7 @@
 #define GPIO_TRG	GPIO_P09 // mark TX
 #define GPIO_INP	GPIO_P10 // mark RX
 
-#define DEF_MODEL_NUMBER_STR		"TH05C"
+#define DEF_MODEL_NUMBER_STR		"TH05D"
 #define DEF_HARDWARE_REVISION		"0018"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 

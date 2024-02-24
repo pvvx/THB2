@@ -452,7 +452,7 @@ int main(void) {
 #endif // OTA_TYPE == OTA_TYPE_BOOT
 
 #if CFG_SLEEP_MODE == PWR_MODE_SLEEP
-//	watchdog_config(WDG_32S);
+	watchdog_config(WDG_32S);
 #endif
 
 //	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
@@ -470,8 +470,8 @@ int main(void) {
 	extern void ll_patch_advscan(void);
 //	ll_patch_advscan();
 #else
-//	extern void ll_patch_slave(void);
-//	ll_patch_slave();
+	extern void ll_patch_slave(void);
+	ll_patch_slave();
 //	extern void ll_patch_master(void);
 //	ll_patch_master();
 #endif
