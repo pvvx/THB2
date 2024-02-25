@@ -46,18 +46,7 @@ SECTIONS
         *.o(_section_standby_code_)
         *.o(_section_sram_code_)
 
-        *patch.o(.text.*)
-        *patch_ext_adv.o(.text.*)
-
-        *rf_phy_driver.o(.text.*)
-        *pwrmgr.o(.text .text.*)
-        *timer.o(.text .text.*)
-
-        *flash.o(.text .text.*)
-        *clock.o(.text.*)
-
-        *phy_sec_ext.o(.text .text.*)
-
+        *main.o(.text.*)
         *libgcc.a:*.o(.text .text.*)
    
         _etextram = ABSOLUTE(.);

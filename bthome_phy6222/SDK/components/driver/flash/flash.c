@@ -49,6 +49,29 @@ static xflash_Ctx_t s_xflashCtx = {
 		.spif_ref_clk = SYS_CLK_DLL_64M,
 		.rd_instr =	XFRD_FCMD_READ_DUAL };
 
+/*
+void spif_cmd(uint8_t op, uint8_t addrlen, uint8_t rdlen, uint8_t wrlen, uint8_t mbit, uint8_t dummy)
+{
+  uint32_t temp = op << 0x18;
+  if (addrlen != 0) {
+	  temp = temp | 0x80000 | addrlen * 0x10000 - 0x10000;
+  }
+  if (rdlen != 0) {
+	  temp = temp | 0x800000 | rdlen * 0x100000 - 0x100000;
+  }
+  if (wrlen != 0) {
+	  temp = temp | 0x8000 | wrlen * 0x1000 - 0x1000;
+  }
+  if (mbit != 0) {
+	  temp = temp | 0x40000;
+  }
+  if (dummy != 0) {
+	  temp = temp | dummy << 7;
+  }
+  AP_SPIF->fcmd = temp | 1;
+  ...
+}
+*/
 
 __ATTR_SECTION_SRAM__ static inline uint32_t spif_lock() {
 	HAL_ENTER_CRITICAL_SECTION();

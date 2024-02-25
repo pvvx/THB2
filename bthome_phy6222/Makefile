@@ -117,11 +117,13 @@ CFLAGS     += -Wl,--gc-sections
 ifdef BOOT_OTA
 LDSCRIPT   ?= $(SDK_PATH)/misc/boot_ota_phy62x2.ld
 DEFINES += -DOTA_TYPE=OTA_TYPE_BOOT
-BIN_OTA	=
+BIN_OTA	= $(OBJ_DIR)/$(PROJECT_NAME).bin
+ADD_OPT = -w 0x2F00 -f ota_upboot.add
 else
 LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
 DEFINES += -DOTA_TYPE=OTA_TYPE_NONE
 BIN_OTA	= $(OBJ_DIR)/$(PROJECT_NAME).bin
+ADD_OPT =
 endif
 
 LDFLAGS    := $(ARCH_FLAGS)
@@ -279,7 +281,7 @@ all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME
 
 %.bin: %.hex
 	@echo Make: $@
-	@$(PYTHON) ./phy62x2_ota.py $(OBJ_DIR)/$(PROJECT_NAME).hex
+	@$(PYTHON) ./phy62x2_ota.py $(ADD_OPT) $(OBJ_DIR)/$(PROJECT_NAME).hex
 
 %.asm: %.elf
 	@echo OBJDUMP: $@
@@ -301,7 +303,7 @@ flash:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex
 
 flash_ota:
-	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -r we 0x10000 $(OBJ_DIR)/$(PROJECT_NAME).bin
+	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -r we 0x10000 $(BIN_OTA)
 
 erase_and_flash:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -e -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex

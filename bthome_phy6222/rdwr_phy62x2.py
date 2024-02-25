@@ -459,7 +459,7 @@ class phyflasher:
 	def HexfHeader(self, hp, start = DEF_START_RUN_APP_ADDR, raddr = DEF_START_WR_FLASH_ADDR):
 		if len(hp) > 1:
 			hexf = bytearray(b'\xff')*(0x100)
-			hexf[0:4] = int.to_bytes(len(hp), 4, byteorder='little')
+			hexf[0:4] = int.to_bytes(len(hp)-1, 4, byteorder='little')
 			hexf[8:12] = int.to_bytes(start, 4, byteorder='little')
 			#sections = 0
 			faddr_min = MAX_FLASH_SIZE-1
@@ -592,8 +592,6 @@ def main():
 			print ('Error Flash read Unique ID!')			
 			sys.exit(3)
 		print ('Flash Serial Number:', rb.hex()) # Unique ID
-							
-		exit(0)
 	if args.operation == 'rc':
 		#filename = "r%08x-%08x.bin" % (addr, length)
 		if args.size == 0:
