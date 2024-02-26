@@ -1906,7 +1906,7 @@ function FirmwareCustom() {
 }
 function FirmwareBeta() {
 	if(hwver_id != null) {
-		let fn = otafiles.custom[hwver_id];
+		let fn = otafiles.betafw[hwver_id];
 		addLog("Загрузка firmware файла '"+fn+"'...");
 		ajax_file(fn, getFwArray);
 	}
@@ -1915,7 +1915,7 @@ function FirmwareBoot() {
 	if(!confirm("Внимание!: Обновление  Boot fw не безопасно. Во избежание сбоя прошивки желательно использование полной батареи!"))
 		return;
 	if(hwver_id != null) {
-		let fn = otafiles.custom[hwver_id];
+		let fn = otafiles.updateboot[hwver_id];
 		addLog("Загрузка firmware файла '"+fn+"'...");
 		ajax_file(fn, getFwArray);
 	}

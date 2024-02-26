@@ -7,10 +7,10 @@
 "bin/TH05D_v14.bin",
 "bin/TH05F_v14.bin"],
 "updateboot":[
-"update_boot/THB2_v14.bin",
-"update_boot/BTH01_v14.bin",
-"update_boot/TH05_v14.bin",
+"update_boot/BOOT_THB2_v14.bin",
+"update_boot/BOOT_BTH01_v14.bin",
+"update_boot/BOOT_TH05_v14.bin",
 "?",
-"update_boot/TH05D_v14.bin",
-"update_boot/TH05F_v14.bin",
-"update_boot/THB1_v14.bin"]}
+"update_boot/BOOT_TH05D_v14.bin",
+"update_boot/BOOT_TH05F_v14.bin",
+"update_boot/BOOT_THB1_v14.bin"]}
