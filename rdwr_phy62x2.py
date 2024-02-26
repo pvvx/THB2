@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2 Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "24.02.24"
+__version__ = "26.02.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -239,7 +239,7 @@ class phyflasher:
 			ttcl = ttcl - 1
 			if ttcl < 1:
 				print('PHY62x2 - Error Reset!')
-				print('Check connection TX->RX, RX<-TX and Chip Power!')
+				print('Check connection TX->RX, RX<-TX, RTS->RESET and Chip Power!')
 				self._port.close()
 				exit(4)
 		print('PHY62x2 - Reset Ok')
