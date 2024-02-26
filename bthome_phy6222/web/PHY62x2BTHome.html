@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.3</title>
+<title>PHY62x2 BTHome v1.4</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -476,6 +476,9 @@ const SERVICE_TH_TRG = 0x00004000; // триггер по температуре
 
 var bluetoothDevice, gattServer, otaCharacteristic, cmdCharacteristic, infoService;
 
+var hwver_id = null;
+var otafiles = { loaded: false };
+
 var devInfo = {};
 var devSrv  = { services: 0 };
 var devCfg  = {};
@@ -511,6 +514,7 @@ const isEmpty = str => !str.trim().length;
 
 function resetVariables() {
 	gattServer = null;
+	hwver_id = null;
 	mainService = null;
 	otaCharacteristic = null;
 	cmdCharacteristic = null;
@@ -1280,6 +1284,11 @@ function parseBlkCustom(value) {
 	// CMD_ID_DEVID Get dev id, version, services
 		devSrv.revision = value.getUint8(1);
 		devSrv.hw_version = value.getUint16(2, true);
+		if(devSrv.hw_version >= 19 && devSrv.hw_version < 30) {
+			hwver_id = devSrv.hw_version - 19;
+			console.log("Set hwver_id: " + hwver_id);
+			menuOtaUpgrade();
+		}
 		devSrv.sw_version = value.getUint16(4, true);
 		devSrv.dev_spec_data = value.getUint16(6, true);
 		devSrv.services = value.getUint32(8, true);
@@ -1866,42 +1875,119 @@ function download(data, path, type) {
 		URL.revokeObjectURL(url);
 	}
 }
-/*
-// BUG: Access-Control-Allow-Origin
-function download(url, filename) {
-  fetch(url)
-    .then(response => response.blob())
-    .then(blob => {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      link.click();
-  })
-  .catch(console.error);
-}
-download("https://get.geojs.io/v1/ip/geo.json","geoip.json")
-*/
-/*
-var getFile = new selectFile;
-getFile.targets('inpFile','lblFile');
 
-function uploadFile() {
-	if ( isEmpty($("inpUrl").value) ) {
-		getFile.simulate()
-	} else {
-		let regex = /[^\\]+$/;
-		// match(regex);
-		//download(, $("inpUrl").value, "application/octet-stream");
-		download($("inpUrl").value, "OTA.bin");
-        // readFile(file);
+function ajax_file(filename, fn, rawurl = "https://raw.githubusercontent.com/pvvx/THB2/master/") {
+	let xhr;
+	if(window.XMLHttpRequest) xhr = new XMLHttpRequest();
+	else if(window.ActiveXObject) xhr = new ActiveXObject("Microsoft.XMLHTTP")
+	if (!xhr) { addClog(msg("Your browser does not support AJAX!")); fn(); return;};
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4) {
+			if (xhr.status == 200) fn(xhr.response, filename);
+			else { console.log('XMLHttpRequest: response ' + xhr.status); fn();}
+			xhr.abort();
+			xhr = null;
+		}
+	};
+	xhr.ontimeout = function() { console.log('XMLHttpRequest: timeout'); fn();};
+	xhr.onerror = function () { console.log('XMLHttpRequest error!'); fn();};
+	xhr.open('GET', rawurl+filename, true);
+	xhr.timeout = 10000;
+	xhr.responseType = "arraybuffer";
+	xhr.send();
+}
+
+function FirmwareCustom() {
+	if(hwver_id != null) {
+		let fn = otafiles.custom[hwver_id];
+		addLog("Загрузка firmware файла '"+fn+"'...");
+		ajax_file(fn, getFwArray);
 	}
 }
-*/
-
-function readFlash() {
-	// if "OK"
-	$('btnSaveFlash').disabled = false;
+function FirmwareBeta() {
+	if(hwver_id != null) {
+		let fn = otafiles.custom[hwver_id];
+		addLog("Загрузка firmware файла '"+fn+"'...");
+		ajax_file(fn, getFwArray);
+	}
 }
+function FirmwareBoot() {
+	if(!confirm("Внимание!: Обновление  Boot fw не безопасно. Во избежание сбоя прошивки желательно использование полной батареи!"))
+		return;
+	if(hwver_id != null) {
+		let fn = otafiles.custom[hwver_id];
+		addLog("Загрузка firmware файла '"+fn+"'...");
+		ajax_file(fn, getFwArray);
+	}
+}
+
+function getOtaJson(d, name) {
+	if (!d) {
+		console.log("No load index file!");
+	} else {
+		let str = '';
+		if (typeof d === 'string')
+			str = d;
+		else
+			str = new TextDecoder("utf-8").decode(d);
+		let x = JSON.parse(str);
+		if(x.custom) {
+			otafiles = x;
+			otafiles.loaded = true;
+			console.log(otafiles);
+		}
+	}
+}
+
+function menuOtaUpgrade() {
+	let is = "";
+	if(hwver_id != null) {
+		if(otafiles.loaded) {
+			if(otafiles.custom != null) {
+				let fn = otafiles.custom[hwver_id];
+				if(fn != null && fn != "" && fn != "?" && fn != "/") {
+					try {
+						if(fn.slice(0,6) == "https:")
+							fn = (new URL(fn)).pathname.split("/").pop();
+					} catch (error) {
+						console.log(error);
+					}
+					fn = fn.substring(fn.lastIndexOf('/')+1);
+					is += '<button type="button" id="btFwCustom" onclick="FirmwareCustom();">APP Firmware: ' + fn + '</button>';
+				}
+			}
+			if(otafiles.betafw != null) {
+				let fn = otafiles.betafw[hwver_id];
+				if(fn != null && fn != "" && fn != "?" && fn != "/") {
+					try {
+						if(fn.slice(0,6) == "https:")
+							fn = (new URL(fn)).pathname.split("/").pop();
+					} catch (error) {
+						console.log(error);
+					}
+					fn = fn.substring(fn.lastIndexOf('/')+1);
+					is += ' <button type="button" id="btFwBeta" onclick="FirmwareBeta();">Beta Firmware: ' + fn + '</button><br>';
+				}
+			}
+			if(otafiles.updateboot != null) {
+				let fn = otafiles.updateboot[hwver_id];
+				if(fn != null && fn != "" && fn != "?" && fn != "/") {
+					try {
+						if(fn.slice(0,6) == "https:")
+							fn = (new URL(fn)).pathname.split("/").pop();
+					} catch (error) {
+						console.log(error);
+					}
+					fn = fn.substring(fn.lastIndexOf('/')+1);
+					is +=' <button type="button" id="btFwBoot" onclick="FirmwareBoot();">Обновление Boot: ' + fn +'</button><br>';
+				}
+			}
+		}
+	}
+	if(is != "") is += '<br>';
+	$("divOTA").innerHTML = is;
+}
+
 
 var	chart = null;
 
@@ -1968,52 +2054,6 @@ function addChartData(temp, humi) {
 	xMax = Math.floor(yMax / rslH) + 1;
 	rangeH = [xMin*rslH, xMax*rslH];
 	//console.log(rangeT, rangeH);
-
-/*********************************
-	if (chartData.length < 3) return;
-	if (chart == null) {
-
-	chart = new Dygraph(
-	    $("divChart"),
-	    "ny-vs-sf.txt",
-	    {
-			rollPeriod: 14,
-			showRoller: true,
-			customBars: true,
-			title: 'NYC vs. SF',
-			ylabel: 'Temperature (F)',
-			legend: 'always'
-	    }
-	  );
- *******************************/
-/******************************
-	chart = new Dygraph(
-		$("divDygraph"),
-	    "ny-vs-sf.txt", // chartData,
-		{
-			//title: "Live data",
-			//showRangeSelector: true,
-			//showRoller: true,
-			//rollPeriod: 1,
-			//xlabel: 'Time(sec)',
-			//ylabel: 'Temp(C&deg;)',
-			//y2label: 'RH(%)',
-			colors: ['green', 'blue'],
-			series : { 'RH(%)': { axis: 'y2' } },
-			labels: ['T(сек)', 'T(°C)', 'RH(%)'],
-			//divLabels: $('divLabels'),
-			legend: 'always',  // "follow"
-			digitsAfterDecimal: 3,
-			rollPeriod: 14,
-			showRoller: true,
-			customBars: true,
-			title: 'NYC vs. SF',
-			ylabel: 'Temperature (F)',
-			legend: 'always'
-		}
-	);
- ******************************/
-	//chart.updateOptions({'file': chartData})
 }
 
 function resizeChart() {
@@ -2042,6 +2082,8 @@ function resizeChart() {
 
 window.onload = function() {
 
+	console.log("Load index file 'fw.json'...");
+	ajax_file('fw.json', getOtaJson);
 	document.querySelector("#inpFile").addEventListener("change", function() {
 		var file = this.files[0];
 	    if (file != null) {
@@ -2060,51 +2102,17 @@ window.onload = function() {
 	    $('divChart'),
 	    [],
 	    {
-			//title: "Live data",
-			//showRangeSelector: true,
-			//showRoller: true,
-			//rollPeriod: 1,
-			//xlabel: 'Time(sec)',
-			//ylabel: 'Temp(C&deg;)',
-			//y2label: 'RH(%)',
-			/******************************/
             axes: {
               y:  { valueRange: rangeT },
               y2: { valueRange: rangeH }
             },
-            /******************************/
 			colors: ['green', 'blue'],
 			series : { 'RH(%)': { axis: 'y2' } },
 			labels: ['T(сек)', 'T(°C)', 'RH(%)'],
-			//labelsDiv: $('labelsDiv'),
 			legend: 'always',  // "follow"
 			digitsAfterDecimal: 2,
 	    }
 	  );
-	/******************************************
-	// debug
-	// let a = [[1, 21, 81], [2, 20, 79], [3, 19, 83]];
-	// addChartData(21, 81);
-	// addChartData(20, 79);
-	// addChartData(19, 83);
-
-	for (i = 0; i < 128; i++) {
-		let t = 20 + (1 - Math.random() * 2);
-		let h = 70 + (5 - Math.random() * 10);
-		chartData.push([i, t, h]);
-		//addChartData(t, h);
-	}
-	chart.updateOptions(
-		{
-		file: chartData,
-		axes: {
-            y:  { 'valueRange': rangeT },
-            y2: { 'valueRange': rangeH }
-        }
-		}
-	);
-	// chart.updateOptions({'file': chartData});
-	******************************************/
 	addEventListener("resize", resizeChart);
 };
 /*! @license https://github.com/danvk/dygraphs/blob/v2.2.1/LICENSE.txt (MIT) */
@@ -2253,8 +2261,8 @@ window.onload = function() {
 </div>
 
 <div id="tabOTA" class="tabcontent">
-  <p>Файл прошивки:
-  <!--input type="file" hidden accept=".bin" id="inpFile"-->
+  <p>Файл(ы) прошивки:
+  <div id="divOTA"></div>
   <input type="file" hidden accept=".bin,application/octet-stream" id="inpFile">
   <label id="lblFile">не выбран</label>
   <button type="button" onClick="$('inpFile').click()">Выбрать</button>

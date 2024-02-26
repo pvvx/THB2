@@ -5,7 +5,8 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
-* Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html)
+* Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
+* Подгрузка файлов OTA в [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) производится автоматически - загружать из файлы из данного репозитория для OTA не требуется.
 
 ## Прошивки Boot и APP
 
