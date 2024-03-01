@@ -119,20 +119,21 @@ void set_def_name(void)
 	gapRole_ScanRspDataLen = sizeof(DEF_MODEL_NUMBER_STR) + 8;
 	*p++ = sizeof(DEF_MODEL_NUMBER_STR) + 7;
 	*p++ = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
-	memcpy(p, devInfoModelNumber, sizeof(DEF_MODEL_NUMBER_STR)-1);
+	memcpy(p, devInfoModelNumber, sizeof(DEF_MODEL_NUMBER_STR) - 1);
 	p += sizeof(DEF_MODEL_NUMBER_STR) - 1;
 	*p++ = '-';
 	p = str_bin2hex(p, pmac+2, 1);
 	p = str_bin2hex(p, pmac+1, 1);
-	str_bin2hex(p, pmac, 1);
+	p = str_bin2hex(p, pmac, 1);
+	*p++ = 0;
 	flash_write_cfg(NULL, EEP_ID_DVN, 0);
 }
 
 void set_dev_name(void)
 {
 	uint8_t * p = gapRole_ScanRspData;
-	int len = flash_read_cfg(&p[2], EEP_ID_DVN, 19);
-	if(len > 0 && p[2] != 0) {
+	int len = flash_read_cfg(&p[2], EEP_ID_DVN, GAP_DEVICE_NAME_LEN - 1);
+	if(len > 0 && len < GAP_DEVICE_NAME_LEN && p[2] != 0) {
 		p[0] = (uint8_t)len + 1;
 		p[1] = GAP_ADTYPE_LOCAL_NAME_COMPLETE;
 		p[len + 2] = 0;
@@ -158,6 +159,9 @@ static void set_mac(void)
 	pGlobal_config[MAC_ADDRESS_LOC] = (uint32_t)ownPublicAddr;
 	// device name
 	set_dev_name();
+#if (DEV_SERVICES & SERVICE_BINDKEY)
+	bthome_beacon_init();
+#endif
 }
 
 static void set_serial_number(void)
@@ -241,14 +245,14 @@ static void adv_measure(void) {
 #endif
 		}
 #if (DEV_SERVICES & SERVICE_THS)
-		if(adv_wrk.adv_count == (uint8_t)(cfg.measure_interval - 1)) {
+		if(adv_wrk.adv_meas_count == (uint8_t)(cfg.measure_interval - 1)) {
 			start_measure();
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			chow_lcd(0);
 #endif
 		} else {
-			if(adv_wrk.adv_count >= cfg.measure_interval) {
-				adv_wrk.adv_count = 0;
+			if(adv_wrk.adv_meas_count >= cfg.measure_interval) {
+				adv_wrk.adv_meas_count = 0;
 				read_sensor();
 #if (DEV_SERVICES & SERVICE_SCREEN)
 				chow_lcd(1);
@@ -283,7 +287,7 @@ static void adv_measure(void) {
 				set_new_adv_interval(cfg.advertising_interval * 100);
 			}
 		}
-		adv_wrk.adv_count++;
+		adv_wrk.adv_meas_count++;
 	}
 }
 
@@ -576,7 +580,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 	VOID task_id; // OSAL required parameter that isn't used in this function
 	if ( events & ADV_BROADCAST_EVT) {
 		adv_measure();
-		LOG("advN%u\n", adv_wrk.adv_count);
+		LOG("advN%u\n", adv_wrk.adv_meas_count);
 		// return unprocessed events
 		return (events ^ ADV_BROADCAST_EVT);
 	}
@@ -598,7 +602,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 	// enable adv (from gaprole start)
 	if ( events & SBP_RESET_ADV_EVT ) {
 		LOG("SBP_RESET_ADV_EVT\n");
-		adv_wrk.adv_count = 0;
+		adv_wrk.adv_meas_count = 0;
 		// set_new_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
 		gatrole_advert_enable(TRUE);
 		return ( events ^ SBP_RESET_ADV_EVT );
@@ -657,7 +661,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 #ifdef GPIO_LED
 		hal_gpio_write(GPIO_LED, LED_OFF);
 #endif
-		//adv_wrk.adv_count = 0;
+		//adv_wrk.adv_meas_count = 0;
 #if (DEV_SERVICES & SERVICE_SCREEN)
 		lcd_show_version();
 #endif
@@ -780,13 +784,13 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 		{
 			LOG("Gaprole_adversting\n");
 			osal_stop_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT);
-			adv_wrk.adv_count = 0;
+			adv_wrk.adv_meas_count = 0;
 		}
 		break;
 
 		case GAPROLE_CONNECTED:
 			adv_wrk.adv_event = 0;
-			adv_wrk.adv_count = 0;
+			adv_wrk.adv_meas_count = 0;
 			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_THS)
 			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, adv_wrk.measure_interval_ms); // 10000 ms
@@ -815,7 +819,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 			gapRole_SlaveLatency = cfg.connect_latency;
 #endif
 			adv_wrk.adv_event = 0;
-			adv_wrk.adv_count = 0;
+			adv_wrk.adv_meas_count = 0;
 			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			show_ble_symbol(0);

@@ -13,10 +13,10 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x14	// BCD
+#define APP_VERSION	0x15	// BCD
 #endif
 
-/*
+/* rf_phy_ana_cfg
 #define BOARD_LYWSD03MMC_B14		0 // number used for BLE firmware
 #define BOARD_MHO_C401				1
 #define BOARD_CGG1					2
@@ -34,7 +34,7 @@
 #define BOARD_TNK					16 // Water tank controller (not yet published at the moment)
 #define BOARD_TS0201_TZ3000			17
 #define BOARD_TS0202_TZ3000			18
-#define BOARD__TH03Z   				22 // ZigBee TH03Z
+#define BOARD_TH03Z   				22 // ZigBee TH03Z
 */
 #define DEVICE_THB2		19
 #define DEVICE_BTH01	20
@@ -45,7 +45,7 @@
 //#define DEVICE_THB3		26
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB2
+#define DEVICE		DEVICE_BTH01
 #endif
 
 // supported services by the device (bits)
@@ -93,6 +93,7 @@
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
+		| SERVICE_BINDKEY \
 )
 #endif
 
@@ -128,6 +129,7 @@
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
+		| SERVICE_BINDKEY \
 )
 #endif
 
@@ -166,6 +168,7 @@
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
+		| SERVICE_BINDKEY \
 )
 #endif
 
@@ -213,6 +216,7 @@
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
+		| SERVICE_BINDKEY \
 )
 #endif
 
@@ -254,6 +258,7 @@
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
+		| SERVICE_BINDKEY \
 )
 #endif
 
@@ -299,6 +304,7 @@
 		| SERVICE_HISTORY \
 		| SERVICE_TH_TRG \
 		| SERVICE_RDS \
+		| SERVICE_BINDKEY \
 )
 #endif
 
@@ -368,7 +374,7 @@ extern const cfg_t def_cfg;
 #define FLG_SHOW_SMILEY		0x00000004	// включить показ смайлика
 #define FLG_SHOW_TRG		0x00000008	// смайлик поаказывает TRG
 #define FLG_DISPLAY_OFF		0x00000010	// отключить дисплей
-//#define FLG_ADV_CRYPT		0x00000100	// Зашифрованная BLE реклама (bindkey)
+#define FLG_ADV_CRYPT		0x00000020	// Зашифрованная BLE реклама (bindkey)
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;
@@ -376,7 +382,7 @@ typedef struct _adv_work_t {
 #if (DEV_SERVICES & SERVICE_RDS)
 	uint32_t	rds_count;
 #endif
-	uint8_t		adv_count;
+	uint8_t		adv_meas_count;
 	uint8_t 	adv_reload_count;
 	uint8_t		adv_batt_count;
 	uint8_t		adv_event;

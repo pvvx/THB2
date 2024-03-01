@@ -24,11 +24,13 @@
 #include "sensors.h"
 #include "cmd_parser.h"
 #include "devinfoservice.h"
+#include "gapgattserver.h"
 #include "ble_ota.h"
 #include "thb2_peripheral.h"
 #include "lcd.h"
 #include "logger.h"
 #include "trigger.h"
+#include "bthome_beacon.h"
 /*********************************************************************/
 extern gapPeriConnectParams_t periConnParameters;
 
@@ -182,6 +184,23 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				olen = 2;
 			}
 #endif
+#if (DEV_SERVICES & SERVICE_BINDKEY)
+		} else if (cmd == CMD_ID_BKEY) { // Get/set beacon bindkey
+			if (len == sizeof(bindkey) + 1) {
+				if(memcmp(bindkey, &ibuf[1], sizeof(bindkey))) {
+					memcpy(bindkey, &ibuf[1], sizeof(bindkey));
+					flash_write_cfg(&bindkey, EEP_ID_KEY, sizeof(bindkey));
+					bthome_beacon_init();
+				}
+			}
+			if (flash_read_cfg(&bindkey, EEP_ID_KEY, sizeof(bindkey)) == sizeof(bindkey)) {
+				memcpy(&obuf[1], bindkey, sizeof(bindkey));
+				olen = sizeof(bindkey) + 1;
+			} else { // No bindkey in EEP!
+				obuf[1] = 0xff;
+				olen = 2;
+			}
+#endif
 		} else if (cmd == CMD_ID_SERIAL) {
 			memcpy(&obuf[1], devInfoSerialNumber, sizeof(devInfoSerialNumber)-1);
 			olen = 1 + sizeof(devInfoSerialNumber)-1;
@@ -258,7 +277,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			olen = 2;
 #endif
 		} else if (cmd == CMD_ID_DNAME) {
-			if (len > 1 && len < B_MAX_ADV_LEN - 2) {
+			if (len > 1 && len <= GAP_DEVICE_NAME_LEN) {
 				if(ibuf[1] == 0)
 					set_def_name();
 				else {

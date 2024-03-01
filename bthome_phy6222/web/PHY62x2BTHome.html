@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.4</title>
+<title>PHY62x2 BTHome v1.5</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -485,6 +485,7 @@ var devCfg  = {};
 var devSens = {};
 var devTrig = {};
 var devTime = {};
+var devKeys = {};
 var devName = "";
 
 var isConnected = false;
@@ -549,12 +550,8 @@ function connect() {
 		deviceOptions.acceptAllDevices = false;
 		deviceOptions.filters = namePrefix.split(",")
 			.map((x) => ({ namePrefix: x }));
-	} else {
-		deviceOptions.acceptAllDevices = false;
-		deviceOptions.filters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz_#@!*0123456789';,.<>{}[]"
-			.split("")
-			.map((x) => ({ namePrefix: x }));
 	}
+	console.log(deviceOptions);
 	if (bluetoothDevice != null) bluetoothDevice.gatt.disconnect();
 	chartData.length = 0;
 	resetVariables();
@@ -746,11 +743,16 @@ function auxControls(state)
 	if ( devSrv.services & SERVICE_SCREEN ) {
 		$('tblChkCfg').style.display  = "block";
 	    $('tblComfort').style.display = "block";
-
-	    
 	} else {
 		$('tblChkCfg').style.display  = "none";
 	    $('tblComfort').style.display = "none";
+	}
+	if ( devSrv.services & SERVICE_BINDKEY ) {
+		$('labBindKey').style.display  = "block";
+	    $('divBindKey').style.display = "block";
+	} else {
+		$('labBindKey').style.display  = "none";
+	    $('divBindKey').style.display = "none";
 	}
 	if ( devSrv.services & SERVICE_TH_TRG )
 		$('tblTrigger').style.display  = "block";
@@ -1252,6 +1254,7 @@ function showConfig() {
 	$('chkCfgSmiley').checked = (devCfg.flg & 4) != 0;
 	$('chkCfgTrg').checked    = (devCfg.flg & 8) != 0;
 	$('chkCfgLcdOff').checked = (devCfg.flg & 16) != 0;
+	$('chkCfgBindKey').checked = (devCfg.flg & 32) != 0;
 	let txPwr = 31;
 	el = $('selTxPwr');
 	for(let n = 0; n < el.options.length; n++) if(el.options[n].value >= devCfg.tx_power) txPwr = el.options[n].value;
@@ -1458,19 +1461,15 @@ function parseBlkCustom(value) {
 		s = 'LCD data # '+bytesToHex(value.buffer.slice(1));
 		addLog(s);
 	} else if(blkId == 0x18 && len >= 1) { // Get/set beacon bkey in EEP
-		if(len >= 16) {
-			devkeys.cbindkey = value.buffer.slice(1);
-			let s = bytesToHex(devkeys.cbindkey,16);
+		if(len > 16) {
+			devKeys.cbindkey = value.buffer.slice(1,17);
+			let s = bytesToHex(devKeys.cbindkey,16);
 			addLog("Bindkey # "+ s);
-			//if($("cbind_key"))
-			//	$("cbind_key").value = s;
+			$("inpBindKey").value = s;
 		} else {
-			if(len == 1 && value.getUint8(1) == 0xff)
-				addLog("Bindkey не запсан!");
-			else
-				addAlog("Ошибка чтения Bindkey!");
-			//if($("cbind_key"))
-			//	$("cbind_key").value = '?';
+			addLog("Ошибка чтения Bindkey!");
+			console.log('blk: ' + dump8(value, value.byteLength));
+			$("inpBindKey").value = 'Не поддерживается!';
 		}
 	} else if(blkId == 0x23 && len >= 4) {
 		devTime.cur = value.getUint32(1,true);
@@ -1576,56 +1575,58 @@ function getMemo(num) {
 		//addLog("getSensCfg...");
 		isMemoActive = true;
 		memoCount = 0;
-		cmdCharacteristic.writeValue(new Uint8Array([0x35, num&0xff, (num>>8)&0xff])).catch(error => { console.log(error); addLog("getMemo() error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x35, num&0xff, (num>>8)&0xff])).catch(error => { addLog("getMemo() Error: " + error); });
 	}
 }
 
 function getDevCfg() {
 	if(cmdCharacteristic != null) {
 		//addLog("getDevCfg...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x55])).catch(error => { console.log(error); addLog("getDevCfg() error!") });
+		cmdCharacteristic.writeValue(new Uint8Array([0x55])).catch(error => { addLog("getDevCfg() Error: " + error) });
 	}
 }
 function getSensCfg() {
 	if(cmdCharacteristic != null) {
 		//addLog("getSensCfg...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { console.log(error); addLog("getSensCfg() error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x25])).catch(error => { addLog("getSensCfg() Error: " + error); });
 	}
 }
 
 function getDevTime() {
 	if(cmdCharacteristic != null) {
 		// addLog("Получить время от устройства...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x23])).then(_ => { console.log('Send GetDevTime ok');	});
+		cmdCharacteristic.writeValue(new Uint8Array([0x23])).then(_ => { console.log('Send GetDevTime ok');	})
+		.catch(error => { addLog("getDevTime() Error: " + error); });
 	}
 }
 
 function getDevMAC() {
 	if(cmdCharacteristic != null) {
-		cmdCharacteristic.writeValue(new Uint8Array([0x10])).catch(error => { console.log(error); addLog("getMAC() error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x10])).catch(error => { addLog("getMAC() Error: " + error); });
 	}
 }
 
 function getTrgCfg() {
 	if(cmdCharacteristic != null) {
-		cmdCharacteristic.writeValue(new Uint8Array([0x44])).catch(error => { console.log(error); addLog("getTrgCfg() error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x44])).catch(error => { addLog("getTrgCfg() Error: " + error); });
 	}
 }
 
 function getDevName() {
 	if(cmdCharacteristic != null) {
-		cmdCharacteristic.writeValue(new Uint8Array([0x01])).catch(error => { console.log(error); addLog("getDevName() error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x01])).catch(error => { addLog("getDevName() Error: " + error); });
 	}
 }
 
 function chkDevCfg() {
 		if(devCfg.flg == null) return;
-		devCfg.flg &= 0xffffffe0;
+		devCfg.flg &= 0xffffffc0;
 	    devCfg.flg |= ($('chkCfgNotify').checked) ? 1 : 0;
 	    devCfg.flg |= ($('chkCfgClock').checked) ? 2 : 0;
 	    devCfg.flg |= ($('chkCfgSmiley').checked) ? 4 : 0;
 	    devCfg.flg |= ($('chkCfgTrg').checked) ? 8 : 0;
 	    devCfg.flg |= ($('chkCfgLcdOff').checked) ? 16 : 0;
+	    devCfg.flg |= ($('chkCfgBindKey').checked) ? 32 : 0;
 		devCfg.tx_power = $('selTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inpLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
@@ -1675,7 +1676,7 @@ function setDevCfg() {
 			devCfg.averaging_measurements,
 	    	devCfg.reserved2
 			]);
-		cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setDevCfg() error!");});
+		cmdCharacteristic.writeValue(blk).catch(error => { addLog("setDevCfg() Error: " + error);});
 	}
 }
 
@@ -1694,7 +1695,7 @@ function setSensCfg() {
 	    	devSens.temp_z & 0xff, (devSens.temp_z >> 8) & 0xff,
 		    devSens.humi_z & 0xff, (devSens.humi_z >> 8) & 0xff
 		    ]);
-		cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setSensCfg() error!"); });
+		cmdCharacteristic.writeValue(blk).catch(error => { addLog("setSensCfg() Error: " + error); });
 	}
 }
 
@@ -1710,7 +1711,7 @@ function setDevTime() {
 	addLog("Установка времени на устройстве (" + dump(blk, blk.length) + ")...");
 	cmdCharacteristic.writeValue(blk).then(_ => {
 		console.log('Время на устройстве синхронизировано');
-	});
+	}).catch(error => { addLog("setDevTime() Error: " + error); });
 }
 
 function setDevMAC() {
@@ -1788,7 +1789,7 @@ function setTrgCfg() {
 				blk[idx+7] = (devTrig.humi_hysteresis >> 8) & 0xff;
 				blk[idx+8] = devTrig.flg & 0xff;
 			}
-			cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setTrgCfg() error!"); });
+			cmdCharacteristic.writeValue(blk).catch(error => { addLog("setTrgCfg() Error: " + error); });
 		}
 	}
 }
@@ -1802,30 +1803,59 @@ function setDevName(flg) {
 		if(flg) {
 			let eltxt = $("inpDevName").value;
 			let len = eltxt.length;
-			if(len > 1 && len < 20) {
+			if(len > 0 && len < 20) {
+				let nm = new Uint8Array((new TextEncoder()).encode(eltxt));
+				len = nm.length;
+				if(len > 0 && len < 20) {
+					addLog("Имя устройства должно быть от 1 до 19 символов, включая кодирование UTF-8!");
+				}
 				let blk = new Uint8Array(1 + len);
 				blk[0] = 0x01;
-				blk.set((new TextEncoder()).encode(eltxt), 1);
+				blk.set(nm, 1);
 				console.log(blk);
-				cmdCharacteristic.writeValue(blk).catch(error => { console.log(error); addLog("setDevName() error!"); });
+				cmdCharacteristic.writeValue(blk).catch(error => { addLog("setDevName() Error: " + error); });
 			} else
 				addLog("Имя устройства должно быть от 1 до 19 символов!");
 		} else 
-			cmdCharacteristic.writeValue(new Uint8Array([0x01, 0])).catch(error => { console.log(error); addLog("setDevName() error!"); });
+			cmdCharacteristic.writeValue(new Uint8Array([0x01, 0])).catch(error => { addLog("setDevName() Error: "+ error); });
 	}
 }
 
 function resetDevCfg() {
 	if(cmdCharacteristic != null) {
 		addLog("Restore connection default settings...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x56])).catch(error => { console.log(error); addLog("resetDevCfg() error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x56])).catch(error => { addLog("resetDevCfg() Error: " + error); });
 	}
 }
 
 function resetSensCfg() {
 	if(cmdCharacteristic != null) {
 		addLog("Restore sensor default settings...");
-		cmdCharacteristic.writeValue(new Uint8Array([0x26])).catch(error => { console.log(error); addLog("resetSensCfg() error!"); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x26])).catch(error => { addLog("resetSensCfg() Error: " + error); });
+	}
+}
+function getGetBindKey() {
+	if(cmdCharacteristic != null) {
+		//addLog("Get bindkey...");
+		cmdCharacteristic.writeValue(new Uint8Array([0x18])).catch(error => { addLog("getGetBindKey() Error: " + error); });
+	}
+}
+function setBindKey() {
+	if(cmdCharacteristic != null) {
+		let bk = $("inpBindKey").value;
+		if(bk.length == 32) {
+			let bkey = hexToBytes(bk);
+			if(bkey.length == 16) {
+				let blk = new Uint8Array(17);
+				blk.set(bkey,1);
+				blk[0] = 0x18;
+				//console.log("Send bindkey...");
+				addLog("Сохранить новый BindKey: " + bytesToHex(blk.slice(1)));
+				cmdCharacteristic.writeValue(blk).catch(error => { addLog("setBindKey() Error: " + error); });
+				return;
+			}
+		}
+		addLog("BindKey должен соднержать 16 байт в HEX виде (32 символа)!")
 	}
 }
 
@@ -2161,7 +2191,7 @@ window.onload = function() {
 </table>
 <table>
   <tr>
-    <td><label><input type="checkbox" id="chkCfgNotify" title="Передача измерений при соединении и включении Notification"/>Notification</label></td>
+    <td><label><input type="checkbox" id="chkCfgNotify" title="Передача измерений при соединении и включении Notification"/>Notification</label> <label id="labBindKey"><input type="checkbox" id="chkCfgBindKey" title="Используется BindKey"/>Шифрованная реклама</label></td>
   </tr>
 </table>
 <table>
@@ -2319,6 +2349,17 @@ window.onload = function() {
 	<td><button type="button" id="btnRstName" onclick="setDevName(false)">По умолчанию</button></td>
   </tr>
 </table>
+<div id="divBindKey">
+ <hr>
+ <table>
+  <tr>
+	<td style="width:100px;">BindKey:</td>
+	<td><button type="button" id="btnGetBindKeyy" onclick="getGetBindKey()">Прочитать</button></td>
+	<td><input size="40" maxlength="32" title="Bind Key должен содержать 16 байт в hex виде" type="text" id="inpBindKey" value="?"></td>
+	<td><button type="button" id="btnBindKey" onclick="setBindKey()">Записать</button></td>
+  </tr>
+ </table>
+</div>
 </div>
 <hr>
 <button type="button" onclick="clearLog()">Очистить лог</button>

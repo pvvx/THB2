@@ -15,7 +15,6 @@
 #define BtHomeID_Info	0x40
 #define BtHomeID_Info_Encrypt	0x41
 
-
 // https://github.com/custom-components/ble_monitor/issues/548
 typedef enum {
 	BtHomeID_PacketId = 0,			//0x00, uint8
@@ -109,7 +108,7 @@ typedef struct __attribute__((packed)) _adv_head_bth_t {
 	uint8		size;   // =
 	uint8		type;	// = 0x16, 16-bit UUID
 	uint16		UUID;	// = 0xFCD2, GATT Service BTHome
-} adv_head_bth_t, * padv_head_bth_t;
+} adv_head_bth_t, * padv_head_bth_t; // size: 4
 
 typedef struct __attribute__((packed)) _adv_bthome_data1_t {
 	uint8		b_id;	// = BtHomeID_battery
@@ -120,55 +119,108 @@ typedef struct __attribute__((packed)) _adv_bthome_data1_t {
 	uint16		humidity; // x 0.01 %
 	uint8		v_id;	// = BtHomeID_voltage
 	uint16		battery_mv; // x 0.001 V
-} adv_bthome_data1_t, * padv_bthome_data1_t;
+} adv_bthome_data1_t, * padv_bthome_data1_t; // size: 11
 
 typedef struct __attribute__((packed)) _adv_bthome_data2_t {
 	uint8		b_id;	// = BtHomeID_battery
 	uint8		battery_level; // 0..100 %
 	uint8		v_id;	// = BtHomeID_voltage
 	uint16		battery_mv; // x 0.001 V
-} adv_bthome_data2_t, * padv_bthome_data2_t;
+} adv_bthome_data2_t, * padv_bthome_data2_t; // size: 5
 
 typedef struct __attribute__((packed)) _adv_bthome_event1_t {
 	uint8_t		o_id;	// = BtHomeID_opened ?
 	uint8_t		opened;
 	uint8_t		c_id;	// = BtHomeID_count32
 	uint32_t	counter;
-} adv_bthome_event1_t, * padv_bthome_event1_t;
-
-
-#define ADV_BUFFER_SIZE		(31-3)
+} adv_bthome_event1_t, * padv_bthome_event1_t; // size: 7
 
 // BTHOME data1, no security
 typedef struct __attribute__((packed)) _adv_bthome_ns1_t {
-	uint8 		flag[3];		// Advertise type flags
-	adv_head_bth_t head;
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;	// [4]
 	uint8		info;	// = 0x40 BtHomeID_Info
 	uint8		p_id;	// = BtHomeID_PacketId
 	uint8		pid;	// PacketId (measurement count)
 	adv_bthome_data1_t data;
-} adv_bthome_ns1_t, * padv_bthome_ns1_t;
+} adv_bthome_ns1_t, * padv_bthome_ns1_t; // size: 21
 
 // BTHOME data2, no security
 typedef struct __attribute__((packed)) _adv_bthome_ns2_t {
-	uint8 		flag[3];		// Advertise type flags
-	adv_head_bth_t head;
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;	// [4]
 	uint8		info;	// = 0x40 BtHomeID_Info
 	uint8		p_id;	// = BtHomeID_PacketId
 	uint8		pid;	// PacketId (measurement count)
 	adv_bthome_data2_t data;
-} adv_bthome_ns2_t, * padv_bthome_ns2_t;
+} adv_bthome_ns2_t, * padv_bthome_ns2_t; // size: 15
 
 // BTHOME event1, no security
 typedef struct __attribute__((packed)) _adv_bthome_evns1_t {
-	uint8 		flag[3];		// Advertise type flags
-	adv_head_bth_t head;
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;	// [4]
 	uint8		info;	// = 0x40 BtHomeID_Info
 	uint8		p_id;	// = BtHomeID_PacketId
 	uint8		pid;	// PacketId (measurement count)
 	adv_bthome_event1_t data;
-} adv_bthome_evns1_t, * padv_bthome_evns1_t;
+} adv_bthome_evns1_t, * padv_bthome_evns1_t; // size: 17
 
+#if (DEV_SERVICES & SERVICE_BINDKEY)
+
+// BTHOME data1, security
+typedef struct __attribute__((packed)) _adv_bthome_d1_t {
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;	// [4]
+	uint8_t		info;	// = 0x41 BtHomeID_Info_Encrypt
+	adv_bthome_data1_t data;
+	uint32_t	count_id;
+	uint8_t		mic[4];
+} adv_bthome_1_t, * padv_bthome_1_t; // size: 27
+
+// BTHOME data2, security
+typedef struct __attribute__((packed)) _adv_bthome_d2_t {
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;	// [4]
+	uint8_t		info;	// = 0x41 BtHomeID_Info_Encrypt
+	adv_bthome_data2_t data;
+	uint32_t	count_id;
+	uint8_t		mic[4];
+} adv_bthome_2_t, * padv_bthome_2_t; // size: 21
+
+// BTHOME event1, security
+typedef struct __attribute__((packed)) _adv_bthome_ev1_t {
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;	// [4]
+	uint8_t		info;	// = 0x41 BtHomeID_Info_Encrypt
+	adv_bthome_event1_t data;
+	uint32_t	count_id;
+	uint8_t		mic[4];
+} adv_bthome_ev1_t, * padv_bthome_ev1_t; // size: 23
+
+
+// BTHOME adv security
+typedef struct __attribute__((packed)) _adv_bthome_encrypt_t {
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;
+	uint8_t info;
+	uint8_t data[30-4];
+} adv_bthome_encrypt_t, * padv_bthome_encrypt_t;
+
+extern uint8_t bindkey[16];
+
+void bthome_beacon_init(void);
+
+#endif // (DEV_SERVICES & SERVICE_BINDKEY)
+
+// BTHOME adv no security
+typedef struct __attribute__((packed)) _adv_bthome_noencrypt_t {
+	uint8 		flag[3];	// Advertise type flags
+	adv_head_bth_t head;	// [4]
+	uint8		info;	// = 0x40 BtHomeID_Info
+	uint8		p_id;	// = BtHomeID_PacketId
+	uint8		pid;	// PacketId (measurement count)
+	uint8_t data[30-4-2];
+} adv_bthome_noencrypt_t, * padv_bthome_noencrypt_t;
 
 uint8_t bthome_data_beacon(void * padbuf);
 

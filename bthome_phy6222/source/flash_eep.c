@@ -417,10 +417,10 @@ signed short flash_read_cfg(void *ptr, unsigned short id, unsigned short maxsize
 #if CONFIG_DEBUG_LOG > 3
 				DBG_FEEP_INFO("obj not found\n");
 #endif
-				rets = -faddr-1;
+				rets = -faddr - 1;
 			}
 		}
-		else rets = -faddr-1;
+		else rets = -faddr - 1;
 		_flash_mutex_unlock();
 	}
     return rets;

@@ -21,7 +21,7 @@ extern "C" {
 //#define EEP_ID_CMF (0x0FCC) // EEP ID comfort data
 #define EEP_ID_DVN (0xDEAE) // EEP ID device name
 #define EEP_ID_TIM (0x0ADA) // EEP ID time adjust
-//#define EEP_ID_KEY (0xBC0D) // EEP ID bkey
+#define EEP_ID_KEY (0xBC0D) // EEP ID bindkey
 #define EEP_ID_VER (0x5555) // EEP ID blk: unsigned int = minimum supported version
 //-----------------------------------------------------------------------------
 #ifndef FLASH_BASE_ADDR
