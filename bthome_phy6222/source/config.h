@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x15	// BCD
+#define APP_VERSION	0x14	// BCD
 #endif
 
 /* rf_phy_ana_cfg
@@ -52,7 +52,7 @@
 #define SERVICE_OTA			0x00000001	// есть функция OTA
 #define SERVICE_OTA_EXT		0x00000002	// пока нет // есть расширенная функция OTA
 #define SERVICE_PINCODE 	0x00000004	// пока нет // есть установка pin-code
-#define SERVICE_BINDKEY 	0x00000008	// пока нет // есть шифрование
+#define SERVICE_BINDKEY 	0x00000008	// есть шифрование
 #define SERVICE_HISTORY 	0x00000010	// есть запись истории
 #define SERVICE_SCREEN		0x00000020	// есть экран
 #define SERVICE_LE_LR		0x00000040	// пока нет // Есть поддержка рекламы в LE Long Range
@@ -380,12 +380,13 @@ typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;
 	uint32_t	measure_batt_tik;
 #if (DEV_SERVICES & SERVICE_RDS)
+	uint32_t	rds_timer_tik;
 	uint32_t	rds_count;
 #endif
-	uint8_t		adv_meas_count;
+	uint8_t		meas_count;
 	uint8_t 	adv_reload_count;
-	uint8_t		adv_batt_count;
-	uint8_t		adv_event;
+	uint8_t		new_battery; 	// new battery
+	uint8_t		adv_event; 		// rds event
 } adv_work_t;
 extern adv_work_t adv_wrk;
 

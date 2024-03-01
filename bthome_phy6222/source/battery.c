@@ -20,8 +20,22 @@
 */
 #define MIN_ADC_CH 2
 
+//--- check battery
+#define BAT_AVERAGE1_SHL		3 // 8*4 = 32 минуты если шаг измерения 60 сек
+#define BAT_AVERAGE1_COUNT	(1 << BAT_AVERAGE1_SHL) // 8
+#define BAT_AVERAGE2_SHL		2
+#define BAT_AVERAGE2_COUNT	(1 << BAT_AVERAGE2_SHL) // 4
+struct {
+	uint32_t buf2[BAT_AVERAGE2_COUNT];
+	uint16_t buf1[BAT_AVERAGE1_COUNT];
+	uint16_t battery_mv;
+	uint8_t index1;
+	uint8_t index2;
+} bat_average;
+
 static void init_adc_batt(void);
 
+__ATTR_SECTION_SRAM__
 void __attribute__((used)) hal_ADC_IRQHandler(void) {
 	uint32_t adc_sum = 0, i;
 	//int status = AP_ADCC->intr_status;
@@ -56,17 +70,11 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 	AP_IOMUX->pad_ps0 &= ~BIT(ADC_PIN); // hal_gpio_ds_control(ADC_PIN, Bit_ENABLE);
 	LOG("ADC_measure = %d\n", adc_sum);
 #if ADC_VBAT_CHL == VBAT_ADC_P15
-	measured_data.battery_mv = (adc_sum * 1710) >> 16; // 3200*65536/(30*4096)=1706.666
+	bat_average.battery_mv = (adc_sum * 1710) >> 16; // 3200*65536/(30*4096)=1706.666
 #else
-	measured_data.battery_mv = (adc_sum * 1904) >> 16;
+	bat_average.battery_mv = (adc_sum * 1904) >> 16;
 #endif
-	if (measured_data.battery_mv < 3000)
-		if (measured_data.battery_mv > 2000)
-			measured_data.battery = (measured_data.battery_mv - 2000) / 10;
-		else
-			measured_data.battery = 0;
-	else
-		measured_data.battery = 100;
+	adv_wrk.new_battery = 1; // new battery
 #if ((DEV_SERVICES & SERVICE_THS) == 0)
 	measured_data.count++;
 #endif
@@ -151,4 +159,45 @@ static void init_adc_batt(void) {
 #else
 	AP_IOMUX->Analog_IO_en |= BIT(ADC_PIN - P11); //	hal_gpio_cfg_analog_io(ADC_PIN, Bit_ENABLE);
 #endif
+}
+
+void check_battery(void) {
+	uint32_t i;
+	uint32_t summ;
+	if(bat_average.battery_mv == 0)
+		return;
+	//if (bat_average.battery_mv < 2000) // It is not recommended to write Flash below 2V
+	//	low_vbat(); // TODO
+	if(bat_average.buf1[0] == 0) {
+		for(i = 0; i < BAT_AVERAGE1_COUNT; i++)
+			bat_average.buf1[i] = bat_average.battery_mv;
+		summ = bat_average.battery_mv << BAT_AVERAGE1_SHL;
+		for(i = 0; i < BAT_AVERAGE2_COUNT; i++)
+			bat_average.buf2[i] = summ;
+		measured_data.battery_mv = bat_average.battery_mv;
+	} else {
+		bat_average.index1++;
+		bat_average.index1 &= BAT_AVERAGE1_COUNT - 1;
+		if(bat_average.index1 == 0) {
+			bat_average.index2++;
+			bat_average.index2 &= BAT_AVERAGE2_COUNT - 1;
+		}
+		bat_average.buf1[bat_average.index1] = bat_average.battery_mv;
+		summ = 0;
+		for(i = 0; i < BAT_AVERAGE1_COUNT; i++)
+			summ += bat_average.buf1[i];
+		bat_average.buf2[bat_average.index2] = summ;
+		summ = 0;
+		for(i = 0; i < BAT_AVERAGE2_COUNT; i++)
+			summ += bat_average.buf2[i];
+		measured_data.battery_mv = summ >> (BAT_AVERAGE1_SHL + BAT_AVERAGE2_SHL);
+	}
+	if (measured_data.battery_mv < 3000)
+		if (measured_data.battery_mv > 2000)
+			measured_data.battery = (measured_data.battery_mv - 2000) / 10;
+		else
+			measured_data.battery = 0;
+	else
+		measured_data.battery = 100;
+	bat_average.battery_mv = 0;
 }

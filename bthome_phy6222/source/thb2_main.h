@@ -33,6 +33,12 @@ extern "C"
 #define DEF_OTA_ADV_INERVAL 		1600 // 1 sec
 #define DEF_OTA_ADV_INERVAL_MS 		((DEF_OTA_ADV_INERVAL*625)/1000) // 1000 ms
 
+// adv. event
+#define RDS_STEP_TIMER_SEC		1800 // шаг передачи 30 минут
+#define RDS_RETRY_DOUBLE_SEC	(RDS_STEP_TIMER_SEC-12) // дубль через 12 сек
+#define RDS_RETRY_START_SEC		(RDS_STEP_TIMER_SEC-120) // старт 2 минуты
+#define RDS_RETRY_ADV_COUNT		16
+
 // How often to perform periodic event
 #define SBP_PERIODIC_EVT_PERIOD		5000
 

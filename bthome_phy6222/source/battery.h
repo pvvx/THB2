@@ -16,6 +16,7 @@
 #define VBAT_ADC_P20	7
 
 void batt_start_measure(void);
+void check_battery(void);
 
 #endif
 

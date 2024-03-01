@@ -214,60 +214,73 @@ static void set_adv_interval(uint16_t advInt)
 
 //extern void start_measure(void);
 
+
 static void adv_measure(void) {
+
 	if(gapRole_AdvEnabled) {
 		get_utc_time_sec(); // счет UTC timestamp
 #if	(DEV_SERVICES & SERVICE_RDS)
 		if(!adv_wrk.adv_event) {
+			if(clkt.utc_time_tik - adv_wrk.rds_timer_tik >= (RDS_STEP_TIMER_SEC << 15)) {
+				adv_wrk.rds_timer_tik = clkt.utc_time_tik;
+				adv_wrk.adv_event = 1;
+				adv_wrk.adv_reload_count = RDS_RETRY_ADV_COUNT;
+				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+				set_new_adv_interval(DEF_EVENT_ADV_INERVAL); // actual time * 625us
+				return;
+			}
 #endif
-		if(clkt.utc_time_tik - adv_wrk.measure_batt_tik >= ((uint32_t)cfg.batt_interval << 15)) {
-			adv_wrk.measure_batt_tik = clkt.utc_time_tik;
-			batt_start_measure();
+			if(clkt.utc_time_tik - adv_wrk.measure_batt_tik >= ((uint32_t)cfg.batt_interval << 15)) {
+				adv_wrk.measure_batt_tik = clkt.utc_time_tik;
+				batt_start_measure();
 #if ((DEV_SERVICES & SERVICE_THS) == 0)
-			adv_wrk.adv_batt_count = 1;
-		} else {
-			if(adv_wrk.adv_batt_count) {
-				adv_wrk.adv_batt_count = 0;
+			} else {
+				if(adv_wrk.new_battery) {
+					adv_wrk.new_battery = 0;
+					check_battery();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-				chow_lcd(1);
+					chow_lcd(1);
 #endif
 #if (DEV_SERVICES & SERVICE_HISTORY)
-				if (cfg.averaging_measurements != 0)
-					write_memo();
+					if (cfg.averaging_measurements != 0)
+						write_memo();
 #endif
-
-				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+					LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 #if (DEV_SERVICES & SERVICE_SCREEN)
-			} else {
-				chow_lcd(0);
+				} else {
+					chow_lcd(0);
+#endif
+				}
 #endif
 			}
-#endif
-		}
 #if (DEV_SERVICES & SERVICE_THS)
-		if(adv_wrk.adv_meas_count == (uint8_t)(cfg.measure_interval - 1)) {
-			start_measure();
+			if(adv_wrk.meas_count == (uint8_t)(cfg.measure_interval - 1)) {
+				start_measure();
 #if (DEV_SERVICES & SERVICE_SCREEN)
-			chow_lcd(0);
-#endif
-		} else {
-			if(adv_wrk.adv_meas_count >= cfg.measure_interval) {
-				adv_wrk.adv_meas_count = 0;
-				read_sensor();
-#if (DEV_SERVICES & SERVICE_SCREEN)
-				chow_lcd(1);
-#endif
-#if (DEV_SERVICES & SERVICE_HISTORY)
-				if (cfg.averaging_measurements != 0)
-					write_memo();
-#endif
-				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
-#if (DEV_SERVICES & SERVICE_SCREEN)
-			} else {
 				chow_lcd(0);
 #endif
+			} else {
+				if(adv_wrk.meas_count >= cfg.measure_interval) {
+					adv_wrk.meas_count = 0;
+					read_sensor();
+					if(adv_wrk.new_battery) {
+						adv_wrk.new_battery = 0;
+						check_battery();
+					}
+#if (DEV_SERVICES & SERVICE_SCREEN)
+					chow_lcd(1);
+#endif
+#if (DEV_SERVICES & SERVICE_HISTORY)
+					if (cfg.averaging_measurements != 0)
+						write_memo();
+#endif
+					LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+#if (DEV_SERVICES & SERVICE_SCREEN)
+				} else {
+					chow_lcd(0);
+#endif
+				}
 			}
-		}
 #endif	// (DEV_SERVICES & SERVICE_THS)
 #if	(DEV_SERVICES & SERVICE_RDS)
 		}
@@ -281,13 +294,17 @@ static void adv_measure(void) {
 #endif
 				if(adv_wrk.adv_event) {
 					adv_wrk.adv_event = 0;
+					if(adv_wrk.new_battery) {
+						adv_wrk.new_battery = 0;
+						check_battery();
+					}
 					measured_data.count++;
 					LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 				}
 				set_new_adv_interval(cfg.advertising_interval * 100);
 			}
 		}
-		adv_wrk.adv_meas_count++;
+		adv_wrk.meas_count++;
 	}
 }
 
@@ -558,6 +575,9 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 	LL_PLUS_PerStats_Init(&g_perStatsByChanTest);
 
 	batt_start_measure();
+#if	(DEV_SERVICES & SERVICE_RDS)
+	adv_wrk.rds_timer_tik = clkt.utc_time_tik - (RDS_RETRY_START_SEC << 15);
+#endif
 
 	LOG("=====SimpleBLEPeripheral_Init Done=======\n");
 }
@@ -580,7 +600,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 	VOID task_id; // OSAL required parameter that isn't used in this function
 	if ( events & ADV_BROADCAST_EVT) {
 		adv_measure();
-		LOG("advN%u\n", adv_wrk.adv_meas_count);
+		LOG("advN%u\n", adv_wrk.meas_count);
 		// return unprocessed events
 		return (events ^ ADV_BROADCAST_EVT);
 	}
@@ -602,7 +622,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 	// enable adv (from gaprole start)
 	if ( events & SBP_RESET_ADV_EVT ) {
 		LOG("SBP_RESET_ADV_EVT\n");
-		adv_wrk.adv_meas_count = 0;
+		adv_wrk.meas_count = 0;
 		// set_new_adv_interval(DEF_ADV_INERVAL); // actual time = advInt * 625us
 		gatrole_advert_enable(TRUE);
 		return ( events ^ SBP_RESET_ADV_EVT );
@@ -637,6 +657,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 	if( events & BATT_VALUE_EVT) {
 		LOG("Vbat: %d mV, %d %%\n", measured_data.battery_mv, measured_data.battery);
 		// Batt Notify
+		check_battery();
 		if(!gapRole_AdvEnabled) {
 			BattNotifyLevel();
 #if ((DEV_SERVICES & SERVICE_THS)==0)
@@ -661,7 +682,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 #ifdef GPIO_LED
 		hal_gpio_write(GPIO_LED, LED_OFF);
 #endif
-		//adv_wrk.adv_meas_count = 0;
+		//adv_wrk.meas_count = 0;
 #if (DEV_SERVICES & SERVICE_SCREEN)
 		lcd_show_version();
 #endif
@@ -686,7 +707,8 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 			if(gapRole_AdvEnabled) {
 				measured_data.count++;
 				adv_wrk.adv_event = 1;
-				adv_wrk.adv_reload_count = 5;
+				adv_wrk.adv_reload_count = RDS_RETRY_ADV_COUNT;
+				adv_wrk.rds_timer_tik = clkt.utc_time_tik - (RDS_RETRY_DOUBLE_SEC << 15);
 				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 				set_new_adv_interval(DEF_EVENT_ADV_INERVAL); // actual time * 625us
 			} else if(cfg.flg & FLG_MEAS_NOTIFY) {
@@ -784,13 +806,13 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 		{
 			LOG("Gaprole_adversting\n");
 			osal_stop_timerEx(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT);
-			adv_wrk.adv_meas_count = 0;
+			adv_wrk.meas_count = 0;
 		}
 		break;
 
 		case GAPROLE_CONNECTED:
 			adv_wrk.adv_event = 0;
-			adv_wrk.adv_meas_count = 0;
+			adv_wrk.meas_count = 0;
 			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_THS)
 			osal_start_reload_timer(simpleBLEPeripheral_TaskID, TIMER_BATT_EVT, adv_wrk.measure_interval_ms); // 10000 ms
@@ -819,7 +841,7 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 			gapRole_SlaveLatency = cfg.connect_latency;
 #endif
 			adv_wrk.adv_event = 0;
-			adv_wrk.adv_meas_count = 0;
+			adv_wrk.meas_count = 0;
 			adv_wrk.adv_reload_count = 1;
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			show_ble_symbol(0);
