@@ -401,8 +401,14 @@ static void hal_rfphy_init(void) {
 	XTAL16M_CURRENT_SETTING(0x01);
 
 	hal_rc32k_clk_tracking_init();
-
-	hal_rom_boot_init();
+    { /* замена hal_rom_boot_init() */
+		extern void efuse_init(void);
+		efuse_init();
+        typedef void (*my_function)(void);
+        my_function pFunc = (my_function)(0xa2e1);
+        //ble_main();
+        pFunc();
+    }
 	NVIC_SetPriority((IRQn_Type) BB_IRQn, IRQ_PRIO_REALTIME);
 	NVIC_SetPriority((IRQn_Type) TIM1_IRQn, IRQ_PRIO_HIGH);		//ll_EVT
 	NVIC_SetPriority((IRQn_Type) TIM2_IRQn, IRQ_PRIO_HIGH);		//OSAL_TICK

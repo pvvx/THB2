@@ -1930,14 +1930,18 @@ function ajax_file(filename, fn, rawurl = "https://raw.githubusercontent.com/pvv
 function FirmwareCustom() {
 	if(hwver_id != null) {
 		let fn = otafiles.custom[hwver_id];
-		addLog("Загрузка firmware файла '"+fn+"'...");
+		let fnn = fn.split("/").pop();
+		$('lblFile').innerHTML = fnn;
+		addLog("Загрузка firmware файла '"+fnn+"'...");
 		ajax_file(fn, getFwArray);
 	}
 }
 function FirmwareBeta() {
 	if(hwver_id != null) {
 		let fn = otafiles.betafw[hwver_id];
-		addLog("Загрузка firmware файла '"+fn+"'...");
+		let fnn = fn.split("/").pop();
+		$('lblFile').innerHTML = fnn;
+		addLog("Загрузка firmware файла '"+fnn+"'...");
 		ajax_file(fn, getFwArray);
 	}
 }
@@ -1946,7 +1950,9 @@ function FirmwareBoot() {
 		return;
 	if(hwver_id != null) {
 		let fn = otafiles.updateboot[hwver_id];
-		addLog("Загрузка firmware файла '"+fn+"'...");
+		let fnn = fn.split("/").pop();
+		$('lblFile').innerHTML = fnn;
+		addLog("Загрузка firmware файла '"+fnn+"'...");
 		ajax_file(fn, getFwArray);
 	}
 }
