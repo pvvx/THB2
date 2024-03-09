@@ -14,14 +14,14 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 * Прошивка [Boot](https://github.com/pvvx/THB2?tab=readme-ov-file#fw-boot-%D0%B8-ota) имеет минимум функций. Boot используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
 * Внешне отличить тип устройства возможно по символу смайлика на экране.
 
-| Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
-|:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v15.hex | THB1_v15.bin | нет |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v15.hex | THB2_v15.bin | нет |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v15.hex | BTH01_v15.bin | нет |
-| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v15.hex | TH05_v1.4.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v15.hex | TH05D_v15.bin | RSH-TH05-V1.3 с чипом BL55072 |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v15.hex | TH05F_v15.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT |
+| Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате | Энергопотребление на кастомной | Энергопотребрелние на ориг. прошивке |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v15.hex | THB1_v15.bin | нет | - | 53 мкА |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v15.hex | THB2_v15.bin | нет | 3 мкА | - |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v15.hex | BTH01_v15.bin | нет | 3 мкА | - |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v15.hex | TH05_v1.4.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 | 13 мкA | 23 мкA |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v15.hex | TH05D_v15.bin | RSH-TH05-V1.3 с чипом BL55072 | 13 мкA | 23 мкA |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v15.hex | TH05F_v15.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT | 13 мкA | 23 мкA |
 
 Основные файлы прошивок, BOOT_xxx_vxx.hex для программирования через USB-COM адаптер и xxx_vxx.bin для OTA, находятся в директории [bin](https://github.com/pvvx/THB2/tree/master/bin).
 
