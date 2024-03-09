@@ -21,7 +21,7 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 | [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v15.hex | BTH01_v15.bin | нет | 8 мкА | - |
 | [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v15.hex | TH05_v1.4.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 | 23 мкA | 23 мкA |
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v15.hex | TH05D_v15.bin | RSH-TH05-V1.3 с чипом BL55072 | 13 мкA | - |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v15.hex | TH05F_v15.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT | 13 мкA | - |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v15.hex | TH05F_v15.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT | 13 мкA | 26 мкА |
 
 Основные файлы прошивок, BOOT_xxx_vxx.hex для программирования через USB-COM адаптер и xxx_vxx.bin для OTA, находятся в директории [bin](https://github.com/pvvx/THB2/tree/master/bin).
 
