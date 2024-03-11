@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2 Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "26.02.24"
+__version__ = "11.03.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -243,9 +243,9 @@ class phyflasher:
 				self._port.close()
 				exit(4)
 		print('PHY62x2 - Reset Ok')
-		self._port.close()
+		#self._port.close()
 		self._port.baudrate = DEF_RUN_BAUD
-		self._port.open();
+		#self._port.open();
 		self._port.timeout = 0.2
 		if fct_mode:
 			print('PHY62x2 in FCT mode!')
