@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x14	// BCD
+#define APP_VERSION	0x16	// BCD
 #endif
 
 /* rf_phy_ana_cfg
