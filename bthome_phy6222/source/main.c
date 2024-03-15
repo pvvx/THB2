@@ -203,7 +203,7 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P33, GPIO_FLOATING }, // I2C_SDA
 		{ GPIO_P34, GPIO_FLOATING }  // I2C_SCL
 
-#elif (DEVICE == DEVICE_THB1)
+#elif (DEVICE == DEVICE_THB1) || (DEVICE == DEVICE_THB3)
 		{ GPIO_P00, GPIO_PULL_DOWN },
 		{ GPIO_P01, GPIO_PULL_UP }, // KEY - GPIO_KEY
 		{ GPIO_P02, GPIO_PULL_DOWN },

@@ -42,10 +42,10 @@
 #define DEVICE_THB1		23
 #define DEVICE_TH05D	24  // TH05_V1.3
 #define DEVICE_TH05F	25  // TH05Y_V1.2
-//#define DEVICE_THB3		26
+#define DEVICE_THB3		26
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_BTH01
+#define DEVICE		DEVICE_THB3
 #endif
 
 // supported services by the device (bits)
@@ -200,7 +200,7 @@
 #define DEF_HARDWARE_REVISION		"0015"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
-#elif DEVICE == DEVICE_THB1
+#elif (DEVICE == DEVICE_THB1) || (DEVICE == DEVICE_THB3)
 /* Model: THB1 */
 #if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
@@ -238,8 +238,13 @@
 #define GPIO_TRG	GPIO_P09 // mark TX
 #define GPIO_INP	GPIO_P10 // mark RX
 
+#if DEVICE == DEVICE_THB1
 #define DEF_MODEL_NUMBER_STR		"THB1"
 #define DEF_HARDWARE_REVISION		"0017"
+#else
+#define DEF_MODEL_NUMBER_STR		"THB3"
+#define DEF_HARDWARE_REVISION		"001A"
+#endif
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #elif DEVICE == DEVICE_TH05D

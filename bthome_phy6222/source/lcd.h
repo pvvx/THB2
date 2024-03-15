@@ -115,6 +115,8 @@
 
 #if (DEVICE == DEVICE_THB1)
 #define LCD_BUF_SIZE	7
+#elif (DEVICE == DEVICE_THB3)
+#define LCD_BUF_SIZE	7
 #elif (DEVICE == DEVICE_TH05D)
 #define LCD_BUF_SIZE	8
 #elif (DEVICE == DEVICE_TH05)

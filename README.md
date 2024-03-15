@@ -1,9 +1,9 @@
-# BTHome THB1, THB2, BTH01, TH05(HW: v1.3..1.6), TH05F
+# BTHome THB1, THB2, THB3, BTH01, TH05(HW: v1.3..1.6), TH05F
 
 Custom firmware for Tuya devices on the PHY622x2 chipset
-| [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
+| [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB2/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
 * Подгрузка файлов OTA в [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) производится автоматически - загружать из файлы из данного репозитория для OTA не требуется.
@@ -16,8 +16,9 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 
 | Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
 |:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v15.hex | THB1_v15.bin | нет |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v15.hex | THB2_v15.bin | нет |
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v16.hex | THB1_v16.bin | нет |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v16.hex | THB2_v16.bin | нет |
+| [THB3](https://pvvx.github.io/THB2) | BOOT_THB2_v16.hex | THB2_v16.bin | нет |
 | [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v15.hex | BTH01_v15.bin | нет |
 | [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v15.hex | TH05_v1.4.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v15.hex | TH05D_v15.bin | RSH-TH05-V1.3 с чипом BL55072 |
@@ -70,7 +71,7 @@ Custom firmware for Tuya devices on the PHY622x2 chipset
 
 Если на адаптере отсутствует RST пин, тогда следует замкнуть вывод RESET с GND(-Vbat) и быстро разомкнуть при старте скрипта (вомзожно потребуется несколько попыток)
 
-Название контактов на устройстве смотреть в описании по ссылкам: [THB1](https://pvvx.github.io/THB1), [THB2](https://pvvx.github.io/THB2), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.3](https://pvvx.github.io/TH05-v1.3), [TH05_V1.4](https://pvvx.github.io/TH-05)
+Название контактов на устройстве смотреть в описании по ссылкам: [THB1](https://pvvx.github.io/THB1), [THB2](https://pvvx.github.io/THB2), [THB3](https://pvvx.github.io/THB3), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.3](https://pvvx.github.io/TH05-v1.3), [TH05_V1.4](https://pvvx.github.io/TH-05)
 
 2. Установить python3 и необходимые библиотеки
 
@@ -197,6 +198,7 @@ python3 rdwr_phy62x2.py -p COM11 -r we 0x10000 ./bin/TH05V13_v13.bin
 
 * На [THB1](https://pvvx.github.io/THB1) - маркирован как `RX`
 * На [THB2](https://pvvx.github.io/THB2) - маркирован как `RX`
+* На [THB3](https://pvvx.github.io/THB3) - маркирован как `RX`
 * На [BTH01](https://pvvx.github.io/BTH01/) - маркирован как `RX2`
 * На [TH05_V1.3](https://pvvx.github.io/TH05-v1.3)  - маркирован как `RX0`
 * На [TH05_V1.4](https://pvvx.github.io/TH-05) - маркирован как `RX2`

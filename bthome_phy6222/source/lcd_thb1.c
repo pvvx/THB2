@@ -7,7 +7,7 @@
 #include <string.h>
 #include "types.h"
 #include "config.h"
-#if (DEV_SERVICES & SERVICE_SCREEN) && (DEVICE == DEVICE_THB1)
+#if (DEV_SERVICES & SERVICE_SCREEN) && ((DEVICE == DEVICE_THB1) || (DEVICE == DEVICE_THB3))
 #include "OSAL.h"
 #include "gpio.h"
 #include "rom_sym_def.h"
