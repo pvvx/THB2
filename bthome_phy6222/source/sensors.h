@@ -10,6 +10,8 @@
 
 #if (DEV_SERVICES & SERVICE_THS)
 
+#include "dev_i2c.h"
+
 // Timing
 #define SENSOR_POWER_TIMEOUT_ms		3
 #define SENSOR_RESET_TIMEOUT_ms		3
@@ -162,7 +164,7 @@ typedef struct _thsensor_coef_t {
 	int16_t humi_z;
 } thsensor_coef_t;
 
-typedef int (*psernsor_rd_t)(void);
+typedef int (*psernsor_rd_t)(pdev_i2c_t pi2c_dev);
 //typedef void (*psernsor_sm_t)(void);
 
 typedef struct _thsensor_cfg_t {
@@ -178,7 +180,7 @@ extern thsensor_cfg_t thsensor_cfg;
 
 void init_sensor(void);
 void start_measure(void);
-int read_sensor(void);
+int read_sensors(void);
 
 #else // (DEV_SERVICES & SERVICE_THS)
 

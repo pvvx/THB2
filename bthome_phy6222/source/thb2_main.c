@@ -262,7 +262,7 @@ static void adv_measure(void) {
 			} else {
 				if(adv_wrk.meas_count >= cfg.measure_interval) {
 					adv_wrk.meas_count = 0;
-					read_sensor();
+					read_sensors();
 					if(adv_wrk.new_battery) {
 						adv_wrk.new_battery = 0;
 						check_battery();
@@ -635,7 +635,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 			adv_wrk.measure_batt_tik = clkt.utc_time_tik;
 			batt_start_measure();
 		}
-		read_sensor();
+		read_sensors();
 		start_measure();
 #if (DEV_SERVICES & SERVICE_SCREEN)
 		chow_lcd(1);
