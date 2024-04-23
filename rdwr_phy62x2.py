@@ -2,8 +2,8 @@
 
 # rdwr_phy62x2.py 11.01.2024 pvvx #
 
-import serial;
-import time;
+import serial
+import time
 import argparse
 import io
 import os
@@ -88,15 +88,15 @@ class phyflasher:
 		self.hexf.sec.extend(bytearray(struct.pack('<IIII', phy_head[secn][0], size, addr, 0xffffffff)))
 		return self.hexf
 	def write_cmd(self, pkt):
-		self._port.write(pkt.encode());
-		read = self._port.read(6);
+		self._port.write(pkt.encode())
+		read = self._port.read(6)
 		return read == b'#OK>>:'
 	def SendResetCmd(self):
-		return self._port.write(str.encode('reset '));
+		return self._port.write(str.encode('reset '))
 	def read_reg(self, addr):
-		pkt = 'rdreg%08x' % addr;
-		sent = self._port.write(pkt.encode());
-		read = self._port.read(17);
+		pkt = 'rdreg%08x' % addr
+		sent = self._port.write(pkt.encode())
+		read = self._port.read(17)
 		if len(read) == 17 and read[0:3] == b'=0x' and read[11:17] == b'#OK>>:':
 			return int(read[1:11], 16)
 		return None
@@ -124,13 +124,13 @@ class phyflasher:
 		if mbit > 0:
 			regcmd = regcmd | 0x40000
 		if dummy > 0:
-			regcmd = regcmd | (dummy << 7);		 
+			regcmd = regcmd | (dummy << 7)
 		if not self.write_reg(0x4000c890, regcmd | 1):
 			print('Error write Flash Command Register!')
 			return False
 		return True
 	def flash_wait_idle(self):
-		i = 5;
+		i = 5
 		while i > 0:
 			r = self.read_reg(0x4000c890)
 			if r == None:
@@ -179,9 +179,9 @@ class phyflasher:
 		return self.wr_flash_cmd(6) and self.wr_flash_cmd(1, 0, 1)	
 	def ReadRevision(self):
 		#0x001364c8 6222M005 #OK>>:
-		self._port.write(str.encode('rdrev+ '));
+		self._port.write(str.encode('rdrev+ '))
 		self._port.timeout = 0.1
-		read = self._port.read(26);
+		read = self._port.read(26)
 		if len(read) == 26 and read[0:2] == b'0x' and read[20:26] == b'#OK>>:':
 			print('Revision:', read[2:19])
 			if read[11:15] != b'6222':
@@ -196,9 +196,9 @@ class phyflasher:
 	def SetBaud(self, baud):
 		if self._port.baudrate != baud:
 			print ('Reopen %s port %i baud...' % (self.port, baud), end = ' '),
-			self._port.write(str.encode("uarts%i" % baud));
+			self._port.write(str.encode("uarts%i" % baud))
 			self._port.timeout = 1
-			read = self._port.read(3);
+			read = self._port.read(3)
 			if read == b'#OK':
 				print ('ok')
 				self.baud = baud
@@ -227,12 +227,12 @@ class phyflasher:
 		self._port.setDTR(False) #TM  (hi)
 		self._port.setRTS(False) #RSTN (hi)
 		self._port.timeout = 0.04
-		ttcl = 50;
+		ttcl = 50
 		fct_mode = False
 		pkt = 'UXTDWU' # UXTL16 UDLL48 UXTDWU
 		while ttcl > 0:
-			sent = self._port.write(pkt.encode());
-			read = self._port.read(6);
+			sent = self._port.write(pkt.encode())
+			read = self._port.read(6)
 			if read == b'cmd>>:' :
 				break
 			if read == b'fct>>:' :
@@ -317,7 +317,7 @@ class phyflasher:
 	def cmd_erase_all_flash(self):
 		print ('Erase All Chip Flash...', end = ' '),
 		if self.wr_flash_cmd(6) and self.wr_flash_cmd(0x60): #Write Enable, Chip Erase
-			i = 77;
+			i = 77
 			while i > 0:
 				r = self.flash_read_status()
 				if r == None:
@@ -387,7 +387,7 @@ class phyflasher:
 			return False
 		data = stream.read(size)
 		self._port.write(data)
-		read = self._port.read(23); #'checksum is: 0x00001d1e'
+		read = self._port.read(23)  #'checksum is: 0x00001d1e'
 		#print ('%s' % read),
 		if read[0:15] != b'checksum is: 0x':
 			print ('error!')
@@ -510,14 +510,14 @@ def arg_auto_int(x):
 
 def main():
 	parser = argparse.ArgumentParser(description='%s version %s' % (__progname__, __version__), prog = __filename__)
-	parser.add_argument('--port', '-p', help = 'Serial port device',	default='COM1');
-	parser.add_argument('--baud', '-b',	help = 'Set Port Baud (115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = DEF_RUN_BAUD);
+	parser.add_argument('--port', '-p', help = 'Serial port device',	default='COM1')
+	parser.add_argument('--baud', '-b',	help = 'Set Port Baud (115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = DEF_RUN_BAUD)
 
-	parser.add_argument('--allerase', '-a',  action='store_true', help = 'Pre-processing: All Chip Erase');
-	parser.add_argument('--erase', '-e',  action='store_true', help = 'Pre-processing: Erase Flash work area');
-	parser.add_argument('--reset', '-r',  action='store_true', help = 'Post-processing: Reset');
-	parser.add_argument('--start', '-s',  help = 'Application start address for hex writer (default: 0x%08x)' % DEF_START_RUN_APP_ADDR, type = arg_auto_int, default = DEF_START_RUN_APP_ADDR);
-	parser.add_argument('--write', '-w',  help = 'Flash starting address for hex writer (default: 0x%08x)' % DEF_START_WR_FLASH_ADDR, type = arg_auto_int, default = DEF_START_WR_FLASH_ADDR);
+	parser.add_argument('--allerase', '-a',  action='store_true', help = 'Pre-processing: All Chip Erase')
+	parser.add_argument('--erase', '-e',  action='store_true', help = 'Pre-processing: Erase Flash work area')
+	parser.add_argument('--reset', '-r',  action='store_true', help = 'Post-processing: Reset')
+	parser.add_argument('--start', '-s',  help = 'Application start address for hex writer (default: 0x%08x)' % DEF_START_RUN_APP_ADDR, type = arg_auto_int, default = DEF_START_RUN_APP_ADDR)
+	parser.add_argument('--write', '-w',  help = 'Flash starting address for hex writer (default: 0x%08x)' % DEF_START_WR_FLASH_ADDR, type = arg_auto_int, default = DEF_START_WR_FLASH_ADDR)
 
 	subparsers = parser.add_subparsers(
 			dest='operation',
@@ -596,7 +596,7 @@ def main():
 		#filename = "r%08x-%08x.bin" % (addr, length)
 		if args.size == 0:
 			print("Read Size = 0!" )
-			exit(1);
+			exit(1)
 		try:
 			ff = open(args.filename, "wb")
 		except:
@@ -634,7 +634,7 @@ def main():
 			sys.exit(1)
 		aerase = args.operation == 'we'
 		if args.erase == True or args.allerase == True:
-			aerase = False;
+			aerase = False
 			if args.allerase == True:
 				if not phy.cmd_erase_all_flash():
 					stream.close()
@@ -672,7 +672,7 @@ def main():
 		print ('----------------------------------------------------------')
 		aerase = True
 		if args.erase == True or args.allerase == True:
-			aerase = False;
+			aerase = False
 			if args.allerase == True:
 				if not phy.cmd_erase_all_flash():
 					stream.close()
