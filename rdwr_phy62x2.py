@@ -600,7 +600,7 @@ def main():
 		try:
 			ff = open(args.filename, "wb")
 		except:
-			print("Error file open '%s'" % filename)
+			print("Error file open '%s'" % args.filename)
 			exit(2)
 		if not phy.ReadBusToFile(ff, args.address, args.size):
 			ff.close()
