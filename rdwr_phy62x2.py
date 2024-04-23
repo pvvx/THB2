@@ -643,7 +643,7 @@ def main():
 			else:
 				if args.erase == True:
 					if not phy.cmd_erase_work_flash():
-						stream.close
+						stream.close()
 						print ('Error: Erase Flash!')
 						sys.exit(3)
 		phy.SetAutoErase(aerase)
@@ -681,7 +681,7 @@ def main():
 			else:
 				if args.erase == True:
 					if not phy.cmd_erase_work_flash():
-						stream.close
+						stream.close()
 						print ('Error: Erase Flash!')
 						sys.exit(3)
 		phy.SetAutoErase(aerase)
