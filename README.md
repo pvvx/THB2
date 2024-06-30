@@ -1,7 +1,7 @@
 [![english](https://img.shields.io/badge/language-english-C1C1C1?style=for-the-badge)](README.md)
 [![russian](https://img.shields.io/badge/also%20available%20in-russian-blue?style=for-the-badge)](README-ru.md)
 
-# BTHome THB1, THB2, THB3, BTH01, TH05(HW: v1.3..1.6), TH05F
+# BTHome THB1, THB2, THB3, BTH01, TH05 (HW: v1.3..1.6), TH05F
 
 Custom firmware for Tuya devices based on the PHY622x2 chipset
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
@@ -35,219 +35,215 @@ Files for updating boot via OTA are located in the [update_boot](https://github.
 
 The current boot version is **v1.7** for devices with CHT8305 sensor. For other variants, boot is not required from version **v1.4**.
 
-## Основные характеристики
+## Main Features
 
-! _При настройках по умолчанию_ !
+! _With default settings_ !
 
-* Интервал BLE рекламы в формате [BTHome v2](https://bthome.io) равен 5 секундам.
-* Опрос датчика влажности и температуры производится каждый второй интервал BLE рекламы - период 10 секунд.
-* Измерение напряжения батареи происходит каждую минуту.
-* Кнопка используется для быстрого подключения к старым BT-адаптерам. Нажатие кнопки переключает интервал BLE рекламы на более короткий период (1562.5 мс). Действие продолжится 60 секунд, затем интервал восстановится на установленный в настройках.
-* Измеренное среднее потребление от источника в 3.3В при сканировании термометров THB2 и BTH01 в пассивном режиме составляет до 8 мкА. Для TH05_V1.4 среднее потребление около 23 мкА - [таков ток установленных компонентов](https://github.com/pvvx/THB2/issues/8#issuecomment-1908982171). Остальные версии с экраном: при включенном LCD - от 12 до 14 мкА, c отключенным LCD - от 7 до 12 мкА.
-* Запись итории каждые 30 минут
-* Интервал соединения с учетом Connect Latency - 900 мс
-* Поддерживаемые сенсоры температуры и влажности: AHT30, CHT8305, CHT8215, CHT8310
-* Обработка входного контакта со счетчиком для передаваемых событий [Open/Close](https://github.com/pvvx/THB2/issues/10#issuecomment-1935169274)
-* Обработка выходного контакта переключаемого по устанавливаемой температуре и/или влажности с гистерезисом
-* Поддержка недорогого [повторителя рекламы BLE в Zigbee](https://github.com/pvvx/TLB2Z)
+* BLE advertisement interval in [BTHome v2](https://bthome.io) format is 5 seconds.
+* Humidity and temperature sensor is polled every second BLE advertisement interval - period of 10 seconds.
+* Battery voltage measurement is done every minute.
+* The button is used for quick connection to old BT adapters. Pressing the button switches the BLE advertising interval to a shorter period (1562.5ms). The action will continue for 60 seconds, then the interval will be restored to the one set in the settings.
+* The measured average consumption from a 3.3V source when scanning THB2 and BTH01 thermometers in passive mode is up to 8 µA. For TH05_V1.4 the average consumption is about 23 µA - [this is the current of the installed components](https://github.com/pvvx/THB2/issues/8#issuecomment-1908982171). Other versions with screen: with LCD on - 12 to 14 µA, with LCD off - 7 to 12 µA.
+* Recording of history every 30 minutes
+* Connection interval with Connect Latency - 900ms
+* Supported temperature and humidity sensors: AHT30, CHT8305, CHT8215, CHT8310.
+* Handling of input counter contact for transmitted [Open/Close events](https://github.com/pvvx/THB2/issues/10#issuecomment-1935169274)
+* Processing of output contact switchable by set temperature and/or humidity with hysteresis.
+* Support low-cost [BLE to Zigbee advertising repeater](https://github.com/pvvx/TLB2Z)
 
-## История версий
+## Version History
 
-| N | Описание |
+| Version | Description |
 |---|--- |
-| 1.0 | Первая релизная версия |
-| 1.1 | Добавлен триггер - вывод TX2 срабатывающий по установленным значениям температуры и/или влажности с гистерезисами. Передача состояния вывода RX2 при connect. Для термометров с экраном добавлен показ смайлика с "комфортом". Дополнены: изменение имени и MAC устройства. |
-| 1.2 | Обработка и передача событий open/close со счетчиком с вывода маркированного "RX2" (для THB2 - "RX1"). |
-| 1.3 | Добавлен THB1 и TH05V1.3. Следующий этап уменьшения потребления для версий с LCD дисплеем и опция отключения дисплея. |
-| 1.4 | Стабилизация соединения для всех вариантов устройств. Добавлен [TH05F](https://pvvx.github.io/TH05F). Коррекция хода RTC. Изменено BLE имя для TH05_V1.3 на "TH05D". Добавлены файлы для обновления Boot по OTA. |
-| 1.5 | Добавлен вариант шифрования BLE рекламы с помощью BindKey. |
-| 1.6 | Добавлено усреднение расчета напряжения батареи, дублирование состояния контакта open/close и счетчика через 12..20 сек (кратно интервалу рекламы) после срабатывания и далее каждые 30 минут. |
-| 1.7 | Исправление ошибки (> 42 C) для сенсора CHT8305 |
+| 1.0 | First release version |
+| 1.1 | Added trigger - TX2 output triggered by set temperature and/or humidity values with hysteresis. Transmission of the state of the RX2 output when connected. For thermometers with screen added display of smiley face with "comfort". Added: change of device name and MAC. |
+| 1.2 | Processing and transmission of open/close events with counter from the output labelled "RX2" (for THB2 - "RX1"). |
+| 1.3 | Added THB1 and TH05V1.3. Next step to reduce consumption for versions with LCD display and option to switch off the display. | 1.4 | Added THB1 and TH05V1.3.
+| 1.4 | Connection stabilisation for all device variants. Added [TH05F](https://pvvx.github.io/TH05F). Correction of RTC progress. Changed BLE name for TH05_V1.3 to "TH05D". Added files for OTA Boot update. |
+| 1.5 | Added option to encrypt BLE ads with BindKey. |
+| 1.6 | Added averaging of battery voltage calculation, duplication of open/close contact and counter status 12..20 sec (multiple of ad interval) after triggering and then every 30 min. |
+| 1.7 | Error correction (> 42 C) for sensor CHT8305 |
 
-## Прошивка
+## Firmware
 
-Прошить устройство програмой Boot возможно через USB-COM адаптер с выходами на 3.3В:
+It is possible to flash the device with the Boot program via USB-COM adapter with 3.3V outputs.
 
-1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
+1. Connect GND, TX, RX, RTS-RESET, VCC (+3.3B).
 
-| Адаптер | Устройство |
+| Adapter | Device |
 |---|---|
 | GND | -Vbat |
-| +3.3В | +Vbat |
+| +3.3V | +Vbat |
 | TX | RX1 |
 | RX | TX1 |
 | RTS | RESET |
 
-Если на адаптере отсутствует RST пин, тогда следует замкнуть вывод RESET с GND(-Vbat) и быстро разомкнуть при старте скрипта (вомзожно потребуется несколько попыток)
+If there is no RST pin on the adapter, then short the RESET pin to GND (-Vbat) and quickly open it when the script starts (it may take a few tries).
 
-Название контактов на устройстве смотреть в описании по ссылкам: [THB1](https://pvvx.github.io/THB1), [THB2](https://pvvx.github.io/THB2), [THB3](https://pvvx.github.io/THB3), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.3](https://pvvx.github.io/TH05-v1.3), [TH05_V1.4](https://pvvx.github.io/TH-05)
+The name of the pins on the device can be found in the description at the links: [THB1](https://pvvx.github.io/THB1), [THB2](https://pvvx.github.io/THB2), [THB3](https://pvvx.github.io/THB3), [BTH01](https://pvvx.github.io/BTH01/), [TH05_V1.3](https://pvvx.github.io/TH05-v1.3), [TH05_V1.4](https://pvvx.github.io/TH-05)
 
-2. Установить python3 и необходимые библиотеки
+2. Install python3 and the necessary libraries
 
-```txt
+```
 pip3 install -r requirements.txt
 ```
 
-3. Скачать необходимый для конкретного устройства файл BOOT_xxx_vxx.hex из директории bin.
+3. Download the BOOT_XXX_vXX.hex file required for the specific device from the [bin](bin) directory.
 
-4. Запустить:
+4. Run:
 
-```txt
+```
 python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_xxx_vxx.hex
 ```
 
-5. Прошивка Boot завершена. Устройство работает. Адаптер можно отсоединить.
+5. Boot flashing is complete. The device is operational. The adapter can be disconnected.
 
-6. Загружаем полную версию прошивки по OTA. Для этого:
-   1. Подаем питание на датчик (устройство).
-   2. Переходим на [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
-   3. Жмем кнопку `Соединение`, ищем устройство, подключаемся.
-   4. После подключение переходим на вкладку `OTA`, выбираем необходимую прошивку и жмем `Старт`.
+6. Download the full version of the firmware via OTA. To do this:
+   1. Apply power to the sensor.
+   2. Go to [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
+   3. Click the `Connect` button, look for the device, and connect.
+   4. Once connected, go to the `OTA` tab, select the required firmware (`.bin`) and click `Start`.
 
-7. Устройство должно перезагрузиться и быть готово для использования.
+7. The device should reboot and be ready for use.
 
-Дополнительно:
+> Optional:
+> * To pre-wipe the entire Flash, use the `-a` option.
+> * To pre-wipe the Flash workspace, use the `-e` option.
+> * With the USB-COM adapter it is possible to write the main firmware (APP) immediately:
+> ```
+> python3 rdwr_phy62x2.py -p COM11 -r we 0x10000 XXX_vXX.bin
+> ```
 
-* Для предварительного стирания всей Flash используйте опцию `-a`.
+## Saving the original firmware
 
-* Для предварительного стирания рабочей области Flash используйте опцию `-e`.
-
-* С помощью USB-COM адаптера возможно сразу дописать основную прошивку (APP)
-```
-python3 rdwr_phy62x2.py -p COM11 -r we 0x10000 xxx_vxx.bin
-```
-
-## Сохранение оригинальной прошивки
-
-1. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
-2. Запустить:
+1. Connect GND, TX, RX, RTS-RESET, VCC (+3.3B).
+2. Run:
 
 ```
 python3 rdwr_phy62x2.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 ```
 
-3. Полученный файл ff_thb2.bin сохранить.
+3. Save the resulting ff_thb2.bin file.
 
-## Восстановление оригинальной прошивки
+## Restoring the original firmware
 
-* Оригинальную Tuya прошивку на конкретный тип устройства можно взять по ссылкам в таблице, находящейся в самом начале README.
+> Original Tuya firmware for a specific device type can be obtained from the links in the table at the beginning of this README.
 
-1. Взять сохраненный файл ff_thb2.bin оригинальной прошивки.
-2. Соединить GND, TX, RX, RTS–RESET, VCC (+3.3B).
-3. Запустить:
+1. Take the saved ff_thb2.bin file of the original firmware.
+2. Connect GND, TX, RX, RTS-RESET, VCC (+3.3B).
+3. Run:
 
 ```
 python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 ```
 
-Не все адаптеры USB-COM поддерживают 1Mbit. Тогда удалите опцию `-b 1000000` или выберите другой Baud rate.
+> Not all USB-COM adapters support 1Mbit. Then remove the `-b 1000000` option or select a different baud rate.
 
-4. Прошивка зашита. Устройство работает.
+4. The firmware has been flashed. The device works.
 
-## Распределение Flash 512 килобайт
+## 512 kilobyte flash allocation
 
-| Адрес | Описание | Размер |
+| Address | Description | Size |
 |---|---|---|
-| 0x00000 | Используется ROM | 8 килобайт |
-| 0x02000 | Boot Info для ROM | 4 килобайта |
-| 0x03000 | FW Boot с функцией OTA | 52 килобайта |
-| 0x10000 | FW APP | 128 килобайт |
-| 0x30000 | Запись истории | 304 килобайт |
-| 0x7C000 | Сохранение настроек (EEP) | 16 килобайт |
+| 0x00000 | ROM used | 8 kilobytes |
+| 0x02000 | Boot Info for ROM | 4 kilobytes |
+| 0x03000 | FW Boot with OTA function | 52 kilobytes |
+| 0x10000 | FW APP | 128 kilobytes |
+| 0x30000 | History Recording | 304 kilobytes |
+| 0x7C000 | Save Settings (EEP) | 16 kilobytes | 16 kilobytes |
 
-## FW Boot и OTA
+## FW Boot and OTA
 
-* `FW Boot` имеет функцию OTA, но не имеет функции записи истории и прочих дополнений. Служит для обработки OTA при любых неудачных или неправильных обновлениях.
+* `FW Boot` has an OTA function, but does not have a history function or any other add-ons. It is used to handle OTA for any failed or incorrect updates.
 
-* `FW APP` не имеет функции OTA, для OTA перезагружается в `FW Boot`. Имеет дополнительные функции и расширения.
+* `FW APP` has no OTA function, for OTA it reboots into `FW Boot`. It has additional features and extensions.
 
-Поддерживаемые функции и сервисы описываются включенными битами в 32-х битном поле `dev_id.services`.
+Supported features and services are described by the enabled bits in the 32-bit `dev_id.services` field.
 
-`FW Boot` запускается по старту, и если не нажата кнопка, проверяет есть или нет запись `FW APP`. Если есть – запускает `FW APP`. Если кнопка при старте нажата - запускается `FW Boot`.
+`FW Boot` starts on startup, and if no button is pressed, checks whether or not there is an `FW APP` entry. If there is, it starts `FW APP`. If the button is pressed at startup, `FW Boot` is started.
 
-При соединении указывается:
+When connected, it specifies:
 
-_Software:_ **V**x.x - значит работает `FW APP`
-_Software:_ **B**x.x - значит работает `FW Boot`
+_Software:_ **V**x.x - means `FW APP` is running.
+_Software:_ **B**x.x means `FW Boot` is running.
 
-На термометрах с экраном, если не включено отображение времени, при первом старте показывает:
+On screen thermometers, if time display is not enabled, the first startup shows:
 
-* "Bot 12" - работает Boot версия 1.2
-* "APP 12" - работает APP версия 1.2  
+* "Boot 12" - Boot version 1.2 is running.
+* "APP 12" - APP version 1.2 is running.  
 
-Принудительно перезагрузиться в `FW Boot` из `FW APP` возможно двумя способами:
+There are two ways to force a reboot to `FW Boot` from `FW APP`:
 
-1. Отключить питание и удерживая кнопку включить питание.
-2. Подать команду `7233` в меню `Service` программы PHY62x2BTHome.html и отключить соединение.
+1. Switch off the power and hold down the button to switch on the power.
+2. Issue the `7233` command in the `Service` menu of the PHY62x2BTHome.html program and disconnect the connection.
 
-Полная перезагрузка - Подать команду `7201` в меню `Service` программы PHY62x2BTHome.html и отключить соединение.
+Complete reboot - Issue the `7201` command in the `Service` menu of the PHY62x2BTHome.html program and disconnect the connection.
 
-Через USB-UART адаптер App можно записать сразу после boot. Пример:
-
+Through USB-UART adapter, APP can be written immediately after boot. For example:
 ```
 python3 rdwr_phy62x2.py -p COM11 -e wh ./bin/BOOT_TH05V13_v13.hex
 python3 rdwr_phy62x2.py -p COM11 -r we 0x10000 ./bin/TH05V13_v13.bin
 ```
 
-## Событие Open/Close и счет импульсов
+## Open/Close event and pulse counting
 
-С версии 1.2 поддерживается опрос вывода подключенного к геркону или контакту, замыкающемуся на GND.
+Since version 1.2 it is supported to poll a pin connected to a reed switch or a contact shorted to GND.
 
-Максимальная частота переключения - 100 раз в секунду.
+The maximum switching frequency is 100 times per second.
 
-Если контакт имеет дребезг, тогда желательно зашунтировать контакт конденсатором.
+If the contact is rattling, then it is advisable to shunt the contact with a capacitor.
 
-При замыкании или размыкании передается блок из 5 BLE реклам следующих друг за другом через период в 50 мс.
+When closing or opening, a block of 5 BLE adverts is transmitted following each other after a period of 50 ms.
 
-При каждом событии "Open" прибавляется счетчик.
+At each "Open" event a counter is added.
 
-Значение счетчика передается совместно с каждым событием "Open/Close".
+The counter value is transmitted together with each "Open/Close" event.
 
-Входной контакт на плате термометра:
+Input contact on the thermometer board:
 
-* На [THB1](https://pvvx.github.io/THB1) - маркирован как `RX`
-* На [THB2](https://pvvx.github.io/THB2) - маркирован как `RX`
-* На [THB3](https://pvvx.github.io/THB3) - маркирован как `RX`
-* На [BTH01](https://pvvx.github.io/BTH01/) - маркирован как `RX2`
-* На [TH05_V1.3](https://pvvx.github.io/TH05-v1.3)  - маркирован как `RX0`
-* На [TH05_V1.4](https://pvvx.github.io/TH-05) - маркирован как `RX2`
+* On [THB1](https://pvvx.github.io/THB1) - labelled as `RX`.
+* On [THB2](https://pvvx.github.io/THB2) - labelled as `RX`.
+* On [THB3](https://pvvx.github.io/THB3) - labelled as `RX`.
+* On [BTH01](https://pvvx.github.io/BTH01/) - labelled as `RX2`.
+* On [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) - labelled as `RX0`.
+* On [TH05_V1.4](https://pvvx.github.io/TH-05) - labelled as `RX2`.
 
 ![image](https://github.com/pvvx/THB2/assets/12629515/09f6f810-f2e2-4b61-9c84-f7c3770bb76a)
 
 ![image](https://github.com/pvvx/THB2/assets/12629515/40de4978-2d97-4f79-af9d-565236d0ba2a)
 
-## Вывод управления внешним устройством по температуре и/или влажности
+## Temperature and/or humidity control output of an external device
 
-Контакт на печатной плате с маркировкой "TX" или "TX2" управляется с помощью уставок с гистерезисами по температуре и влажности.
-Имеется возможность переключения на инверсное управление выводом.
+The contact on the printed circuit board labelled "TX" or "TX2" is controlled with hysteresis setpoints for temperature and humidity.
+It is possible to switch to inverse output control.
 
-Настройка производится в PHY62x2BTHome.html.
+The setting is made in PHY62x2BTHome.html.
 
-Работа выхода назначается с помощью установки значения гистерезиса:
+Output operation is assigned by setting the hysteresis value:
 
-* Если значение гистерезиса равно нулю - переключений не будет.
-* Если значение гистерезиса больше нуля - переключение (включение) произойдет при значении ниже уставка + гистерезис.
-* Если значение гистерезиса меньше нуля - переключение (включение) произойдет при значении выше уставка + гистерезис.
+* If the hysteresis value is zero, there will be no switching.
+* If the hysteresis value is greater than zero - switching (switching on) will occur at a value lower than the setpoint + hysteresis.
+* If the hysteresis value is less than zero - switching (switching on) will take place at a value higher than setpoint + hysteresis.
 
-## Сброс основных настроек
+## Reset basic settings
 
-Для установки основных параметров в начальные значения берете смартфон с Android и программу "nRFConnect".
-Соединяетесь с устройством и в сервис `0xFCD2` c характеристикой `0xFFF4` записываете `56`.
+To reset basic parameters to initial values, take an Android smartphone and the "nRFConnect" app.
+Connect to the device and in the service `0xFCD2` with characteristic `0xFFF4` write `56`.
 
 ![image](https://github.com/pvvx/THB2/assets/12629515/85cfaf06-e430-492e-930a-536afb163b5b)
 
-* Нажатие/отпускание кнопки временно меняет интервал соединения для подключения. Коротко нажмите кнопку и подключитесь за 60 сек. Если не успеваете - нажимайте кнопку чаще...
-* В прошивке проверяются все установки на соответствие стандартам Bluetooth SIG.
-Если интервал более 10 сек, то поставит 10 сек - это максимум в стандарте. Так и другие параметры.
-Но не все BT адаптеры могут работать с интервалом 10 сек для соединения.
-* **При работе с BLE в Linux обязательно требуется изменение опций Bluez и/или патчи kernel!**
+* Pressing/releasing the button temporarily changes the connection interval for connection. Press the button briefly and connect in 60 sec. If you don't have time, press the button more often...
+* The firmware checks all settings for compliance with Bluetooth SIG standards.
+If the interval is more than 10 sec, it will set 10 sec is the maximum in the standard. So do other settings.
+But not all BT adapters can work with 10 sec interval for connection.
+* **When working with BLE in Linux it is mandatory to change Bluez options and/or kernel patches!**
     
 ---
 
-## Сборка прошивки
+## Build Firmware
 
-Для сборки прошивки используется GNU Arm Embedded Toolchain.
+The GNU Arm Embedded Toolchain is used to build the firmware.
 
-Для работы в Eclipce используете импорт проекта и установите toolchain.path.
+To work in Eclipse, use project import and install toolchain.path.
 
-Дополнительная информация по чипам [PHY62xx](https://github.com/pvvx/PHY62x2).
+See [this](https://github.com/pvvx/PHY62x2) for more information on PHY62xx chips.
