@@ -1,36 +1,36 @@
 # BTHome THB1, THB2, THB3, BTH01, TH05(HW: v1.3..1.6), TH05F
 
-Custom firmware for Tuya devices on the PHY622x2 chipset
+Custom firmware for Tuya devices based on the PHY622x2 chipset
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
 All firmware supports any of the sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
 
-* Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
-* Подгрузка файлов OTA в [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) производится автоматически - загружать из файлы из данного репозитория для OTA не требуется.
-* Для автономной работы [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) достаточно скопировать [html](https://github.com/pvvx/THB2/blob/master/bthome_phy6222/web/PHY62x2BTHome.html) файл в локальную папку.
+* Software for setting up and BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
+* Uploading OTA files to [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) is automatic. You don't need to download files from this repository for OTA.
+* To run [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) offline, just copy the [html](https://github.com/pvvx/THB2/blob/master/bthome_phy6222/web/PHY62x2BTHome.html) file to a local folder.
 
-## Прошивки Boot и APP
+## Boot and App firmware
 
-* Прошивка [Boot](https://github.com/pvvx/THB2?tab=readme-ov-file#fw-boot-%D0%B8-ota) имеет минимум функций. Boot используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
-* Внешне отличить тип устройства возможно по символу смайлика на экране.
+* The [Boot](https://github.com/pvvx/THB2?tab=readme-ov-file#fw-boot-%D0%B8-ota) firmware has minimal functions. Boot is used only for OTA - for downloading the full-featured version of APP (Application - *.bin files).
+* The device type can be distinguished externally by the smiley face symbol on the screen.
 
-| Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
+| Device | Boot file | OTA file | Printed circuit board labelling |
 |:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v17.hex | THB1_v17.bin | нет |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v17.hex | THB2_v17.bin | нет |
-| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v17.hex | THB2_v17.bin | нет |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v17.hex | BTH01_v17.bin | нет |
-| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v17.hex | TH05_v17.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v17.hex | TH05D_v17.bin | RSH-TH05-V1.3 с чипом BL55072 |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v17.hex | TH05F_v17.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT |
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v17.hex | THB1_v17.bin | no |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v17.hex | THB2_v17.bin | no |
+| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v17.hex | THB2_v17.bin | no |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v17.hex | BTH01_v17.bin | no |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v17.hex | TH05_v17.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v17.hex | TH05D_v17.bin | RSH-TH05-V1.3 (chip: BL55072) |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v17.hex | TH05F_v17.bin | TH05Y_V1.1, TH05Y_V1.2 (chip: QD01 2332 NT) |
 
-Основные файлы прошивок, BOOT_xxx_vxx.hex для программирования через USB-COM адаптер и xxx_vxx.bin для OTA, находятся в директории [bin](https://github.com/pvvx/THB2/tree/master/bin).
+The main firmware files, BOOT_XXX_vXX.hex for programming via USB-COM adapter and XXX_vXX.bin for OTA, are located in the [bin](https://github.com/pvvx/THB2/tree/master/bin) directory.
 
-Файлы для обновления Boot по OTA находятся в директории [update_boot](https://github.com/pvvx/THB2/tree/master/update_boot). Процесс обновления boot через OTA не является безопасным. Перед этим действием проверьте уровень батареи. Если boot работает нормально, то обновлять на новую версию не требуется. О необходимости замены boot на новую версию будет объявляется дополнительно.
+Files for updating boot via OTA are located in the [update_boot](https://github.com/pvvx/THB2/tree/master/update_boot) directory. **The process of updating boot via OTA is not safe. Please check the battery level before doing this. If boot is working fine, there is no need to update to the new version. The need to replace boot with a new version will be announced later.**
 
-Актуальная версия boot - **v1.7** для устройств с датчиком CHT8305. Для остальных вариантов обновлений boot не требуется с версии **v1.4**.
+The current boot version is **v1.7** for devices with CHT8305 sensor. For other variants, boot is not required from version **v1.4**.
 
 ## Основные характеристики
 
