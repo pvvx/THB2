@@ -1,5 +1,5 @@
-[![english](https://img.shields.io/badge/language-english-blue?style=for-the-badge)]()
-[![russian](https://img.shields.io/badge/language-russian-red?style=for-the-badge)]()
+[![english](https://img.shields.io/badge/language-english-blue?style=for-the-badge)](https://github.com/devmlb/PHY622x-custom-firmware/blob/master/README.md)
+[![russian](https://img.shields.io/badge/language-russian-red?style=for-the-badge)](https://github.com/devmlb/PHY622x-custom-firmware/blob/master/README-ru.md)
 
 # BTHome THB1, THB2, THB3, BTH01, TH05(HW: v1.3..1.6), TH05F
 
