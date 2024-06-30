@@ -3,20 +3,21 @@
 
 # BTHome THB1, THB2, THB3, BTH01, TH05 (HW: v1.3..1.6), TH05F
 
-Custom firmware for Tuya devices based on the PHY622x2 chipset
+Custom firmware for Tuya devices based on the PHY622x2 chipset.
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
-All firmware supports any of the sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
+All firmware supports any of these sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
 
-* Software for setting up and BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
-* Uploading OTA files to [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) is automatic. You don't need to download files from this repository for OTA.
-* To run [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) offline, just copy the [html](https://github.com/pvvx/THB2/blob/master/bthome_phy6222/web/PHY62x2BTHome.html) file to a local folder.
+**Software for setting up and making BLE OTA: [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).**
+> Uploading OTA files to [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) is automatic. You don't need to download files from this repository for OTA.
+  
+> To run [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) offline, just copy the [html](https://github.com/pvvx/THB2/blob/master/bthome_phy6222/web/PHY62x2BTHome.html) file to a local folder.
 
 ## Boot and App firmware
 
-* The [Boot](https://github.com/pvvx/THB2?tab=readme-ov-file#fw-boot-%D0%B8-ota) firmware has minimal functions. Boot is used only for OTA - for downloading the full-featured version of APP (Application - *.bin files).
+The [Boot](#fw-boot-and-ota) firmware has minimal functions. Boot is only used for downloading via OTA the full-featured version of APP (`.bin` files).
 * The device type can be distinguished externally by the smiley face symbol on the screen.
 
 | Device | Boot file | OTA file | Printed circuit board labelling |
