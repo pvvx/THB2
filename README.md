@@ -1,3 +1,6 @@
+[![english](https://img.shields.io/badge/language-english-blue?style=for-the-badge)]()
+[![russian](https://img.shields.io/badge/language-russian-red?style=for-the-badge)]()
+
 # BTHome THB1, THB2, THB3, BTH01, TH05(HW: v1.3..1.6), TH05F
 
 Custom firmware for Tuya devices based on the PHY622x2 chipset
