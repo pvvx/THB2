@@ -2,7 +2,7 @@
 
 Custom firmware for Tuya devices on the PHY622x2 chipset
 
-This firmware works with Home Assistant and other software running in the [BTHome](https://bthome.io/) format.
+This firmware works with [Home Assistant](https://www.home-assistant.io/) and other software running in the [BTHome](https://bthome.io/) format.
 
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
