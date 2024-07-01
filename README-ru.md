@@ -3,12 +3,15 @@
 
 # BTHome THB1, THB2, THB3, BTH01, TH05(HW: v1.3..1.6), TH05F
 
-Custom firmware for Tuya devices on the PHY622x2 chipset
+Кастомная прошивка для устройств Tuya на чипсете PHY622x2.
+
+Эти прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
+
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
-All firmware supports any of the sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
+Прошивки поддерживают любой из датчиков: CHT8215 (CHT8310), CHT8305, AHT20..30.
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
 * Подгрузка файлов OTA в [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) производится автоматически - загружать из файлы из данного репозитория для OTA не требуется.
@@ -16,7 +19,7 @@ All firmware supports any of the sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
 
 ## Прошивки Boot и APP
 
-* Прошивка [Boot](https://github.com/pvvx/THB2?tab=readme-ov-file#fw-boot-%D0%B8-ota) имеет минимум функций. Boot используются только для выполнения OTA - для загрузки полнофункциональной версии APP (Application - файлы *.bin).
+* Прошивка [Boot](https://github.com/pvvx/THB2?tab=readme-ov-file#fw-boot-%D0%B8-ota) имеет минимум функций. Boot используются только для выполнения OTA (для загрузки полнофункциональной версии APP (Application - файлы *.bin)).
 * Внешне отличить тип устройства возможно по символу смайлика на экране.
 
 | Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
@@ -84,7 +87,7 @@ All firmware supports any of the sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
 
 2. Установить python3 и необходимые библиотеки
 
-```txt
+```
 pip3 install -r requirements.txt
 ```
 
@@ -92,7 +95,7 @@ pip3 install -r requirements.txt
 
 4. Запустить:
 
-```txt
+```
 python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_xxx_vxx.hex
 ```
 
