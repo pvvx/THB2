@@ -20,7 +20,7 @@ All firmware supports any of these sensors: CHT8215 (CHT8310), CHT8305, AHT20..3
 
 ## Getting started with the device
 
-To work with the device, you need to write the `FW Boo`t firmware to the device via a USB-COM adapter. Boot firmware is a program with reduced functionality and provides secure OTA updates.
+To work with the device, you need to write the `FW Boot` firmware to the device via a USB-COM adapter. Boot firmware is a program with reduced functionality and provides secure OTA updates.
 
 Next, using the BLE connection in PHY62x2BTHome.html through the OTA tab, the main operating program of the `FW APP` is recorded.
 
