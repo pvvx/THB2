@@ -5,6 +5,12 @@
 
 Кастомная прошивка для устройств Tuya на чипсете PHY622x2.
 
+_Для работы с устройством требуется записать прошивку Boot в устройство через адаптер USB-COM. Прошивка Boot является программой урезанной по функционалу и обеспечивает безопасное обновление OTA._
+
+_Далее, с помощью соединения BLE в PHY62x2BTHome.html через вкладку OTA, программируется основная рабочая программа APP._
+
+_APP возможно записать и программистом._
+
 Эти прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
 
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
