@@ -3,25 +3,27 @@
 
 # BTHome THB1, THB2, THB3, BTH01, TH05(HW: v1.3..1.6), TH05F
 
-Кастомная прошивка для устройств Tuya на чипсете PHY622x2.
-
-_Для работы с устройством требуется записать прошивку Boot в устройство через адаптер USB-COM. Прошивка Boot является программой урезанной по функционалу и обеспечивает безопасное обновление OTA._
-
-_Далее, с помощью соединения BLE в  [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) через вкладку OTA, записывается основная рабочая программа APP._
-
-_APP возможно записать и с помощью адаптера USB-COM._
-
-Эти прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
+Кастомные прошивки для устройств Tuya на чипсете PHY622x2.
 
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
-Прошивки поддерживают любой из датчиков: CHT8215 (CHT8310), CHT8305, AHT20..30.
+Прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
+
+Все прошивки поддерживают любой из датчиков: CHT8215 (CHT8310), CHT8305, AHT20..30.
 
 * Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
 * Подгрузка файлов OTA в [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) производится автоматически - загружать из файлы из данного репозитория для OTA не требуется.
 * Для автономной работы [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) достаточно скопировать [html](https://github.com/pvvx/THB2/blob/master/bthome_phy6222/web/PHY62x2BTHome.html) файл в локальную папку.
+
+## Начало работы с устройством 
+
+_Для работы с устройством требуется записать прошивку Boot в устройство через адаптер USB-COM. Прошивка Boot является программой урезанной по функционалу и обеспечивает безопасное обновление OTA._
+
+_Далее, с помощью соединения BLE в  [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) через вкладку OTA, записывается основная рабочая программа APP._
+
+APP возможно записать и с помощью адаптера USB-COM.
 
 ## Прошивки Boot и APP
 
