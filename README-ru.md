@@ -119,13 +119,6 @@ python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_xxx_vxx.hex
 
 Дополнительно:
 
-'FW APP' возможно запсать и через USB-UART адаптер. Пример:
-
-```
-python3 rdwr_phy62x2.py -p COM11 -e wh ./bin/BOOT_TH05V13_v13.hex
-python3 rdwr_phy62x2.py -p COM11 -r we 0x10000 ./bin/TH05V13_v13.bin
-```
-
 * Для предварительного стирания всей Flash используйте опцию `-a`.
 
 * Для предварительного стирания рабочей области Flash используйте опцию `-e`.
