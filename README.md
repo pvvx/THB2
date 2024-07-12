@@ -5,11 +5,11 @@
 
 Custom firmware for Tuya devices based on the PHY622x2 chipset.
 
-This firmware works with [Home Assistant](https://www.home-assistant.io/) and other software running in the [BTHome](https://bthome.io/) format.
-
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
+
+This firmware works with [Home Assistant](https://www.home-assistant.io/) and other software running in the [BTHome](https://bthome.io/) format.
 
 All firmware supports any of these sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
 
@@ -18,9 +18,17 @@ All firmware supports any of these sensors: CHT8215 (CHT8310), CHT8305, AHT20..3
   
 > To run [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) offline, just copy the [html](bthome_phy6222/web/PHY62x2BTHome.html) file to a local folder.
 
+## Getting started with the device
+
+To work with the device, you need to write the `FW Boo`t firmware to the device via a USB-COM adapter. Boot firmware is a program with reduced functionality and provides secure OTA updates.
+
+Next, using the BLE connection in PHY62x2BTHome.html through the OTA tab, the main operating program of the `FW APP` is recorded.
+
+* `FW APP` can also be recorded using a USB-COM adapter.
+
 ## Boot and App firmware
 
-The [Boot](#fw-boot-and-ota) firmware has minimal functions. Boot is only used for downloading via OTA the full-featured version of APP (`.bin` files).
+The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only used for downloading via OTA the full-featured version of `FW APP` (`.bin` files).
 * The device type can be distinguished externally by the smiley face symbol on the screen.
 
 | Device | Boot file | OTA file | Printed circuit board labelling |
@@ -37,7 +45,7 @@ The main firmware files, BOOT_XXX_vXX.hex (for programming via USB-COM adapter) 
 
 Files for updating boot via OTA are located in the [update_boot](update_boot) directory. **The process of updating boot via OTA is not safe. Please check the battery level before doing this. If boot is working fine, there is no need to update to the new version. The need to replace boot with a new version will be announced later.**
 
-> The current boot version is **v1.7** for devices with CHT8305 sensor. For other variants, boot is not required from version **v1.4**.
+> The current `FW Boot' version is **v1.7** for devices with CHT8305 sensor. For other variants, `FW boot' is not required from version **v1.4**.
 
 ## Main features
 
@@ -169,19 +177,17 @@ python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 
 * `FW APP` has no OTA function, for OTA it reboots into `FW Boot`. It has additional features and extensions.
 
-Supported features and services are described by the enabled bits in the 32-bit `dev_id.services` field.
+Action of the button when the device is turned on:
 
-`FW Boot` starts on startup, and if no button is pressed, checks whether or not there is an `FW APP` entry. If there is, it starts `FW APP`. If the button is pressed at startup, `FW Boot` is started.
+* If the button is pressed at startup, `FW Boot` always starts.
 
-When connected, it specifies:
+* If the button is not pressed, the `FW APP` entry is checked or not. If there is an `FW APP`, it launches the `FW APP`. If there is no `FW APP`, `FW Boot` is launched.
 
-* _Software:_ **V**x.x - means `FW APP` is running.
-* _Software:_ **B**x.x means `FW Boot` is running.
+On thermometers with a screen, if the time display is not turned on, during start or restart the following is displayed for a short time:
 
-On screen thermometers, if time display is not enabled, the first startup shows:
+"Bot 14" - `FW Boot` version 1.4
 
-* "Boot 12" - Boot version 1.2 is running.
-* "APP 12" - APP version 1.2 is running.  
+"APP 15" - `FW APP` version 1.5 
 
 There are two ways to force a reboot to `FW Boot` from `FW APP`:
 
