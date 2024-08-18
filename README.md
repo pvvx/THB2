@@ -33,13 +33,13 @@ The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only u
 
 | Device | Boot file | OTA file | Printed circuit board labelling |
 |:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v17.hex | THB1_v17.bin | no |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v17.hex | THB2_v17.bin | no |
-| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v17.hex | THB2_v17.bin | no |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v17.hex | BTH01_v17.bin | no |
-| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v17.hex | TH05_v17.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v17.hex | TH05D_v17.bin | RSH-TH05-V1.3 (chip: BL55072) |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v17.hex | TH05F_v17.bin | TH05Y_V1.1, TH05Y_V1.2 (chip: QD01 2332 NT) |
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v18.hex | THB1_v18.bin | no |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v18.hex | THB2_v18.bin | no |
+| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v18.hex | THB2_v18.bin | no |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v18.hex | BTH01_v18.bin | no |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v18.hex | TH05_v18.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v18.hex | TH05D_v18.bin | RSH-TH05-V1.3 (chip: BL55072) |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v18.hex | TH05F_v18.bin | TH05Y_V1.1, TH05Y_V1.2 (chip: QD01 2332 NT) |
 
 The main firmware files, BOOT_XXX_vXX.hex (for programming via USB-COM adapter) and XXX_vXX.bin (for OTA), are located in the [bin](bin) directory.
 
