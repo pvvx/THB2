@@ -210,10 +210,18 @@ void chow_clock(void) {
 
 static void chow_measure(void) {
 #if (DEV_SERVICES & SERVICE_THS)
-	show_big_number_x10(measured_data.temp/10);
-	show_small_number(measured_data.humi/100, true);
+	if(cfg.flg & FLG_SHOW_TF) {
+		show_big_number_x10(((int32_t)((int32_t)measured_data.temp * 9)/ 50) + 320); // convert C to F
+		show_temp_symbol(LCD_TSYMBOL_F); // "°F"
+	} else {
+		show_big_number_x10((measured_data.temp + 5)/10);
+		show_temp_symbol(LCD_TSYMBOL_C);
+	}
+	int16_t h = (measured_data.humi + 50)/100;
+	if(h > 99)
+		h = 99;
+	show_small_number(h, true);
 	show_battery_symbol(measured_data.battery < 20);
-	show_temp_symbol(LCD_TSYMBOL_C);
 #if (OTA_TYPE == OTA_TYPE_APP)
 	if(cfg.flg & FLG_SHOW_SMILEY) {
 #if (DEV_SERVICES & SERVICE_TH_TRG)

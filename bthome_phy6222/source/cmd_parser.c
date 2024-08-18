@@ -104,6 +104,8 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		obuf[1] = 0; // no err
 		if (cmd == CMD_ID_DEVID) { // Get DEV_ID
 			memcpy(obuf, &dev_id, sizeof(dev_id));
+			dev_id_t * p = (dev_id_t *)&obuf;
+			p->dev_spec_data = thsensor_cfg.sensor_type;
 			olen = sizeof(dev_id);
 		} else if (cmd == CMD_ID_CFG) {		// Get/Set device config
 			if (--len > sizeof(cfg))
@@ -151,7 +153,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			memcpy(&obuf[1], &thsensor_cfg, thsensor_cfg_send_size);
 			olen = thsensor_cfg_send_size + 1;
 		} else if (cmd == CMD_ID_SEN_ID) {
-			memcpy(&obuf[1], (uint8_t *)&thsensor_cfg.mid, 5);
+			memcpy(&obuf[1], (uint8_t *)&thsensor_cfg.mid, 6);
 			olen = 1 + 5;
 #if (OTA_TYPE == OTA_TYPE_APP) && ((DEV_SERVICES & SERVICE_TH_TRG) || (DEV_SERVICES & SERVICE_SCREEN))
 		} else if (cmd == CMD_ID_TRG) {	// Get/Set tigger data config

@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.5</title>
+<title>PHY62x2 BTHome v1.6</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -591,6 +591,8 @@ div#divChart {
 			INVALID_BINDKEY_LENGTH: { en: 'Bindkey must be 16 bytes, hex encoded (=32 characters)', ru: 'BindKey должен соднержать 16 байт в HEX виде (32 символа)' },
 			UPLOAD_FIRMWARE: { en: 'Download firmware file', ru: 'Загрузка firmware файла' },
 			WARNING_BOOT_FW: { en: 'Attention!: Uploading boot FW is not safe. In order to avoid firmware failure use a fresh battery!', ru: 'Внимание!: Обновление  Boot fw не безопасно. Во избежание сбоя прошивки желательно использование полной батареи!' },
+			MEMO_OFF: {en: 'Disabled', ru: 'Отключено'},
+			SHOW_TEMPF: {en: 'Show Temperature in Fahrenheit', ru: 'Показывать температуру в градусах Фаренгейта'},
 		};
 
 		function getUserLang() {
@@ -1425,6 +1427,8 @@ function showConfig() {
 	$('chkCfgTrg').checked    = (devCfg.flg & 8) != 0;
 	$('chkCfgLcdOff').checked = (devCfg.flg & 16) != 0;
 	$('chkCfgBindKey').checked = (devCfg.flg & 32) != 0;
+	$('chkCfgFahrenheit').checked = (devCfg.flg & 64) != 0;
+
 	let txPwr = 31;
 	el = $('selTxPwr');
 	for(let n = 0; n < el.options.length; n++) if(el.options[n].value >= devCfg.tx_power) txPwr = el.options[n].value;
@@ -1437,7 +1441,7 @@ function showConfig() {
 	$('lblMeasInt').innerHTML = "= " + msri.toFixed(1) + ` ${i18n.getTag('MS')}`;
 	$('inpAverInt').value = devCfg.averaging_measurements; // запись истории: при 0 - отключена, 1...255 * шаг опроса датчика = интерал записи истории 
 	if(devCfg.averaging_measurements == 0)
-		$('lblAverInt').innerHTML = "отключена";
+		$('lblAverInt').innerHTML = ` ${i18n.getTag('MEMO_OFF')}`;
 	else {
 		let hsti = (msri*devCfg.averaging_measurements)/1000.0;
 		if(hsti > 60) {
@@ -1797,6 +1801,7 @@ function chkDevCfg() {
 	    devCfg.flg |= ($('chkCfgTrg').checked) ? 8 : 0;
 	    devCfg.flg |= ($('chkCfgLcdOff').checked) ? 16 : 0;
 	    devCfg.flg |= ($('chkCfgBindKey').checked) ? 32 : 0;
+	    devCfg.flg |= ($('chkCfgFahrenheit').checked) ? 64 : 0;
 		devCfg.tx_power = $('selTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inpLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
@@ -2365,6 +2370,7 @@ window.onload = function() {
     <td><label><input type="checkbox" id="chkCfgSmiley"/><span data-i18ntag="SHOW_SMILEY">Отображать смайлик</span></label></td>
     <td><label><input type="checkbox" id="chkCfgTrg"/><span data-i18ntag="SHOW_TRIGGER">Отображать триггер</span></label></td>
     <td><label><input type="checkbox" id="chkCfgLcdOff"/><span data-i18ntag="DISCONNECT_DISPLAY">Отключить дисплей</span></label></td>
+    <td><label><input type="checkbox" id="chkCfgFahrenheit"/><span data-i18ntag="SHOW_TEMPF">Показывать температуру в градусах Фаренгейта</span></label></td>
   </tr>
 </table>
 <table>

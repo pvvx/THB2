@@ -76,6 +76,7 @@ Files for updating boot via OTA are located in the [update_boot](update_boot) di
 | 1.5 | <ul><li>Added option to encrypt BLE ads with BindKey.</li></ul> |
 | 1.6 | <ul><li>Added averaging of battery voltage calculation</li><li>Added duplication of open/close contact</li><li>Added counter status 12..20 sec (multiple of ad interval) after triggering and then every 30 min. |
 | 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
+| 1.8beta | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 
 ## Firmware
 

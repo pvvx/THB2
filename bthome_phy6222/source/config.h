@@ -13,7 +13,7 @@
 // #include "bus_dev.h"
 
 #ifndef APP_VERSION
-#define APP_VERSION	0x17	// BCD
+#define APP_VERSION	0x18	// BCD
 #endif
 
 /* rf_phy_ana_cfg
@@ -64,6 +64,7 @@
 #define SERVICE_TIME_ADJUST 0x00001000	// пока нет // есть функция коррекции счета времени
 #define SERVICE_HARD_CLOCK	0x00002000	// пока нет // есть реальные часы RTC
 #define SERVICE_TH_TRG		0x00004000	// триггер по температуре и влажности
+#define SERVICE_LED			0x00008000	// use led
 
 #define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
 #define OTA_TYPE_BOOT	SERVICE_OTA		// вариант для прошивки boot + OTA
@@ -380,6 +381,7 @@ extern const cfg_t def_cfg;
 #define FLG_SHOW_TRG		0x00000008	// смайлик поаказывает TRG
 #define FLG_DISPLAY_OFF		0x00000010	// отключить дисплей
 #define FLG_ADV_CRYPT		0x00000020	// Зашифрованная BLE реклама (bindkey)
+#define FLG_SHOW_TF			0x00000040	// Show temperature in F.
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;

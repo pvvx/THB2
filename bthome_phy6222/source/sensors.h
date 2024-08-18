@@ -3,8 +3,8 @@
 	Author: pvvx
 */
 
-#ifndef _SENSORS_H_
-#define _SENSORS_H_
+#ifndef _SRC_SENSORS_H_
+#define _SRC_SENSORS_H_
 
 #include "config.h"
 
@@ -136,6 +136,16 @@ struct __attribute__((packed)) _cht8305_config_t{
 #define AHT2x_CMD_RST	0x0BA  // Soft Reset Command
 #define AHT2x_DATA_LPWR	0x0800 // go into low power mode
 
+enum {
+	TH_SENSOR_NONE = 0,
+	TH_SENSOR_SHTC3,   // 1
+	TH_SENSOR_SHT4x,   // 2
+	TH_SENSOR_SHT30,	// 3
+	TH_SENSOR_CHT8305,	// 4
+	TH_SENSOR_AHT2x,	// 5
+	TH_SENSOR_CHT8215,	// 6
+	TH_SENSOR_TYPE_MAX // 7
+}; // TH_SENSOR_TYPES
 
 typedef struct __attribute__((packed)) _measured_flg_t {
 	uint8_t 	pin_input	:	1; // GPIO_INP input pin
@@ -162,7 +172,13 @@ typedef struct _thsensor_coef_t {
 	uint32_t humi_k;
 	int16_t temp_z;
 	int16_t humi_z;
-} thsensor_coef_t;
+} thsensor_coef_t;	// [12]
+
+typedef struct _thsensor_def_cfg_t {
+	thsensor_coef_t coef;
+//	uint32_t measure_timeout;
+	uint8_t sensor_type; // TH_SENSOR_TYPES
+} thsensor_def_cfg_t;
 
 typedef int (*psernsor_rd_t)(pdev_i2c_t pi2c_dev);
 //typedef void (*psernsor_sm_t)(void);
@@ -172,6 +188,7 @@ typedef struct _thsensor_cfg_t {
 	uint16_t mid;
 	uint16_t vid;
 	uint8_t i2c_addr;
+	uint8_t sensor_type; // TH_SENSOR_TYPES
 	psernsor_rd_t read_sensor;
 //	psernsor_sm_t start_measure;
 } thsensor_cfg_t;
@@ -197,4 +214,4 @@ extern measured_data_t measured_data;
 
 #endif // (DEV_SERVICES & SERVICE_THS)
 
-#endif // _SENSORS_H_
+#endif // _SRC_SENSORS_H_
