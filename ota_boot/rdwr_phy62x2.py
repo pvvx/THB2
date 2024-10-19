@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2 Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "24.02.24"
+__version__ = "11.03.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -201,19 +201,21 @@ class phyflasher:
 			read = self._port.read(3);
 			if read == b'#OK':
 				print ('ok')
-				self._port.close()
 				self.baud = baud
-				self._port.baudrate = baud
 				try:
-					self._port.open();
+					self._port.baudrate = baud
 				except Exception as e:
-					print ('Error: Open %s, %d baud! Error: %s' % (self.port, self.baud, e))
+					print ('Error set %i baud on %s port!' % (baud, self.port))
 					sys.exit(1)			
 			else:
 				print ('error!')
 				print ('Error set %i baud on %s port!' % (baud, self.port))
 				self._port.close()
 				sys.exit(3)
+			self._port.timeout = 0.2
+			time.sleep(0.05)
+			self._port.flushOutput()
+			self._port.flushInput()
 		return True
 	def Connect(self, baud=DEF_RUN_BAUD):
 		self._port.setDTR(True) #TM   (lo)
@@ -239,13 +241,11 @@ class phyflasher:
 			ttcl = ttcl - 1
 			if ttcl < 1:
 				print('PHY62x2 - Error Reset!')
-				print('Check connection TX->RX, RX<-TX and Chip Power!')
+				print('Check connection TX->RX, RX<-TX, RTS->RESET and Chip Power!')
 				self._port.close()
 				exit(4)
 		print('PHY62x2 - Reset Ok')
-		self._port.close()
 		self._port.baudrate = DEF_RUN_BAUD
-		self._port.open();
 		self._port.timeout = 0.2
 		if fct_mode:
 			print('PHY62x2 in FCT mode!')
