@@ -286,8 +286,8 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 					len--;
 					memcpy(&gapRole_ScanRspData[2], &ibuf[1], len);
 					flash_write_cfg(&gapRole_ScanRspData[2], EEP_ID_DVN, len);
-					set_dev_name();
 				}
+				set_dev_name();
 			}
 			olen = gapRole_ScanRspData[0];
 			memcpy(&obuf[1], &gapRole_ScanRspData[2], olen - 1);

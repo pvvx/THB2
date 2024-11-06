@@ -33,19 +33,19 @@ The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only u
 
 | Device | Boot file | OTA file | Printed circuit board labelling |
 |:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v18.hex | THB1_v18.bin | no |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v18.hex | THB2_v18.bin | no |
-| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v18.hex | THB2_v18.bin | no |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v18.hex | BTH01_v18.bin | no |
-| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v18.hex | TH05_v18.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v18.hex | TH05D_v18.bin | RSH-TH05-V1.3 (chip: BL55072) |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v18.hex | TH05F_v18.bin | TH05Y_V1.1, TH05Y_V1.2 (chip: QD01 2332 NT) |
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v19.hex | THB1_v19.bin | no |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v19.hex | THB2_v19.bin | no |
+| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v19.hex | THB2_v19.bin | no |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v19.hex | BTH01_v19.bin | no |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v19.hex | TH05_v19.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v19.hex | TH05D_v19.bin | RSH-TH05-V1.3 (chip: BL55072) |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v19.hex | TH05F_v19.bin | TH05Y_V1.1, TH05Y_V1.2 (chip: QD01 2332 NT) |
 
 The main firmware files, BOOT_XXX_vXX.hex (for programming via USB-COM adapter) and XXX_vXX.bin (for OTA), are located in the [bin](bin) directory.
 
-Files for updating boot via OTA are located in the [update_boot](update_boot) directory. **The process of updating boot via OTA is not safe. Please check the battery level before doing this. If boot is working fine, there is no need to update to the new version. The need to replace boot with a new version will be announced later.**
+Files for updating boot via OTA are located in the [update_boot](update_boot) directory. **
 
-> The current `FW Boot' version is **v1.7** for devices with CHT8305 sensor. For other variants, `FW boot' is not required from version **v1.4**.
+> The current `FW Boot' version is **v1.9** for all devices (errors fixed).
 
 ## Main features
 
@@ -76,7 +76,8 @@ Files for updating boot via OTA are located in the [update_boot](update_boot) di
 | 1.5 | <ul><li>Added option to encrypt BLE ads with BindKey.</li></ul> |
 | 1.6 | <ul><li>Added averaging of battery voltage calculation</li><li>Added duplication of open/close contact</li><li>Added counter status 12..20 sec (multiple of ad interval) after triggering and then every 30 min. |
 | 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
-| 1.8beta | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
+| 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
+| 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
 
 ## Firmware
 

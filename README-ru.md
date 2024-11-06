@@ -32,19 +32,19 @@ _Далее, с помощью соединения BLE в [PHY62x2BTHome.html](
 
 | Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
 |:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v18.hex | THB1_v18.bin | нет |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v18.hex | THB2_v18.bin | нет |
-| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v18.hex | THB2_v18.bin | нет |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v18.hex | BTH01_v18.bin | нет |
-| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v18.hex | TH05_v18.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v18.hex | TH05D_v18.bin | RSH-TH05-V1.3 с чипом BL55072 |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v18.hex | TH05F_v18.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT |
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v19.hex | THB1_v19.bin | нет |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v19.hex | THB2_v19.bin | нет |
+| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v19.hex | THB2_v19.bin | нет |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v19.hex | BTH01_v19.bin | нет |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v19.hex | TH05_v19.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v19.hex | TH05D_v19.bin | RSH-TH05-V1.3 с чипом BL55072 |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v19.hex | TH05F_v19.bin | TH05Y_V1.1, TH05Y_V1.2 с чипом QD01 2332 NT |
 
 Основные файлы прошивок, BOOT_xxx_vxx.hex для программирования через USB-COM адаптер и xxx_vxx.bin для OTA, находятся в директории [bin](https://github.com/pvvx/THB2/tree/master/bin).
 
-Файлы для обновления `FW Boot` по OTA находятся в директории [update_boot](https://github.com/pvvx/THB2/tree/master/update_boot). Процесс обновления `FW Boot` через OTA не является безопасным. Перед этим действием проверьте уровень батареи. Если `FW Boot` работает нормально, тогда не требуется обновлять его на новую версию. О необходимости замены `FW Boot` на новую версию будет объявляется дополнительно.
+Файлы для обновления `FW Boot` по OTA находятся в директории [update_boot](https://github.com/pvvx/THB2/tree/master/update_boot). Процесс обновления `FW Boot` через OTA не является безопасным. Перед этим действием проверьте уровень батареи.
 
-Актуальная версия `FW Boot` - **v1.7** для устройств с датчиком CHT8305. Для остальных вариантов обновлений `FW Boot` не требуется с версии **v1.4**.
+Актуальная версия `FW Boot` - **v1.9** для всех устройств (содержит исправления).
 
 ## Основные характеристики
 
@@ -74,7 +74,8 @@ _Далее, с помощью соединения BLE в [PHY62x2BTHome.html](
 | 1.5 | Добавлен вариант шифрования BLE рекламы с помощью BindKey. |
 | 1.6 | Добавлено усреднение расчета напряжения батареи, дублирование состояния контакта open/close и счетчика через 12..20 сек (кратно интервалу рекламы) после срабатывания и далее каждые 30 минут. |
 | 1.7 | Исправление ошибки (> 42 C) для сенсора CHT8305 |
-| 1.8b | Добавлено отображение температуры в градусах Фаренгейта |
+| 1.8 | Добавлено отображение температуры в градусах Фаренгейта |
+| 1.9 | Исправлена ошибка восстановления измененного имени устройства после сброса питания |
 
 ## Прошивка
 

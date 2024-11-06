@@ -139,7 +139,8 @@ void set_dev_name(void)
 		p[len + 2] = 0;
 	} else
 		set_def_name();
-	HCI_LE_SetScanRspDataCmd(p[0] + 1, p);
+	gapRole_ScanRspDataLen = p[0] + 1;
+	HCI_LE_SetScanRspDataCmd(gapRole_ScanRspDataLen, p);
 	GGS_SetParameter( GGS_DEVICE_NAME_ATT, p[0] - 1, (void *)&p[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
 }
 
