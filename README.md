@@ -47,6 +47,18 @@ Files for updating boot via OTA are located in the [update_boot](update_boot) di
 
 > The current `FW Boot' version is **v1.9** for all devices (errors fixed).
 
+## Internal GPIO pinout:
+
+| Device | Sensor SDA/SCL/Power | LCD SDA/SCL/Power | Key | LED |
+|:---:|:---:|:---:|:---:|:---:|
+| THB1 | P18/P20/- | P34/P33/- | P01 | - |
+| THB2 | P18/P20/- | - | P07 | P26 |
+| THB3 | P18/P20/- | P34/P33/- | P01 | - |
+| BTH01 | P33/P34/P00 | - | P14 | P15 |
+| TH05 | P34/P33/P00 | P34/P33/P02 | P14 | - |
+| TH05D | P31/P32/- | P11/P14/- | P02 | - |
+| TH05F | P33/P34/P00 | P26/P31/P02 | P14 | - |
+
 ## Main features
 
 **With default settings**:
