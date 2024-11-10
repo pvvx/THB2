@@ -49,15 +49,15 @@ Files for updating boot via OTA are located in the [update_boot](update_boot) di
 
 ## Internal GPIO pinout:
 
-| Device | Sensor SDA/SCL/Power | LCD SDA/SCL/Power | Key | LED |
-|:---:|:---:|:---:|:---:|:---:|
-| THB1 | P18/P20/- | P34/P33/- | P01 | - |
-| THB2 | P18/P20/- | - | P07 | P26 |
-| THB3 | P18/P20/- | P34/P33/- | P01 | - |
-| BTH01 | P33/P34/P00 | - | P14 | P15 |
-| TH05 | P34/P33/P00 | P34/P33/P02 | P14 | - |
-| TH05D | P31/P32/- | P11/P14/- | P02 | - |
-| TH05F | P33/P34/P00 | P26/P31/P02 | P14 | - |
+| Firmware | Sensor SDA/SCL/Power | LCD SDA/SCL/Power | Key | LED | TRG(TX) | IN(RX) |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:| 
+| THB1 | P18/P20/- | P34/P33/- | P01 | - | P09 | P10 |
+| THB2 | P18/P20/- | - | P07 | P26 | P20 | P18 |
+| THB3 | P18/P20/- | P34/P33/- | P01 | - | P09 | P10 |
+| BTH01 | P33/P34/P00 | - | P14 | P15 | P20 | P18 |
+| TH05 | P33/P34/P00 | P32/P34/P02 | P14 | - | P20 | P18 |
+| TH05D | P31/P32/- | P11/P14/- | P02 | - | P09 | P10 |
+| TH05F | P33/P34/P00 | P26/P31/P02 | P14 | - | P20 | P18 |
 
 ## Main features
 
