@@ -55,7 +55,7 @@ Files for updating boot via OTA are located in the [update_boot](update_boot) di
 | THB2 | P18/P20/- | - | P07 | P26 | P20 | P18 |
 | THB3 | P18/P20/- | P34/P33/- | P01 | - | P09 | P10 |
 | BTH01 | P33/P34/P00 | - | P14 | P15 | P20 | P18 |
-| TH05 | P33/P34/P00 | P32/P34/P02 | P14 | - | P20 | P18 |
+| TH05 | P33/P34/P00 | P33/P34/P02 | P14 | - | P20 | P18 |
 | TH05D | P31/P32/- | P11/P14/- | P02 | - | P09 | P10 |
 | TH05F | P33/P34/P00 | P26/P31/P02 | P14 | - | P20 | P18 |
 
