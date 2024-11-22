@@ -11,7 +11,7 @@ Custom firmware for Tuya devices based on the PHY622x2 chipset.
 
 This firmware works with [Home Assistant](https://www.home-assistant.io/) and other software running in the [BTHome](https://bthome.io/) format.
 
-All firmware supports any of these sensors: CHT8215 (CHT8310), CHT8305, AHT20..30.
+All firmware supports any of these sensors: [CHT8215](pvvx.github.io/THB2/CHT8315%20Advanced%20Datasheet%20Ver1.6%2020230927.pdf) ([CHT8310](https://pvvx.github.io/THB2/CHT8310%20Advanced%20Datasheet%20Ver1.1%2020230927.pdf)), [CHT8305](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8305C%20Advanced%20Datasheet%20Ver2.5%202021-10-26.pdf), [CHT832x](pvvx.github.io/THB2/CHT832X%20Advanced%20Datasheet%20Ver1.pdf), AHT20..30.
 
 **Software for setting up and making BLE OTA: [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).**
 > Uploading OTA files to [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) is automatic. You don't need to download files from this repository for OTA.
@@ -39,13 +39,13 @@ The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only u
 | [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v19.hex | BTH01_v19.bin | no |
 | [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v19.hex | TH05_v19.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v19.hex | TH05D_v19.bin | RSH-TH05-V1.3 (chip: BL55072) |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v19.hex | TH05F_v19.bin | TH05Y_V1.1, TH05Y_V1.2 (chip: QD01 2332 NT) |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v19.hex | TH05F_v19.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
 
 The main firmware files, BOOT_XXX_vXX.hex (for programming via USB-COM adapter) and XXX_vXX.bin (for OTA), are located in the [bin](bin) directory.
 
 Files for updating boot via OTA are located in the [update_boot](update_boot) directory. **
 
-> The current `FW Boot' version is **v1.9** for all devices (errors fixed).
+> The current version of `FW Boot` for TH05Y_V3.1 with CHT832x sensor is **2.0**, for the rest - **v1.9**.
 
 ## Internal GPIO pinout:
 
@@ -58,6 +58,10 @@ Files for updating boot via OTA are located in the [update_boot](update_boot) di
 | TH05 | P33/P34/P00 | P33/P34/P02 | P14 | - | P20 | P18 |
 | TH05D | P31/P32/- | P11/P14/- | P02 | - | P09 | P10 |
 | TH05F | P33/P34/P00 | P26/P31/P02 | P14 | - | P20 | P18 |
+
+The LCD chip is initialized the same way in all variants, but the connection ports are different.
+The LCD has different segment layouts depending on the model.
+The sensors are detected automatically, but have different ports depending on the model.
 
 ## Main features
 
@@ -90,6 +94,7 @@ Files for updating boot via OTA are located in the [update_boot](update_boot) di
 | 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
 | 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 | 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
+| 2.0beta | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li></ul> |
 
 ## Firmware
 

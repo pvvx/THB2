@@ -25,8 +25,15 @@
 
 #define CHT83xx_MID	0x5959
 
+/* CHT832x https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT832X Advanced Datasheet Ver1.pdf */
 
-/* CHT8310 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310.Advanced.Datasheet_Ver1.0.20230407.pdf */
+#define CHT832x_CMD_MID		0x3781	// Read Manufacturer ID
+#define CHT832x_MID_CRC		0x535959 // CRC, MID
+#define CHT832x_VID			0x2083	// VID
+#define CHT832x_CMD_OSM		0x2400	// start measure T/H (One-shot mode)
+
+/* CHT8310 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310 Advanced Datasheet Ver1.1 20230927.pdf */
+/* CHT8315 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8315 Advanced Datasheet Ver1.6 20230927.pdf */
 //	I2C addres
 
 #define CHT8215_I2C_ADDR0	0x40
@@ -71,7 +78,8 @@
 #define CHT8315_MID	0x5959
 #define CHT8215_VID	0x1582
 
-/* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/BTH01/CHT8305.pdf */
+
+/* CHT8305 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8305C Advanced Datasheet Ver2.5 2021-10-26.pdf */
 
 //  I2C addres
 #define CHT8305_I2C_ADDR0		0x40
@@ -144,6 +152,7 @@ enum {
 	TH_SENSOR_CHT8305,	// 4
 	TH_SENSOR_AHT2x,	// 5
 	TH_SENSOR_CHT8215,	// 6
+	TH_SENSOR_CHT832x,	// 6
 	TH_SENSOR_TYPE_MAX // 7
 }; // TH_SENSOR_TYPES
 

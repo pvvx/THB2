@@ -123,6 +123,7 @@ int read_i2c_bytes(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint8 * data, uin
 	return 0;
 }
 
+/* size max = 7 ! */
 int read_i2c_nabuf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * data, uint8 size) {
 	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	int i = size;
@@ -130,6 +131,7 @@ int read_i2c_nabuf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * data, uint8 size) {
 	pi2cdev->IC_TAR = addr;
 
 	HAL_ENTER_CRITICAL_SECTION();
+
 	pi2cdev->IC_ENABLE = 1;
 	while(i--)
 		pi2cdev->IC_DATA_CMD = 0x100;
@@ -150,15 +152,7 @@ int read_i2c_nabuf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * data, uint8 size) {
 	return 0;
 }
 
-int send_i2c_byte(pdev_i2c_t pi2c_dev, uint8 addr, uint8 data) {
-	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
-	pi2cdev->IC_ENABLE = 0;
-	pi2cdev->IC_TAR = addr;
-	HAL_ENTER_CRITICAL_SECTION();
-	pi2cdev->IC_ENABLE = 1;
-	pi2cdev->IC_DATA_CMD = data;
-	// while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
-	HAL_EXIT_CRITICAL_SECTION();
+static int i2c_wait_send(AP_I2C_TypeDef* pi2cdev) {
 	uint32 to = osal_sys_tick;
 	while(1) {
 		if(pi2cdev->IC_RAW_INTR_STAT & 0x200)// check tx empty
@@ -167,47 +161,74 @@ int send_i2c_byte(pdev_i2c_t pi2c_dev, uint8 addr, uint8 data) {
 			return 1;
 	}
 	return 0;
+}
+
+int send_i2c_byte(pdev_i2c_t pi2c_dev, uint8 addr, uint8 data) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
+	pi2cdev->IC_ENABLE = 0;
+	pi2cdev->IC_TAR = addr;
+
+	HAL_ENTER_CRITICAL_SECTION();
+
+	pi2cdev->IC_ENABLE = 1;
+	pi2cdev->IC_DATA_CMD = data;
+	// while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
+
+	HAL_EXIT_CRITICAL_SECTION();
+
+	return i2c_wait_send(pi2cdev);
 }
 
 int send_i2c_wreg(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint16 data) {
 	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_TAR = addr;
+
 	HAL_ENTER_CRITICAL_SECTION();
+
 	pi2cdev->IC_ENABLE = 1;
-	  pi2cdev->IC_DATA_CMD = reg;
-		while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
-	  pi2cdev->IC_DATA_CMD = (data >> 8) & 0xff;
-		while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
-	  pi2cdev->IC_DATA_CMD = data & 0xff;
-		HAL_EXIT_CRITICAL_SECTION();
-		uint32 to = osal_sys_tick;
-		while(1) {
-			if(pi2cdev->IC_RAW_INTR_STAT & 0x200)// check tx empty
-				break;
-			if(osal_sys_tick - to > I2C_WAIT_ms)
-				return 1;
-	}
-	return 0;
+	pi2cdev->IC_DATA_CMD = reg;
+	while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
+	pi2cdev->IC_DATA_CMD = (data >> 8) & 0xff;
+	while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
+	pi2cdev->IC_DATA_CMD = data & 0xff;
+
+	HAL_EXIT_CRITICAL_SECTION();
+
+	return i2c_wait_send(pi2cdev);
+}
+
+int send_i2c_wcmd(pdev_i2c_t pi2c_dev, uint8 addr, uint16 cmd) {
+	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
+	pi2cdev->IC_ENABLE = 0;
+	pi2cdev->IC_TAR = addr;
+
+	HAL_ENTER_CRITICAL_SECTION();
+
+	pi2cdev->IC_ENABLE = 1;
+	pi2cdev->IC_DATA_CMD = (cmd >> 8) & 0xff;
+	while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
+	pi2cdev->IC_DATA_CMD = cmd & 0xff;
+
+	HAL_EXIT_CRITICAL_SECTION();
+
+	return i2c_wait_send(pi2cdev);
 }
 
 int send_i2c_buf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * pdata, int len) {
 	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	pi2cdev->IC_ENABLE = 0;
 	pi2cdev->IC_TAR = addr;
+
 	HAL_ENTER_CRITICAL_SECTION();
+
 	pi2cdev->IC_ENABLE = 1;
 	while(len--) {
 	  pi2cdev->IC_DATA_CMD = *pdata++;
 	  while(!(pi2cdev->IC_RAW_INTR_STAT & 0x10));
 	}
+
 	HAL_EXIT_CRITICAL_SECTION();
-	uint32 to = osal_sys_tick;
-	while(1) {
-		if(pi2cdev->IC_RAW_INTR_STAT & 0x200)// check tx empty
-			break;
-		if(osal_sys_tick - to > I2C_WAIT_ms)
-			return 1;
-	}
-	return 0;
+
+	return i2c_wait_send(pi2cdev);
 }

@@ -27,6 +27,14 @@ dev_i2c_t i2c_dev0 = {
 
 thsensor_cfg_t thsensor_cfg;
 
+const thsensor_def_cfg_t def_thcoef_cht8320 = {
+		.coef.temp_k = 17500,
+		.coef.humi_k = 10000,
+		.coef.temp_z = -4500,
+		.coef.humi_z = 0,
+		.sensor_type = TH_SENSOR_CHT832x
+};
+
 const thsensor_def_cfg_t def_thcoef_cht8215 = {
 		.coef.temp_k = 25606,
 		.coef.humi_k = 20000,
@@ -74,6 +82,19 @@ int read_sensor_cht821x(pdev_i2c_t pi2c_dev) {
 		_r16 = (reg_data[0] << 8) | reg_data[1];
 		measured_data.temp = ((int32_t)(_r16 * thsensor_cfg.coef.temp_k) >> 16)  + thsensor_cfg.coef.temp_z;; // x 0.01 C
 		_r32 = ((reg_data[2] << 8) | reg_data[3]); // & 0x7fff;
+		measured_data.humi = ((uint32_t)(_r32 * thsensor_cfg.coef.humi_k) >> 16) + thsensor_cfg.coef.humi_z; // x 0.01 %
+		return 0;
+	}
+	return 1;
+}
+
+int read_sensor_cht832x(pdev_i2c_t pi2c_dev) {
+	uint32_t _r32;
+	uint8_t reg_data[6];
+	if (read_i2c_nabuf(pi2c_dev, thsensor_cfg.i2c_addr, reg_data, 6) == 0)	 {
+		_r32 = (reg_data[0] << 8) | reg_data[1];
+		measured_data.temp = ((uint32_t)(_r32 * thsensor_cfg.coef.temp_k) >> 16)  + thsensor_cfg.coef.temp_z;; // x 0.01 C
+		_r32 = ((reg_data[3] << 8) | reg_data[4]);
 		measured_data.humi = ((uint32_t)(_r32 * thsensor_cfg.coef.humi_k) >> 16) + thsensor_cfg.coef.humi_z; // x 0.01 %
 		return 0;
 	}
@@ -131,7 +152,61 @@ void start_measure(void) {
 			send_i2c_byte(&i2c_dev0, thsensor_cfg.i2c_addr, CHT83xx_REG_TMP); // start measure T/H
 			deinit_i2c(&i2c_dev0);
 		}
+		else if(thsensor_cfg.vid == CHT832x_VID) {
+			init_i2c(&i2c_dev0);
+			send_i2c_wcmd(&i2c_dev0, thsensor_cfg.i2c_addr, CHT832x_CMD_OSM); // start measure T/H
+			deinit_i2c(&i2c_dev0);
+		}
 	}
+}
+
+
+__ATTR_SECTION_XIP__
+thsensor_def_cfg_t * init_cht83xx_sensor(void) {
+	thsensor_def_cfg_t *ptabinit = NULL;
+	// test cht832x
+#if 1
+	uint32_t tmp = 0;
+	if((!send_i2c_wcmd(&i2c_dev0, thsensor_cfg.i2c_addr, CHT832x_CMD_MID))
+	 && (!read_i2c_nabuf(&i2c_dev0, thsensor_cfg.i2c_addr, (uint8 *)&tmp, 3))
+	 && tmp == CHT832x_MID_CRC) {
+		thsensor_cfg.mid = (uint16_t)tmp;
+#else
+	if((!send_i2c_wcmd(&i2c_dev0, thsensor_cfg.i2c_addr, CHT832x_CMD_MID))
+	 && (!read_i2c_nabuf(&i2c_dev0, thsensor_cfg.i2c_addr, (uint8_t *)&thsensor_cfg.mid, 3))
+	 && thsensor_cfg.mid == CHT83xx_MID) {
+#endif
+		thsensor_cfg.vid = CHT832x_VID;
+		ptabinit = (thsensor_def_cfg_t *)&def_thcoef_cht8320;
+		thsensor_cfg.read_sensor = read_sensor_cht832x;
+	}
+	// test CHT8305, CHT8315...
+	else if(!read_i2c_bytes(&i2c_dev0, thsensor_cfg.i2c_addr, CHT83xx_REG_MID, (uint8 *)&thsensor_cfg.mid, 2)) { // 0x5959
+		if(thsensor_cfg.mid == CHT83xx_MID) {
+			if(!read_i2c_bytes(&i2c_dev0, thsensor_cfg.i2c_addr, CHT83xx_REG_VID, (uint8 *)&thsensor_cfg.vid, 2)) { // 0x8215
+				if(thsensor_cfg.vid == CHT8305_VID) {
+#if 0 // USE_DEFAULT_SETS_SENSOR
+					// Soft reset command
+					send_i2c_wreg(thsensor_cfg.i2c_addr, CHT8305_REG_CFG,
+					CHT8305_CFG_SOFT_RESET | CHT8305_CFG_MODE);
+					WaitMs(SENSOR_RESET_TIMEOUT_ms);
+					// Configure
+					send_i2c_wreg(&i2c_dev0, thsensor_cfg.i2c_addr, CHT8305_REG_CFG, CHT8305_CFG_MODE );
+#endif
+					ptabinit = (thsensor_def_cfg_t *)&def_thcoef_cht8305;
+					thsensor_cfg.read_sensor = read_sensor_cht8305;
+				} else if(thsensor_cfg.vid == CHT8215_VID) { // 0x8210/0x8215 ?
+					if(adv_wrk.measure_interval_ms >= 5000) // > 5 sec
+						send_i2c_wreg(&i2c_dev0, thsensor_cfg.i2c_addr, CHT8215_REG_CRT, 0x0300); // Set conversion ratio 5 sec
+					// else 1 sec
+					ptabinit = (thsensor_def_cfg_t *)&def_thcoef_cht8215;
+					thsensor_cfg.read_sensor = read_sensor_cht821x;
+				}
+
+			}
+		}
+	}
+	return ptabinit;
 }
 
 __ATTR_SECTION_XIP__
@@ -141,31 +216,14 @@ void init_sensor(void) {
 	thsensor_cfg.sensor_type = TH_SENSOR_NONE;
 	init_i2c(&i2c_dev0);
 	//send_i2c_byte(0,6);
-	thsensor_cfg.i2c_addr = CHT83xx_I2C_ADDR;
-	if(!read_i2c_bytes(&i2c_dev0, thsensor_cfg.i2c_addr, CHT83xx_REG_MID, (uint8 *)&thsensor_cfg.mid, 2) // 0x5959
-	&& !read_i2c_bytes(&i2c_dev0, thsensor_cfg.i2c_addr, CHT83xx_REG_VID, (uint8 *)&thsensor_cfg.vid, 2)) { // 0x8215
-		if(thsensor_cfg.mid == CHT83xx_MID) {
-			if(thsensor_cfg.vid == CHT8305_VID) {
-#if 0 // USE_DEFAULT_SETS_SENSOR
-				// Soft reset command
-				send_i2c_wreg(thsensor_cfg.i2c_addr, CHT8305_REG_CFG,
-				CHT8305_CFG_SOFT_RESET | CHT8305_CFG_MODE);
-				WaitMs(SENSOR_RESET_TIMEOUT_ms);
-				// Configure
-				send_i2c_wreg(&i2c_dev0, thsensor_cfg.i2c_addr, CHT8305_REG_CFG, CHT8305_CFG_MODE );
-#endif
-				ptabinit = (thsensor_def_cfg_t *)&def_thcoef_cht8305;
-				thsensor_cfg.read_sensor = read_sensor_cht8305;
-			} else if(thsensor_cfg.vid == CHT8215_VID) { // 0x8210/0x8215 ?
-				if(adv_wrk.measure_interval_ms >= 5000) // > 5 sec
-					send_i2c_wreg(&i2c_dev0, thsensor_cfg.i2c_addr, CHT8215_REG_CRT, 0x0300); // Set conversion ratio 5 sec
-				// else 1 sec
-				ptabinit = (thsensor_def_cfg_t *)&def_thcoef_cht8215;
-				thsensor_cfg.read_sensor = read_sensor_cht821x;
-			}
-		} else
-			thsensor_cfg.i2c_addr = 0;
-	} else {
+	thsensor_cfg.i2c_addr = CHT8215_I2C_ADDR0;
+	while(thsensor_cfg.i2c_addr < CHT8215_I2C_ADDR3) {
+		ptabinit = init_cht83xx_sensor();
+		if(ptabinit != NULL)
+			break;
+		thsensor_cfg.i2c_addr += CHT8215_I2C_ADDR1 - CHT8215_I2C_ADDR0;
+	}
+	if(ptabinit == NULL) {
 		thsensor_cfg.i2c_addr = AHT2x_I2C_ADDR;
 		if(!send_i2c_wreg(&i2c_dev0, thsensor_cfg.i2c_addr, AHT2x_CMD_TMS, AHT2x_DATA_TMS)) {
 			ptabinit = (thsensor_def_cfg_t *)&def_thcoef_aht30;

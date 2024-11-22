@@ -25,6 +25,7 @@ void init_i2c(pdev_i2c_t pi2c_dev);
 void deinit_i2c(pdev_i2c_t pi2c_dev);
 int send_i2c_byte(pdev_i2c_t pi2c_dev, uint8_t addr, uint8_t data);
 int send_i2c_wreg(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint16 data);
+int send_i2c_wcmd(pdev_i2c_t pi2c_dev, uint8 addr, uint16 cmd);
 int send_i2c_buf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * pdata, int len);
 int read_i2c_bytes(pdev_i2c_t pi2c_dev, uint8 addr, uint8 reg, uint8 * data, uint8 size);
 int read_i2c_nabuf(pdev_i2c_t pi2c_dev, uint8 addr, uint8 * data, uint8 size);

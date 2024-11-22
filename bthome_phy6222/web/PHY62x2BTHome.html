@@ -579,7 +579,7 @@ div#divChart {
 			UPDATE: { en: 'Update', ru: 'Обновление' },
 			TRIGGER_DATA: { en: 'Trigger settings line', ru: 'Строка настроек триггера' },
 			COMFORT_TEMPERATURE: { en: 'Comfort temperature', ru: 'Комфорт Температура' },
-			DEVICE: { en: 'Device', ru: 'Устройство' },
+			DEVICE: { en: 'Device MAC', ru: 'MAC устройства' },
 			COMMAND_RESPONSE: { en: 'Command response', ru: 'Ответ на команду' },
 			SET_DEVICE_TIME: { en: 'Set device time', ru: 'Установка времени на устройстве' },
 			TIME_IS_SYNCED: { en: 'Device time is synchronized', ru: 'Время на устройстве синхронизировано' },
@@ -1738,7 +1738,7 @@ function parseBlkCustom(value) {
 		mac[5] = value.getUint8(1);
 		let mac_txt = bytesToHex(mac);
 		$("inpDevMAC").value = mac_txt;
-		addLog(`${i18n.getTag('DEVICE')} MAC : ${mac_txt}`);
+		addLog(`${i18n.getTag('DEVICE_MAC')}: ${mac_txt}`);
 	} else {
 		console.log('blk: ' + dump8(value, value.byteLength));
 		addLog(`${i18n.getTag('COMMAND_RESPONSE')} (${hex(blkId,2)}): ${bytesToHex(value.buffer.slice(1))}`);
