@@ -45,7 +45,7 @@ The main firmware files, BOOT_XXX_vXX.hex (for programming via USB-COM adapter) 
 
 Files for updating boot via OTA are located in the [update_boot](update_boot) directory. **
 
-> The current version of `FW Boot` for TH05Y_V3.1 with CHT832x sensor is **2.0**, for the rest - **v1.9**.
+> The current version of `FW Boot` for TH05Y_V3.1 with CHT832x sensor is **v2.0**, for the rest - **v1.9**.
 
 ## Internal GPIO pinout:
 
