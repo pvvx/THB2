@@ -106,9 +106,9 @@ It is possible to flash the device with the Boot program via USB-COM adapter wit
 |---|---|
 | GND | -Vbat |
 | +3.3V | +Vbat |
-| TX | RX1 |
-| RX | TX1 |
-| RTS | RESET |
+| TX | RX or RX1 |
+| RX | TX or TX1 |
+| RTS or DTR | RESET or REST_N |
 
 If there is no RST pin on the adapter, then short the RESET pin to GND (-Vbat) and quickly open it when the script starts (it may take a few tries).
 
@@ -119,6 +119,7 @@ The name of the pins on the device can be found in the description at the links:
 * [BTH01](https://pvvx.github.io/BTH01/)
 * [TH05_V1.3](https://pvvx.github.io/TH05-v1.3)
 * [TH05_V1.4](https://pvvx.github.io/TH-05)
+* [TH05F](https://pvvx.github.io/TH05F)
 
 2. Install python3 and the necessary libraries:
 
