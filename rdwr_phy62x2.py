@@ -511,7 +511,7 @@ def arg_auto_int(x):
 def main():
 	parser = argparse.ArgumentParser(description='%s version %s' % (__progname__, __version__), prog = __filename__)
 	parser.add_argument('--port', '-p', help = 'Serial port device',	default='COM1')
-	parser.add_argument('--baud', '-b',	help = 'Set Port Baud (115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = DEF_RUN_BAUD)
+	parser.add_argument('--baud', '-b',	help = 'Set Port Baud rate (115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = DEF_RUN_BAUD)
 
 	parser.add_argument('--allerase', '-a',  action='store_true', help = 'Pre-processing: All Chip Erase')
 	parser.add_argument('--erase', '-e',  action='store_true', help = 'Pre-processing: Erase Flash work area')

@@ -5,6 +5,8 @@
 
 Custom firmware for Tuya devices based on the PHY622x2 chipset.
 
+(!) It is not recommended to buy Tuya thermometers with CHT8305 sensors and/or BL55028 LCD driver chips. They have increased consumption and are not compatible with battery operation. This is a dummy thermometer from Tuya.
+
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
@@ -176,7 +178,7 @@ python3 rdwr_phy62x2.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 ```
 
-> Not all USB-COM adapters support 1Mbit. Then remove the `-b 1000000` option or select a different baud rate.
+> Not all USB-COM adapters support 1Mbit. Then remove the `-b 1000000` option or select a different baud rate (115200, 250000, 500000, 1000000).
 
 4. The firmware has been flashed and the device should work.
 

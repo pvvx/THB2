@@ -5,6 +5,8 @@
 
 Кастомные прошивки для устройств Tuya на чипсете PHY622x2.
 
+(!) Не рекомендуется покупать термометры Tuya с датчиками CHT8305 и/или чипами драйверов ЖК-дисплея BL55028. Они имеют повышенное потребление и несовместимы с работой от батареек. Это муляж термометра от Tuya.
+
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
@@ -178,7 +180,7 @@ python3 rdwr_phy62x2.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 ```
 
-Не все адаптеры USB-COM поддерживают 1Mbit. Тогда удалите опцию `-b 1000000` или выберите другой вариант Baud rate.
+Не все адаптеры USB-COM поддерживают 1Mbit. Тогда удалите опцию `-b 1000000` или выберите другой вариант Baud rate (115200, 250000, 500000, 1000000).
 
 4. Прошивка зашита. Устройство работает.
 
