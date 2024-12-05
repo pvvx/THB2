@@ -7,4 +7,4 @@
 | [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_vNN.hex | BTH01_vNN.bin | no |
 | [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_vNN.hex | TH05_vNN.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_vNN.hex | TH05D_vNN.bin | RSH-TH05-V1.3 (chip: BL55072) |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_vNN.hex | TH05F_vNN.bin | TH05Y_V1.1, TH05Y_V1.2 (chip: QD01 2332 NT) |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_vNN.hex | TH05F_vNN.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
