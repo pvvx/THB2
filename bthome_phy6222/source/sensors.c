@@ -239,4 +239,10 @@ void init_sensor(void) {
 	deinit_i2c(&i2c_dev0);
 }
 
+#else
+
+#include "sensors.h"
+
+measured_data_t measured_data;
+
 #endif // (DEV_SERVICES & SERVICE_THS)

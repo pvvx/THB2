@@ -711,7 +711,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 				adv_wrk.adv_reload_count = RDS_RETRY_ADV_COUNT;
 				adv_wrk.rds_timer_tik = clkt.utc_time_tik - (RDS_RETRY_DOUBLE_SEC << 15);
 				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
-				set_new_adv_interval(DEF_EVENT_ADV_INERVAL); // actual time * 625us
+				set_new_adv_interval(DEF_EVENT_ADV_INERVAL); // 50ms, actual time * 625us
 			} else if(cfg.flg & FLG_MEAS_NOTIFY) {
 				get_utc_time_sec(); // счет UTC timestamp
 				measure_notify();

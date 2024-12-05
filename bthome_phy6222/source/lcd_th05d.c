@@ -213,7 +213,7 @@ void show_big_number_x10(int16_t number) {
 	} else {
 		display_buff[6] = 0;
 		display_buff[7] = 0;
-		/* number: -995..19995 */
+		/* number: -19995..19995 */
 		if (number > 1995 || number < -1995) {
 			//display_buff[5] &= ~BIT(0); // no point, show: -1999..1999
 			if (number < 0) {
