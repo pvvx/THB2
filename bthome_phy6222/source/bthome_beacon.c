@@ -86,6 +86,12 @@ uint8_t adv_set_data(void * pd) {
 	p->battery_level = measured_data.battery;
 	p->v_id = BtHomeID_voltage;
 	p->battery_mv = measured_data.battery_mv; // x mV
+#if (DEV_SERVICES & SERVICE_BUTTON)
+	p->u_id = BtHomeID_button;
+	p->button = measured_data.button;
+	p->c_id = BtHomeID_count32;
+	p->counter = adv_wrk.rds_count;
+#endif
 	return sizeof(adv_bthome_data2_t);
 }
 
@@ -96,6 +102,15 @@ uint8_t adv_set_event(void * ped) {
 	padv_bthome_event1_t p = (padv_bthome_event1_t)ped;
 	p->o_id = BtHomeID_opened;
 	p->opened = measured_data.flg.pin_input;
+	p->c_id = BtHomeID_count32;
+	p->counter = adv_wrk.rds_count;
+	return sizeof(adv_bthome_event1_t);
+}
+#elif (DEV_SERVICES & SERVICE_BUTTON)
+uint8_t adv_set_event(void * ped) {
+	padv_bthome_event1_t p = (padv_bthome_event1_t)ped;
+	p->b_id = BtHomeID_button;
+	p->button = measured_data.button;
 	p->c_id = BtHomeID_count32;
 	p->counter = adv_wrk.rds_count;
 	return sizeof(adv_bthome_event1_t);
@@ -121,7 +136,7 @@ uint8_t bthome_data_beacon(void * padbuf) {
 	if (cfg.flg & FLG_ADV_CRYPT) {
 		padv_bthome_encrypt_t pe = (padv_bthome_encrypt_t)p;
 		pe->info = BtHomeID_Info_Encrypt;
-#if (DEV_SERVICES & SERVICE_RDS)
+#if (DEV_SERVICES & (SERVICE_RDS | SERVICE_BUTTON))
 		if(adv_wrk.adv_event) {
 			p->head.size = adv_encrypt(pe->data, adv_set_event(pe->data)) + sizeof(pe->head) - sizeof(pe->head.size) + sizeof(pe->info);
 		} else
@@ -135,11 +150,11 @@ uint8_t bthome_data_beacon(void * padbuf) {
 		p->info = BtHomeID_Info;
 		p->p_id = BtHomeID_PacketId;
 		p->pid = (uint8)measured_data.count;
-	#if (DEV_SERVICES & SERVICE_RDS)
+#if (DEV_SERVICES & (SERVICE_RDS | SERVICE_BUTTON))
 		if(adv_wrk.adv_event) {
 			p->head.size = adv_set_event(p->data) + sizeof(p->head) - sizeof(p->head.size) + sizeof(p->info) + sizeof(p->p_id) + sizeof(p->pid);
 		} else
-	#endif
+#endif
 		{
 			p->head.size = adv_set_data(p->data) + sizeof(p->head) - sizeof(p->head.size) + sizeof(p->info) + sizeof(p->p_id) + sizeof(p->pid);
 		}

@@ -76,7 +76,7 @@ void __attribute__((used)) hal_ADC_IRQHandler(void) {
 #endif
 	adv_wrk.new_battery = 1; // new battery
 #if ((DEV_SERVICES & SERVICE_THS) == 0)
-	measured_data.count++;
+//	measured_data.count++;
 #endif
 	hal_pwrmgr_unlock(MOD_ADCC);
 
@@ -161,13 +161,38 @@ static void init_adc_batt(void) {
 #endif
 }
 
+void low_vbat(void) {
+#if (DEV_SERVICES & SERVICE_BUTTON)
+	pwroff_cfg_t pwr_wkp_cfg[]= {
+#if (DEV_SERVICES & SERVICE_BUTTON)
+			{ GPIO_KEY, KEY_PRESSED, 0 },
+#endif
+//#if (DEV_SERVICES & SERVICE_RDS)
+//			{ GPIO_INP, POL_FALLING, 0 }
+//#endif
+	};
+    // 0.48 uA at 3.0V
+    hal_pwrmgr_poweroff( pwr_wkp_cfg, sizeof(pwr_wkp_cfg)/sizeof(pwr_wkp_cfg[0]) );
+#else
+    // 1.67 uA at 3.0V
+    hal_pwrmgr_enter_sleep_rtc_reset((60*60)<<15); // 60 minutes
+#endif
+
+}
+
+
 void check_battery(void) {
 	uint32_t i;
 	uint32_t summ;
 	if(bat_average.battery_mv == 0)
 		return;
-	//if (bat_average.battery_mv < 2000) // It is not recommended to write Flash below 2V
-	//	low_vbat(); // TODO
+#if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
+	if (bat_average.battery_mv < 2000) // It is not recommended to write Flash below 2V
+		low_vbat();
+#else
+	if (bat_average.battery_mv < 1900)
+		low_vbat();
+#endif
 	if(bat_average.buf1[0] == 0) {
 		for(i = 0; i < BAT_AVERAGE1_COUNT; i++)
 			bat_average.buf1[i] = bat_average.battery_mv;

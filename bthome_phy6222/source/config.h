@@ -43,9 +43,10 @@
 #define DEVICE_TH05D	24  // TH05_V1.3
 #define DEVICE_TH05F	25  // TH05Y_V1.2
 #define DEVICE_THB3		26
+#define DEVICE_KEY2		30
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB3
+#define DEVICE		DEVICE_KEY2
 #endif
 
 // supported services by the device (bits)
@@ -61,10 +62,16 @@
 #define SERVICE_KEY			0x00000200	// есть кнопка
 #define SERVICE_OUTS		0x00000400	// пока нет // есть обслуживние выходных пинов
 #define SERVICE_INS			0x00000800	// пока нет // есть обслуживние входных пинов
-#define SERVICE_TIME_ADJUST 0x00001000	// пока нет // есть функция коррекции счета времени
+//#define SERVICE_TIME_ADJUST 0x00001000	// пока нет // есть функция коррекции счета времени
 #define SERVICE_HARD_CLOCK	0x00002000	// пока нет // есть реальные часы RTC
 #define SERVICE_TH_TRG		0x00004000	// триггер по температуре и влажности
 #define SERVICE_LED			0x00008000	// use led
+//#define SERVICE_MI_KEYS	0x00010000	// use mi keys (не используется)
+//#define SERVICE_PRESSURE	0x00020000	// pressure sensor (пока нет реализации)
+//#define SERVICE_18B20		0x00040000	// use sensor(s) MY18B20 (пока нет реализации)
+//#define SERVICE_IUS		0x00080000	// use I and U sensor (INA226) (пока нет реализации)
+//#define SERVICE_PLM		0x00100000	// use PWM-RH and NTC (пока нет реализации)
+#define SERVICE_BUTTON		0x00200000	// кнопка, активность только при нажатии
 
 #define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
 #define OTA_TYPE_BOOT	SERVICE_OTA		// вариант для прошивки boot + OTA
@@ -105,6 +112,7 @@
 #define I2C_SDA 	GPIO_P18
 #define I2C_SCL 	GPIO_P20
 #define GPIO_KEY	GPIO_P07
+#define KEY_PRESSED	0
 #define GPIO_LED	GPIO_P26
 #define LED_ON		0
 #define LED_OFF		1
@@ -142,6 +150,7 @@
 #define I2C_SCL 	GPIO_P34 // SCL
 #define GPIO_SPWR	GPIO_P00 // питание сенсора
 #define GPIO_KEY	GPIO_P14
+#define KEY_PRESSED	0
 #define GPIO_LED	GPIO_P15
 #define LED_ON		1
 #define LED_OFF		0
@@ -188,6 +197,7 @@
 
 #define GPIO_SPWR	GPIO_P00 // питание сенсора
 #define GPIO_KEY	GPIO_P14
+#define KEY_PRESSED	0
 #define GPIO_LPWR	GPIO_P02 // питание LCD драйвера
 
 #define GPIO_TRG	GPIO_P20 // mark TX2
@@ -235,6 +245,7 @@
 #define I2C_LCD_SCL GPIO_P33 // SCL
 
 #define GPIO_KEY	GPIO_P01
+#define KEY_PRESSED	0
 
 #define GPIO_TRG	GPIO_P09 // mark TX
 #define GPIO_INP	GPIO_P10 // mark RX
@@ -286,6 +297,7 @@
 #define I2C_LCD_SCL GPIO_P14 // SCL
 
 #define GPIO_KEY	GPIO_P02
+#define KEY_PRESSED	0
 
 #define GPIO_TRG	GPIO_P09 // mark TX
 #define GPIO_INP	GPIO_P10 // mark RX
@@ -333,6 +345,7 @@
 
 #define GPIO_SPWR	GPIO_P00 // питание сенсора
 #define GPIO_KEY	GPIO_P14
+#define KEY_PRESSED	0
 #define GPIO_LPWR	GPIO_P02 // питание LCD драйвера
 
 #define GPIO_TRG	GPIO_P20 // mark TX2
@@ -341,6 +354,41 @@
 #define DEF_MODEL_NUMBER_STR		"TH05F"
 #define DEF_HARDWARE_REVISION		"0019"
 #define DEF_MANUFACTURE_NAME_STR	"Tuya"
+
+#elif DEVICE == DEVICE_KEY2
+/* Model: iSearch ver2 ST17H66 (TSSOP16) */
+#define SDK_VER_CHIP  __DEF_CHIP_TSOP16__
+
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_BINDKEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_BINDKEY \
+)
+#endif
+
+#define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
+
+#define GPIO_KEY	GPIO_P15
+#define KEY_PRESSED	1
+#define GPIO_LED	GPIO_P03
+#define LED_ON		1
+#define LED_OFF		0
+
+#define GPIO_BUZZER	GPIO_P09
+
+//#define GPIO_INP	GPIO_P15
+
+#define DEF_MODEL_NUMBER_STR		"KEY"
+#define DEF_HARDWARE_REVISION		"0020"
+#define DEF_MANUFACTURE_NAME_STR	"DIY"
+
 
 #else
 #error "DEVICE Not released!"
@@ -386,14 +434,14 @@ extern const cfg_t def_cfg;
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;
 	uint32_t	measure_batt_tik;
-#if (DEV_SERVICES & SERVICE_RDS)
-	uint32_t	rds_timer_tik;
-	uint32_t	rds_count;
+#if (DEV_SERVICES & (SERVICE_RDS | SERVICE_BUTTON))
+	uint32_t	rds_timer_tik;	// rds & button time tik (in 32768 Hz)
+	uint32_t	rds_count;		// rds & button count
 #endif
-	uint8_t		meas_count;
-	uint8_t 	adv_reload_count;
-	uint8_t		new_battery; 	// new battery
-	uint8_t		adv_event; 		// rds event
+	uint8_t		meas_count;		// счет до нового измерения в кол-ве вызовов adv_measure()
+	uint8_t 	adv_reload_count; // кол-во передач рекламы до перехода к новому типу и установкам рекламы
+	uint8_t		new_battery; 	// flag: new battery
+	uint8_t		adv_event; 		// flag: rds event
 } adv_work_t;
 extern adv_work_t adv_wrk;
 

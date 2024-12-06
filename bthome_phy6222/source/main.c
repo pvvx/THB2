@@ -108,7 +108,6 @@ volatile sysclk_t g_spif_clk_config;
 static void hal_low_power_io_init(void) {
 //========= disable all gpio pullup/down to preserve juice
 const ioinit_cfg_t ioInit[] = {
-#if(SDK_VER_CHIP == __DEF_CHIP_QFN32__)
 #if DEVICE == DEVICE_THB2
 		{ GPIO_P00, GPIO_PULL_DOWN },
 		{ GPIO_P01, GPIO_PULL_DOWN },
@@ -295,22 +294,24 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P32, GPIO_PULL_DOWN },
 		{ GPIO_P33, GPIO_FLOATING }, // CHT8305 SDA
 		{ GPIO_P34, GPIO_FLOATING } // CHT8305 SCL
+#elif (DEVICE == DEVICE_KEY2)
+		{ GPIO_P02, GPIO_FLOATING }, // connect to +Vbat ?
+#ifdef GPIO_LED
+		{ GPIO_P03, GPIO_FLOATING }, // LED - GPIO_LED
+#else
+		{ GPIO_P03, GPIO_PULL_DOWN },
+#endif
+		{ GPIO_P07, GPIO_PULL_DOWN }, // mark "SWS"
+		{ GPIO_P09, GPIO_PULL_DOWN }, // TX Buzzer
+		{ GPIO_P10, GPIO_PULL_DOWN}, // GPIO_PULL_UP }, // RX
+		{ GPIO_P11, GPIO_PULL_UP }, // ADC Vbat
+		{ GPIO_P14, GPIO_PULL_DOWN }, // PN8 ?
+ 		{ GPIO_P15, GPIO_PULL_DOWN }, // KEY
+		{ GPIO_P18, GPIO_PULL_DOWN }, // PN10 ?
+		{ GPIO_P20, GPIO_FLOATING }, // connect to GND
+		{ GPIO_P34, GPIO_FLOATING }  // connect to +Vbat
 #else
 #error "DEVICE Not released!"
-#endif
-#else
-		{GPIO_P02, GPIO_FLOATING },
-		{GPIO_P03, GPIO_FLOATING },
-		{GPIO_P07, GPIO_FLOATING },
-		{GPIO_P09, GPIO_FLOATING },
-		{GPIO_P10, GPIO_FLOATING },
-		{GPIO_P11, GPIO_FLOATING },
-		{GPIO_P14, GPIO_FLOATING },
-		{GPIO_P15, GPIO_FLOATING },
-		{GPIO_P18, GPIO_FLOATING },
-		{GPIO_P20, GPIO_FLOATING },
-		{GPIO_P34, GPIO_FLOATING },
-
 #endif
 	};
 
@@ -323,7 +324,9 @@ const ioinit_cfg_t ioInit[] = {
 #ifdef GPIO_LED
 	hal_gpio_write(GPIO_LED, LED_ON);
 #endif
+//#if SDK_VER_CHIP  == __DEF_CHIP_TSOP16__
 	DCDC_CONFIG_SETTING(0x0a);
+//#endif
 	DCDC_REF_CLK_SETTING(1);
 	DIG_LDO_CURRENT_SETTING(1);
 #if defined ( __GNUC__ )
@@ -440,9 +443,9 @@ int main(void) {
 #endif
 	wrk.boot_flg = (uint8_t)read_reg(OTA_MODE_SELECT_REG);
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
-#if (DEV_SERVICES & SERVICE_KEY)
+#if (DEV_SERVICES & (SERVICE_KEY | SERVICE_BUTTON))
 	hal_gpio_pin_init(GPIO_KEY, GPIO_INPUT);
-	if (hal_gpio_read(GPIO_KEY) == 0
+	if (hal_gpio_read(GPIO_KEY) == KEY_PRESSED
     	|| wrk.boot_flg == BOOT_FLG_OTA
     	|| wrk.boot_flg == BOOT_FLG_FW0) {
 #else

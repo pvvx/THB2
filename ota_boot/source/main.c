@@ -22,6 +22,7 @@ extern const uint32_t _ebss;
  ****************************************************************************/
 
 #define	WR_BLK_SIZE  		256
+#define	MAX_FLASH_SIZE		0x200000
 
 /* Заголовок OTA */
 typedef struct _app_info_t {
@@ -45,14 +46,68 @@ app_info_seg_t seg_info;
 
 uint8_t sector_buf[WR_BLK_SIZE];
 
+#define SPIF_WAIT_IDLE_CYC	 32
+
+static void spif_status_wait_idle(void) {
+	while((AP_SPIF->fcmd & 0x02) == 0x02);
+	volatile int delay_cycle = SPIF_WAIT_IDLE_CYC;
+	while (delay_cycle--){};
+	while ((AP_SPIF->config & 0x80000000) == 0);
+}
+
+
+#define flh_OK			0
+#define flh_ERR			1
+
+static uint8_t _spif_read_status_reg_x(void) {
+	uint8_t status;
+	spif_cmd(0x05, 0, 2, 0, 0, 0); //  0x05  - read status
+	spif_status_wait_idle();
+	spif_rddata(&status, 1);
+	return status;
+}
+
+extern void WaitRTCCount(uint32_t rtcDelyCnt);
+
+#define SPIF_TIMEOUT       (0x7ffffff)//1000000 ; // 0x40000 - 40 сек
+
+static int spif_wait_nobusy(uint8_t flg) {
+	uint8_t status;
+	volatile int tout = SPIF_TIMEOUT;
+	while(tout--) {
+		status = _spif_read_status_reg_x();
+		if ((status & flg) == 0)
+			return flh_OK;
+	}
+	return flh_ERR;
+}
+
+#define SFLG_WIP    1
+#define SFLG_WEL    2
+#define SFLG_WELWIP 3
+
+void flash_erase_sector(unsigned int addr) {
+	spif_status_wait_idle();
+	spif_wait_nobusy(SFLG_WIP);
+    AP_SPIF->fcmd = 0x6000001;
+    spif_status_wait_idle();
+    spif_wait_nobusy(SFLG_WIP);
+	AP_SPIF->fcmd_addr = addr;
+	spif_cmd(0x20,3,0,0,0,0);
+	spif_status_wait_idle();
+	spif_wait_nobusy(SFLG_WELWIP);
+}
+
+
 __attribute__ ((naked))
 void copy_app_code(void) {
 	uint32_t blksize = WR_BLK_SIZE;
 	uint32_t rfaddr = FADDR_APP_SEC + 0xfc;
 	uint32_t dfaddr = 0;
-	uint32_t wfaddr = FADDR_BOOT_ROM_INFO;
+	uint32_t wfaddr = FADDR_BOOT_ROM_INFO + MAX_FLASH_SIZE;
 	uint32_t count;
     __disable_irq();
+    //*(volatile uint32_t *) 0x1fff0898 = MAX_FLASH_SIZE*2;
 	spif_read(rfaddr, (uint8_t*)&rfaddr, 4);
 	spif_read(rfaddr, (uint8_t*)&info_app, sizeof(info_app));
 	if(info_app.flag == START_UP_FLAG
@@ -62,7 +117,7 @@ void copy_app_code(void) {
 		){
 		dfaddr = rfaddr + 0x100;
 		count = info_app.seg_count;
-		spif_erase_sector(wfaddr);
+		flash_erase_sector(wfaddr);
 		spif_write(wfaddr, (uint8_t*)&info_app.seg_count, 4);
 		spif_write(wfaddr + 8, (uint8_t*)&info_app.start_addr, 4);
 		wfaddr += 0x100;
@@ -72,13 +127,13 @@ void copy_app_code(void) {
 			spif_write(wfaddr, (uint8_t*)&seg_info, 12);
 			wfaddr += 16;
 		}
-		wfaddr = FADDR_OTA_SEC;
+		wfaddr = FADDR_OTA_SEC + MAX_FLASH_SIZE;
 		count = info_app.app_size;
 		while(count) {
 			if(count < WR_BLK_SIZE)
 				blksize = count;
 			if((wfaddr & (FLASH_SECTOR_SIZE - 1)) == 0)
-				spif_erase_sector(wfaddr);
+				flash_erase_sector(wfaddr);
 			spif_read(dfaddr, sector_buf, blksize);
 			spif_write(wfaddr, sector_buf, blksize);
 			dfaddr += blksize;

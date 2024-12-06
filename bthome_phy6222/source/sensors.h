@@ -224,6 +224,7 @@ typedef struct _measured_data_t {
 	uint16_t	battery_mv; // mV
 	uint8_t		battery; // 0..100 %
 	measured_flg_t flg;
+	uint8_t		button;
 } measured_data_t;
 
 #define send_len_measured_data 5

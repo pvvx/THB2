@@ -28,16 +28,21 @@ extern "C"
 #define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 5000 ms
 #define DEF_CON_ADV_INERVAL 		2500 // 1.5625 sec
 #define DEF_CON_ADV_INERVAL_MS 		((DEF_CON_ADV_INERVAL*625)/1000) // 1562 ms
-#define DEF_EVENT_ADV_INERVAL 		80 // 50 ms
+#if	(DEV_SERVICES & SERVICE_BUTTON)
+#define DEF_EVENT_ADV_INERVAL 		120 // 75 ms
+#define RDS_EVENT_ADV_COUNT			16  // 16*75 = 1200 ms
+#else
+#define DEF_EVENT_ADV_INERVAL 		80  // 50 ms
+#define RDS_EVENT_ADV_COUNT			16  // 16*50 = 800 ms
+#endif
 #define DEF_EVENT_ADV_INERVAL_MS 	((DEF_EVENT_ADV_INERVAL*625)/1000) // 50 ms
 #define DEF_OTA_ADV_INERVAL 		1600 // 1 sec
 #define DEF_OTA_ADV_INERVAL_MS 		((DEF_OTA_ADV_INERVAL*625)/1000) // 1000 ms
 
 // adv. event
-#define RDS_STEP_TIMER_SEC		1800 // шаг передачи 30 минут
-#define RDS_RETRY_DOUBLE_SEC	(RDS_STEP_TIMER_SEC-12) // дубль через 12 сек
-#define RDS_RETRY_START_SEC		(RDS_STEP_TIMER_SEC-120) // старт 2 минуты
-#define RDS_RETRY_ADV_COUNT		16
+#define RDS_EVENT_STEP_SEC		1800 // шаг передачи (дублирование состояния) RDS 30 минут без событий
+#define RDS_EVENT_DOUBLE_SEC	(RDS_EVENT_STEP_SEC - 12) // передача (дублирование состояния) RDS через 12 сек после события
+#define RDS_EVENT_START_SEC		(RDS_EVENT_STEP_SEC - 120) // передача (дублирование состояния) RDS от старта питания - 2 минуты
 
 // How often to perform periodic event
 #define SBP_PERIODIC_EVT_PERIOD		5000

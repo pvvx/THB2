@@ -126,14 +126,26 @@ typedef struct __attribute__((packed)) _adv_bthome_data2_t {
 	uint8		battery_level; // 0..100 %
 	uint8		v_id;	// = BtHomeID_voltage
 	uint16		battery_mv; // x 0.001 V
+#if (DEV_SERVICES & SERVICE_BUTTON)
+	uint8_t		u_id;	// = BtHomeID_button ?
+	uint8_t		button; //  =1 press, =2 double_press ... https://bthome.io/format/
+	uint8_t		c_id;	// = BtHomeID_count32
+	uint32_t	counter;
+#endif
 } adv_bthome_data2_t, * padv_bthome_data2_t; // size: 5
 
 typedef struct __attribute__((packed)) _adv_bthome_event1_t {
+#if (DEV_SERVICES & SERVICE_RDS)
 	uint8_t		o_id;	// = BtHomeID_opened ?
 	uint8_t		opened;
+#elif (DEV_SERVICES & SERVICE_BUTTON)
+	uint8_t		b_id;	// = BtHomeID_button ?
+	uint8_t		button; //  =1 press, =2 double_press ... https://bthome.io/format/
+#endif
 	uint8_t		c_id;	// = BtHomeID_count32
 	uint32_t	counter;
 } adv_bthome_event1_t, * padv_bthome_event1_t; // size: 7
+
 
 // BTHOME data1, no security
 typedef struct __attribute__((packed)) _adv_bthome_ns1_t {

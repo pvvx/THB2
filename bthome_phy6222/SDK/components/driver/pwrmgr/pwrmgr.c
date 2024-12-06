@@ -460,9 +460,10 @@ void hal_pwrmgr_poweroff(pwroff_cfg_t* pcfg, uint8_t wakeup_pin_num)
 		config reset casue as RSTC_OFF_MODE
 		reset path walkaround dwc
 	*/
+
 	AON_CLEAR_XTAL_TRACKING_AND_CALIB;
 	AP_AON->SLEEP_R[0] = 2;
-	enter_sleep_off_mode(SYSTEM_OFF_MODE);
+	enter_sleep_off_mode(SYSTEM_OFF_MODE); // = write_reg(0x4000f000, 0x5a5aa5a5)  - enter system off mode
 
 	while(1);
 }

@@ -81,7 +81,7 @@ SECTIONS
         *(.text .text.*)
 
         _etext = ABSOLUTE(.);
-    } > flash : xip
+    } > sram : xip
 
     .rodata : {
        *(.rodata .rodata.*)
@@ -94,7 +94,7 @@ SECTIONS
         *(.got)
         *(.gcc_except_table)
         *(.gnu.linkonce.r.*)
-    } > flash : rodata
+    } > sram : rodata
 
     .init_section : {
         _sinit = ABSOLUTE(.);
@@ -104,17 +104,17 @@ SECTIONS
 
     .ARM.extab : {
         *(.ARM.extab*)
-    } > flash : rodata
+    } > sram : rodata
 
     .ARM.exidx : {
         __exidx_start = ABSOLUTE(.);
         *(.ARM.exidx*)
         __exidx_end = ABSOLUTE(.);
-    } > flash : rodata
+    } > sram : rodata
  
     ._sjtblsstore : {
        _sjtblss = ABSOLUTE(.);
-    } > flash : rodata
+    } > sram : rodata
  
     /* Stabs debugging sections. */
     .stab 0 : { *(.stab) }
