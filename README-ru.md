@@ -7,14 +7,14 @@
 
 (!) Не рекомендуется покупать термометры Tuya с датчиками CHT8305 и/или чипами драйверов ЖК-дисплея BL55028. Они имеют повышенное потребление и несовместимы с работой от батареек. Это муляж термометра от Tuya.
 
-| [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
+| [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | 
+|:---:|:---:|:---:|:---:|
+| <img src="https://pvvx.github.io/THB1/img/THB1.jpg" width="120"/> | <img src="https://pvvx.github.io/THB2/img/THB2.jpg" width="80"/> | <img src="https://pvvx.github.io/THB3/img/THB3.jpg" width="120"/> | <img src="https://pvvx.github.io/BTH01/img/BTH01.jpg" width="100"/> |
 
-| [KEY2](https://pvvx.github.io/iSearching) |
-|:---:|
-| ![KEY2](https://pvvx.github.io/iSearching/img/key2.jpg) |
-| Поддерживает "FindMy" |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |  [KEY2](https://pvvx.github.io/iSearching) |
+|:---:|:---:|:---:|:---:|
+| <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/iSearching/img/key2.jpg" width="120"/> |
+| | | | Поддерживает "FindMy" |
 
 Прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
 
