@@ -23,14 +23,18 @@ extern "C"
 /*********************************************************************
  * CONSTANTS
  */
-
+#if	(DEV_SERVICES & SERVICE_BUTTON)
+#define DEF_ADV_INERVAL  			16000 // = 10 sec, actual time = advInt * 625us
+#define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 10000 ms
+#else
 #define DEF_ADV_INERVAL  			8000 // = 5 sec, actual time = advInt * 625us
 #define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 5000 ms
+#endif
 #define DEF_CON_ADV_INERVAL 		2500 // 1.5625 sec
 #define DEF_CON_ADV_INERVAL_MS 		((DEF_CON_ADV_INERVAL*625)/1000) // 1562 ms
 #if	(DEV_SERVICES & SERVICE_BUTTON)
-#define DEF_EVENT_ADV_INERVAL 		120 // 75 ms
-#define RDS_EVENT_ADV_COUNT			16  // 16*75 = 1200 ms
+#define DEF_EVENT_ADV_INERVAL 		200 // 95 ms
+#define RDS_EVENT_ADV_COUNT			32  // 32*95 = 3040 ms
 #else
 #define DEF_EVENT_ADV_INERVAL 		80  // 50 ms
 #define RDS_EVENT_ADV_COUNT			16  // 16*50 = 800 ms

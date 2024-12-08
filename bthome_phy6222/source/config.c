@@ -34,6 +34,7 @@
 #include "thservice.h"
 #include "thb2_peripheral.h"
 #include "bthome_beacon.h"
+#include "findmy_beacon.h"
 #include "sensors.h"
 #include "battery.h"
 #include "sbp_profile.h"
@@ -49,8 +50,9 @@ adv_work_t adv_wrk;
 
 const cfg_t def_cfg = {
 		.flg = FLG_MEAS_NOTIFY | FLG_SHOW_SMILEY,
-		.rf_tx_power = RF_PHY_TX_POWER_0DBM,
-		.advertising_interval = 80, // 80 * 62.5 = 5000 ms
+		.rf_tx_power = RF_PHY_TX_POWER_MAX, // RF_PHY_TX_POWER_0DBM,
+		.adv_event_cnt = 16,
+		.advertising_interval = DEF_ADV_INERVAL/100, // 80 * 62.5 = 5000 ms
 		.measure_interval = 2,  // 5 * 2 = 10 sec
 		.batt_interval = 60, // 60 sec
 		.connect_latency = DEFAULT_DESIRED_SLAVE_LATENCY,	// 30*(29+1) = 900 ms
@@ -163,6 +165,8 @@ void test_config(void) {
 	if(cfg.measure_interval < 2)
 		cfg.measure_interval = 2;
 	adv_wrk.measure_interval_ms = (cfg.advertising_interval * cfg.measure_interval * 625) / 10;
+	if(cfg.adv_event_cnt < 6)
+		cfg.adv_event_cnt = 16;
 }
 
 void load_eep_config(void) {
@@ -192,10 +196,14 @@ void load_eep_config(void) {
 			clkt.delta_time = 0;
 		}
 #endif
+#if (DEV_SERVICES & SERVICE_FINDMY)
+		flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key));
+#endif
 	}
 #if (DEV_SERVICES & SERVICE_HISTORY)
 	memo_init();
 #endif
+
 	test_config();
 }
 

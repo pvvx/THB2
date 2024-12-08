@@ -11,6 +11,7 @@ SRC_PRJ += battery.c
 SRC_PRJ += battservice.c
 SRC_PRJ += ccm.c
 SRC_PRJ += bthome_beacon.c
+SRC_PRJ += findmy_beacon.c
 SRC_PRJ += osal_peripheral.c
 SRC_PRJ += peripheral_main.c
 SRC_PRJ += sbp_profile.c

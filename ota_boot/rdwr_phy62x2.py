@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# rdwr_phy62x2.py 11.01.2024 pvvx #
+# rdwr_phy62x2.py 08.12.2024 pvvx #
 
 import serial
 import time
@@ -22,9 +22,9 @@ PHY_FLASH_SECTOR_SIZE = 4096
 PHY_FLASH_SECTOR_MASK = 0xfffff000
 PHY_WR_BLK_SIZE = 0x2000
 
-__progname__ = 'PHY62x2 Utility'
+__progname__ = 'PHY62x2/ST17H66B Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "11.03.24"
+__version__ = "08.12.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -80,7 +80,7 @@ class phyflasher:
 			self._port.timeout = 1
 		except Exception as e:
 			print ('Error: Open %s, %d baud! Error: %s' % (self.port, self.baud, e))
-			sys.exit(1)			
+			sys.exit(1)
 	def SetAutoErase(self, enable = True):
 		self.autoerase = enable
 	def AddSectionToHead(self, addr, size):
@@ -224,10 +224,12 @@ class phyflasher:
 		self._port.flushOutput()
 		self._port.flushInput()
 		time.sleep(0.1)
+		print('PHY62x2: Release RST_N if RTS is not connected...')
+		print('ST17H66B: Turn on the power...')
 		self._port.setDTR(False) #TM  (hi)
 		self._port.setRTS(False) #RSTN (hi)
 		self._port.timeout = 0.04
-		ttcl = 50
+		ttcl = 250
 		fct_mode = False
 		pkt = 'UXTDWU' # UXTL16 UDLL48 UXTDWU
 		while ttcl > 0:
@@ -240,11 +242,11 @@ class phyflasher:
 				break
 			ttcl = ttcl - 1
 			if ttcl < 1:
-				print('PHY62x2 - Error Reset!')
+				print('Chip Reset error! Response: %s' % read)
 				print('Check connection TX->RX, RX<-TX, RTS->RESET and Chip Power!')
 				self._port.close()
 				exit(4)
-		print('PHY62x2 - Reset Ok')
+		print('Chip Reset Ok. Response: %s' % read)
 		self._port.baudrate = DEF_RUN_BAUD
 		self._port.timeout = 0.2
 		if fct_mode:

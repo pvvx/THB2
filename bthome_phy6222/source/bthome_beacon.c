@@ -11,6 +11,7 @@
 #include "gapbondmgr.h"
 #include "sensors.h"
 #include "bthome_beacon.h"
+#include "findmy_beacon.h"
 
 #if (DEV_SERVICES & SERVICE_BINDKEY)
 
@@ -18,6 +19,7 @@
 #include "ccm.h"
 #include "flash_eep.h"
 #include "ll.h"
+#include "thb2_peripheral.h"
 
 /* Encrypted bthome nonce */
 typedef struct __attribute__((packed)) _bthome_beacon_nonce_t{
@@ -118,6 +120,13 @@ uint8_t adv_set_event(void * ped) {
 #endif
 
 uint8_t bthome_data_beacon(void * padbuf) {
+#if (DEV_SERVICES & SERVICE_FINDMY)
+	if (adv_wrk.adv_event == 0 && (cfg.flg & FLG_FINDMY)) {
+		gapRole_AdvEventType = LL_ADV_NONCONNECTABLE_UNDIRECTED_EVT;
+		return  findmy_beacon(padbuf);
+	} else
+		gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
+#endif
 	padv_bthome_noencrypt_t p = (padv_bthome_noencrypt_t)padbuf;
 	p->flag[0] = 0x02; // size
 	p->flag[1] = GAP_ADTYPE_FLAGS; // type
@@ -132,6 +141,21 @@ uint8_t bthome_data_beacon(void * padbuf) {
 	p->flag[2] = GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED | GAP_ADTYPE_FLAGS_GENERAL; // Flags
 	p->head.type = GAP_ADTYPE_SERVICE_DATA; // 16-bit UUID
 	p->head.UUID = ADV_BTHOME_UUID16;
+#if (DEV_SERVICES & SERVICE_BUTTON)
+#if (DEV_SERVICES & SERVICE_BINDKEY)
+	if (cfg.flg & FLG_ADV_CRYPT) {
+		padv_bthome_encrypt_t pe = (padv_bthome_encrypt_t)p;
+		pe->info = BtHomeID_Info_Encrypt;
+		p->head.size = adv_encrypt(pe->data, adv_set_data(pe->data)) + sizeof(pe->head) - sizeof(pe->head.size) + sizeof(pe->info);
+	} else
+#endif	// (DEV_SERVICES & SERVICE_BINDKEY)
+	{
+		p->info = BtHomeID_Info;
+		p->p_id = BtHomeID_PacketId;
+		p->pid = (uint8)measured_data.count;
+		p->head.size = adv_set_data(p->data) + sizeof(p->head) - sizeof(p->head.size) + sizeof(p->info) + sizeof(p->p_id) + sizeof(p->pid);
+#else // !(DEV_SERVICES & SERVICE_BUTTON)
+
 #if (DEV_SERVICES & SERVICE_BINDKEY)
 	if (cfg.flg & FLG_ADV_CRYPT) {
 		padv_bthome_encrypt_t pe = (padv_bthome_encrypt_t)p;
@@ -158,7 +182,7 @@ uint8_t bthome_data_beacon(void * padbuf) {
 		{
 			p->head.size = adv_set_data(p->data) + sizeof(p->head) - sizeof(p->head.size) + sizeof(p->info) + sizeof(p->p_id) + sizeof(p->pid);
 		}
-
+#endif
 	}
 	return p->head.size + sizeof(p->flag) + 1;
 }

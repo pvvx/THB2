@@ -221,13 +221,15 @@ typedef struct __attribute__((packed)) _measured_flg_t {
 
 typedef struct _measured_data_t {
 	uint16_t	count;
+	uint8_t		button;
+	uint8_t		none1;
+	int16_t		none2;
 	uint16_t	battery_mv; // mV
 	uint8_t		battery; // 0..100 %
 	measured_flg_t flg;
-	uint8_t		button;
 } measured_data_t;
 
-#define send_len_measured_data 5
+#define send_len_measured_data 10
 
 extern measured_data_t measured_data;
 

@@ -1,7 +1,7 @@
 [![english](https://img.shields.io/badge/language-english-C1C1C1?style=for-the-badge)](README.md)
 [![russian](https://img.shields.io/badge/also%20available%20in-russian-blue?style=for-the-badge)](README-ru.md)
 
-# BTHome THB1, THB2, THB3, BTH01, TH05 (HW: v1.3..1.6), TH05F
+# BTHome THB1, THB2, THB3, BTH01, TH05 (HW: v1.3..1.6), TH05F, iSearching
 
 Custom firmware for Tuya devices based on the PHY622x2 chipset.
 
@@ -10,6 +10,12 @@ Custom firmware for Tuya devices based on the PHY622x2 chipset.
 | [THB1](https://pvvx.github.io/THB1) | [THB2](https://pvvx.github.io/THB2) | [THB3](https://pvvx.github.io/THB3) | [BTH01](https://pvvx.github.io/BTH01/) | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
+
+| [KEY2](https://pvvx.github.io/iSearching) |
+|:---:|
+| ![KEY2](https://pvvx.github.io/iSearching/img/key2.jpg |
+| Support "FindMy" |
+
 
 This firmware works with [Home Assistant](https://www.home-assistant.io/) and other software running in the [BTHome](https://bthome.io/) format.
 
@@ -35,13 +41,15 @@ The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only u
 
 | Device | Boot file | OTA file | Printed circuit board labelling |
 |:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v19.hex | THB1_v19.bin | no |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v19.hex | THB2_v19.bin | no |
-| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v19.hex | THB2_v19.bin | no |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v19.hex | BTH01_v19.bin | no |
-| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v19.hex | TH05_v19.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v19.hex | TH05D_v19.bin | RSH-TH05-V1.3 (chip: BL55072) |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v19.hex | TH05F_v19.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v20.hex | THB1_v20.bin | no |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v20.hex | THB2_v20.bin | no |
+| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v20.hex | THB2_v20.bin | no |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v20.hex | BTH01_v20.bin | no |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v20.hex | TH05_v20.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v20.hex | TH05D_v20.bin | RSH-TH05-V1.3 (chip: BL55072) |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v20.hex | TH05F_v20.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
+| [KEY2](https://pvvx.github.io/iSearching) | BOOT_KEY2_v20.hex | KEY2_v20.bin | SoC ST17H66B |
+
 
 The main firmware files, BOOT_XXX_vXX.hex (for programming via USB-COM adapter) and XXX_vXX.bin (for OTA), are located in the [bin](bin) directory.
 
@@ -96,7 +104,7 @@ The sensors are detected automatically, but have different ports depending on th
 | 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
 | 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 | 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
-| 2.0beta2 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip</li></ul> |
+| 2.0beta3 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li></ul> |
 
 
 

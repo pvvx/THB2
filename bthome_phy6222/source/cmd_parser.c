@@ -31,6 +31,7 @@
 #include "logger.h"
 #include "trigger.h"
 #include "bthome_beacon.h"
+#include "findmy_beacon.h"
 /*********************************************************************/
 extern gapPeriConnectParams_t periConnParameters;
 
@@ -205,6 +206,22 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				olen = 2;
 			}
 #endif
+#if (DEV_SERVICES & SERVICE_FINDMY)
+		} else if (cmd == CMD_ID_FDMKEY) { // Get/set findmy key
+			if (len == sizeof(findmy_key) + 1) {
+				if(memcmp(findmy_key, &ibuf[1], sizeof(findmy_key))) {
+					memcpy(findmy_key, &ibuf[1], sizeof(findmy_key));
+					flash_write_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key));
+				}
+			}
+			if (flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key)) == sizeof(findmy_key)) {
+				memcpy(&obuf[1], findmy_key, sizeof(findmy_key));
+				olen = sizeof(findmy_key) + 1;
+			} else { // No findmy key in EEP!
+				obuf[1] = 0xff;
+				olen = 2;
+			}
+#endif
 		} else if (cmd == CMD_ID_SERIAL) {
 			memcpy(&obuf[1], devInfoSerialNumber, sizeof(devInfoSerialNumber)-1);
 			olen = 1 + sizeof(devInfoSerialNumber)-1;
@@ -212,10 +229,14 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			memcpy(&obuf[1], (uint8_t *)&phy_flash.IdentificationID, 8);
 			olen = 1 + 8;
 		} else if (cmd == CMD_ID_MTU) {
-			if (ibuf[1] <= MTU_SIZE) {
-				ATT_UpdateMtuSize(gapRole_ConnectionHandle, ibuf[1]);
+			if(len >= 2) {
+				if (ibuf[1] <= MTU_SIZE) {
+					ATT_UpdateMtuSize(gapRole_ConnectionHandle, ibuf[1]);
+					obuf[1] = gAttMtuSize[gapRole_ConnectionHandle];
+				} else
+					obuf[1] = 0xff;
 			} else
-				obuf[1] = 0xff;
+				obuf[1] = gAttMtuSize[gapRole_ConnectionHandle];
 			olen = 2;
 		} else if (cmd == CMD_ID_REBOOT) {
 			if(len >= 2) {

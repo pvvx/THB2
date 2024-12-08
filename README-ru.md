@@ -11,6 +11,11 @@
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | ![THB1](https://pvvx.github.io/THB1/img/THB1.jpg) | ![THB2](https://pvvx.github.io/THB2/img/THB2.jpg) | ![THB3](https://pvvx.github.io/THB3/img/THB3.jpg) | ![BTH01](https://pvvx.github.io/BTH01/img/BTH01.jpg) | ![TH05V1.3](https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg) | ![TH05V1.4](https://pvvx.github.io/TH-05/img/TH05V14.jpg) | ![TH05F](https://pvvx.github.io/TH05F/img/TH05F.jpg)
 
+| [KEY2](https://pvvx.github.io/iSearching) |
+|:---:|
+| ![KEY2](https://pvvx.github.io/iSearching/img/key2.jpg |
+| Поддерживает "FindMy" |
+
 Прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
 
 Все прошивки поддерживают любой из датчиков: [CHT8215](pvvx.github.io/THB2/CHT8315%20Advanced%20Datasheet%20Ver1.6%2020230927.pdf) ([CHT8310](https://pvvx.github.io/THB2/CHT8310%20Advanced%20Datasheet%20Ver1.1%2020230927.pdf)), [CHT8305](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8305C%20Advanced%20Datasheet%20Ver2.5%202021-10-26.pdf), [CHT832x](pvvx.github.io/THB2/CHT832X%20Advanced%20Datasheet%20Ver1.pdf), AHT20..30.
@@ -34,13 +39,14 @@ _Далее, с помощью соединения BLE в [PHY62x2BTHome.html](
 
 | Устройство | Файл Boot | Файл OTA | Маркировка на печатной плате |
 |:---:|:---:|:---:|:---:|
-| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v19.hex | THB1_v19.bin | нет |
-| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v19.hex | THB2_v19.bin | нет |
-| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v19.hex | THB2_v19.bin | нет |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v19.hex | BTH01_v19.bin | нет |
-| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v19.hex | TH05_v19.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v19.hex | TH05D_v19.bin | RSH-TH05-V1.3 с чипом BL55072 |
-| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v19.hex | TH05F_v19.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 с чипом QD01 2332 NT |
+| [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v20.hex | THB1_v20.bin | нет |
+| [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v20.hex | THB2_v20.bin | нет |
+| [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v20.hex | THB2_v20.bin | нет |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v20.hex | BTH01_v20.bin | нет |
+| [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v20.hex | TH05_v20.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 с чипом BL55028 |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v20.hex | TH05D_v20.bin | RSH-TH05-V1.3 с чипом BL55072 |
+| [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v20.hex | TH05F_v20.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 с чипом QD01 2332 NT |
+| [KEY2](https://pvvx.github.io/iSearching) | BOOT_KEY2_v20.hex | KEY2_v20.bin | SoC ST17H66B |
 
 Основные файлы прошивок, BOOT_xxx_vxx.hex для программирования через USB-COM адаптер и xxx_vxx.bin для OTA, находятся в директории [bin](https://github.com/pvvx/THB2/tree/master/bin).
 
@@ -94,7 +100,7 @@ LCD имеет разную разводку сегментов в зависи�
 | 1.7 | <ul><li>Исправление ошибки (> 42 C) для сенсора CHT8305</li></ul> |
 | 1.8 | <ul><li>Добавлено отображение температуры в градусах Фаренгейта</li></ul> |
 | 1.9 | <ul><li>Исправлена ошибка восстановления измененного имени устройства после сброса питания</li></ul> |
-| 2.0beta2 | <ul><li>Добавлена обработка датчика CHT832x (поддержка платы TH05Y_v3.1)</li><li>Исправление ошибки в bin-файлах BOOT OTA</li><li>Добавлена функция сна при полном разряде батареи.</li><li>Добавлена опытная прошивка для брелков [iSearching](https://pvvx.github.io/iSearching) на чипе ST17H66B</li></ul> |
+| 2.0beta3 | <ul><li>Добавлена обработка датчика CHT832x (поддержка платы TH05Y_v3.1)</li><li>Исправление ошибки в bin-файлах BOOT OTA</li><li>Добавлена функция сна при полном разряде батареи.</li><li>Добавлена опытная прошивка для брелков [iSearching](https://pvvx.github.io/iSearching) на чипе ST17H66B с поддержкой FindMy</li></ul> |
 
 ## Прошивка
 

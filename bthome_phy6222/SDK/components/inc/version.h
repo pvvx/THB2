@@ -9,7 +9,7 @@
 #ifndef __SDK_VER_H__
 #define __SDK_VER_H__
 
-//#include "config.h"
+#include "config.h"
 
 #define __DEF_CHIP_QFN32__                  (0x0001)
 #define __DEF_CHIP_TSOP16__                  (0x0002)

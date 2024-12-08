@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.6</title>
+<title>PHY62x2 BTHome v1.7</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -558,7 +558,7 @@ div#divChart {
 			READING_BYTES: { en: 'Reading %s bytes at', ru: 'Чтение %s байт по адресу' },
 			WRITING_BYTES: { en: 'Writing %s bytes at', ru: 'Запись %s байт по адресу' },
 			BLOCK_LENGTH_RANGE: { en: 'Block length must be 1 to 16 bytes', ru: 'длина блока от 1 до 16 байт' },
-			COMMAND_LENGTH_RANGE: { en: 'Command length must be 1 to 20 bytes', ru: 'длина команды от 1 до 20 байт' },
+			COMMAND_LENGTH_RANGE: { en: 'Command length must be 1 to MTU bytes', ru: 'длина команды от 1 до MTU байт' },
 			BATTERY: { en: 'Battery', ru: 'Батарея' },
 			MILLIVOLT: { en: 'mV', ru: 'мВ' },
 			MEMO_EMPTY: { en: 'Memo is empty', ru: 'Пока нет истории' },
@@ -589,6 +589,7 @@ div#divChart {
 			CORRECT_DEVICENAME_LENGTH: { en: 'Save DeviceName...', ru: 'Сохранение имени устройства...' },
 			INVALID_DEVICENAME_LENGTH: { en: 'Devicename length must be 1 to 19 bytes (UTF-8 characters consume 2 bytes)', ru: 'Имя устройства должно быть от 1 до 19 символов, включая кодирование UTF-8' },
 			INVALID_BINDKEY_LENGTH: { en: 'Bindkey must be 16 bytes, hex encoded (=32 characters)', ru: 'BindKey должен соднержать 16 байт в HEX виде (32 символа)' },
+			INVALID_FINDMYKEY_LENGTH: { en: 'FindMyKey must be 22 bytes, hex encoded (=44 characters)', ru: 'BindKey должен соднержать 22 байта в HEX виде (44 символа)' },
 			UPLOAD_FIRMWARE: { en: 'Download firmware file', ru: 'Загрузка firmware файла' },
 			WARNING_BOOT_FW: { en: 'Attention!: Uploading boot FW is not safe. In order to avoid firmware failure use a fresh battery!', ru: 'Внимание!: Обновление  Boot fw не безопасно. Во избежание сбоя прошивки желательно использование полной батареи!' },
 			MEMO_OFF: {en: 'Disabled', ru: 'Отключено'},
@@ -646,6 +647,7 @@ const SERVICE_INS = 0x00000800; // Maintenance of input pins
 const SERVICE_TIME_ADJUST = 0x00001000;	// Time account correction function
 const SERVICE_HARD_CLOC = 0x00002000;	// Real hours RTC
 const SERVICE_TH_TRG = 0x00004000; // temperature and humidity
+const SERVICE_BUTTON = 0x00200000	// кнопка, активность только при нажатии
 
 var bluetoothDevice, gattServer, otaCharacteristic, cmdCharacteristic, infoService;
 
@@ -912,21 +914,21 @@ function doConnect() {
 
 function auxControls(state)
 {
-	if ( devSrv.services & SERVICE_SCREEN ) {
+	if (devSrv.services & SERVICE_SCREEN) {
 		$('tblChkCfg').style.display  = "block";
 	    $('tblComfort').style.display = "block";
 	} else {
 		$('tblChkCfg').style.display  = "none";
 	    $('tblComfort').style.display = "none";
 	}
-	if ( devSrv.services & SERVICE_BINDKEY ) {
+	if (devSrv.services & SERVICE_BINDKEY) {
 		$('labBindKey').style.display  = "block";
 	    $('divBindKey').style.display = "block";
 	} else {
 		$('labBindKey').style.display  = "none";
 	    $('divBindKey').style.display = "none";
 	}
-	if ( devSrv.services & SERVICE_TH_TRG )
+	if (devSrv.services & SERVICE_TH_TRG)
 		$('tblTrigger').style.display  = "block";
 	else
 	    $('tblTrigger').style.display = "none";
@@ -936,6 +938,25 @@ function auxControls(state)
 	} else {
 		$('tblTriggerKeys').style.display  = "none";
 	    $('hrPres').style.display = "none";
+	}
+	if (devSrv.services & SERVICE_THS) {
+		$('tblSensorTH').style.display  = "block";
+ 	} else {
+		$('tblSensorTH').style.display  = "none";
+	}
+	if (devSrv.services & SERVICE_BUTTON) {
+		$('tblButton').style.display  = "block";
+		$('trMeasStep').style.display  = "none";
+		$('divFindMyKey').style.display  = "block";
+	} else {
+		$('tblButton').style.display  = "none";
+		$('trMeasStep').style.display  = "block";
+		$('divFindMyKey').style.display  = "none";
+	}
+	if (devSrv.services & SERVICE_HISTORY) {
+		$('trHistStep').style.display  = "block";
+	} else {
+		$('trHistStep').style.display  = "none";
 	}
 }
 
@@ -1387,7 +1408,7 @@ function writeAddr(addr, data) {
 function writeCmd(data) {
 	if(cmdCharacteristic) {
 		len = data.length;
-		if((len > 0) && (len <= 20)) {
+		if((len > 0) && (len <= 40)) { // TODO: MTU
 			let blk = new Uint8Array(data);
 			cmdCharacteristic.writeValue(blk);
 		} else
@@ -1414,7 +1435,7 @@ function writeAddress() {
 
 function sendCommand() {
 	let data = hexToBytes($('inpCmdData').value);
-	if(data.length != 0 && data.length <= 20)
+	if(data.length != 0 && data.length <= 40) // TODO:MTU
 		writeCmd(data);
 	else
 	    console.log(`${i18n.getTag('ERROR')}: ${i18n.getTag('COMMAND_LENGTH_RANGE')}!`);
@@ -1428,6 +1449,7 @@ function showConfig() {
 	$('chkCfgLcdOff').checked = (devCfg.flg & 16) != 0;
 	$('chkCfgBindKey').checked = (devCfg.flg & 32) != 0;
 	$('chkCfgFahrenheit').checked = (devCfg.flg & 64) != 0;
+	$('chkCfgFindMy').checked = (devCfg.flg & 128) != 0;
 
 	let txPwr = 31;
 	el = $('selTxPwr');
@@ -1451,6 +1473,7 @@ function showConfig() {
 			$('lblAverInt').innerHTML = "= " + hsti.toFixed(1) + ` ${i18n.getTag('SECONDS')}`;
 	}
 	$('inpBatInt').value  = devCfg.batt_interval; // в секундах, минимум 2 секунды, но кратно интервалу рекламы
+	$('inpEvAdvCnt').value  = devCfg.event_adv_count; 
 }
 
 function parseBlkCustom(value) {
@@ -1599,7 +1622,7 @@ function parseBlkCustom(value) {
 	    devCfg.tx_power = value.getUint8(5);
 	    devCfg.advertising_interval = value.getUint8(6);
 	    devCfg.connect_latency = value.getUint8(7);
-	    devCfg.reserved1 = value.getUint8(8);
+	    devCfg.event_adv_count = value.getUint8(8);
 		devCfg.measure_interval = value.getUint8(9);
 		devCfg.batt_interval = value.getUint8(10);
 		devCfg.averaging_measurements = value.getUint8(11);
@@ -1609,6 +1632,7 @@ function parseBlkCustom(value) {
 		        + ", tx: " + devCfg.tx_power
 		        + ", adi: " + devCfg.advertising_interval
 		        + ", cli: " + devCfg.connect_latency
+		        + ", eac: " + devCfg.event_adv_count
 		        +" , msi: " + devCfg.measure_interval
 		        + ", bti: " + devCfg.batt_interval
 		        + ", avi: " + devCfg.averaging_measurements);
@@ -1644,6 +1668,17 @@ function parseBlkCustom(value) {
 			addLog(`${i18n.getTag('READ_ERROR')} Bindkey!`);
 			console.log('blk: ' + dump8(value, value.byteLength));
 			$("inpBindKey").value = i18n.getTag('NOT_SUPPORTED');
+		}
+	} else if(blkId == 0x19 && len >= 1) { // Get/set findmy bkey in EEP
+		if(len > 22) {
+			devKeys.cfindmykey = value.buffer.slice(1,23);
+			let s = bytesToHex(devKeys.cfindmykey,22);
+			addLog("FindMy key # "+ s);
+			$("inpFindMyKey").value = s;
+		} else {
+			addLog(`${i18n.getTag('READ_ERROR')} FindMy key!`);
+			console.log('blk: ' + dump8(value, value.byteLength));
+			$("inpFindMyKey").value = "none";
 		}
 	} else if(blkId == 0x23 && len >= 4) {
 		devTime.cur = value.getUint32(1,true);
@@ -1739,6 +1774,12 @@ function parseBlkCustom(value) {
 		let mac_txt = bytesToHex(mac);
 		$("inpDevMAC").value = mac_txt;
 		addLog(`${i18n.getTag('DEVICE_MAC')}: ${mac_txt}`);
+	} else if(blkId == 0x71 && len >= 1) {
+		devInfo.mtu = value.getUint8(1);
+		if(devInfo.mtu == 255 || devInfo.mtu == 0)
+			addLog('Error set MTU size!');
+		else
+			addLog('MTU size: ' + devInfo.mtu);
 	} else {
 		console.log('blk: ' + dump8(value, value.byteLength));
 		addLog(`${i18n.getTag('COMMAND_RESPONSE')} (${hex(blkId,2)}): ${bytesToHex(value.buffer.slice(1))}`);
@@ -1802,6 +1843,7 @@ function chkDevCfg() {
 	    devCfg.flg |= ($('chkCfgLcdOff').checked) ? 16 : 0;
 	    devCfg.flg |= ($('chkCfgBindKey').checked) ? 32 : 0;
 	    devCfg.flg |= ($('chkCfgFahrenheit').checked) ? 64 : 0;
+	    devCfg.flg |= ($('chkCfgFindMy').checked) ? 128 : 0;
 		devCfg.tx_power = $('selTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inpLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
@@ -1829,6 +1871,11 @@ function chkDevCfg() {
 			devCfg.averaging_measurements = 0;
 		if(devCfg.averaging_measurements > 255)
 			devCfg.averaging_measurements = 255;
+		devCfg.event_adv_count = parseInt($('inpEvAdvCnt').value);
+		if(devCfg.event_adv_count < 6) 
+			devCfg.event_adv_count = 6;
+		if(devCfg.event_adv_count > 255)
+			devCfg.event_adv_count = 255;
 		devCfg.batt_interval = parseInt($('inpBatInt').value);
 		if(devCfg.batt_interval < 2) // в секундах, минимум 2 секунды, но кратно интервалу рекламы
 			devCfg.batt_interval = 2;
@@ -1845,7 +1892,7 @@ function setDevCfg() {
 	  		devCfg.tx_power,
 	    	devCfg.advertising_interval,
 	    	devCfg.connect_latency,
-	    	devCfg.reserved1,
+	    	devCfg.event_adv_count,
 			devCfg.measure_interval,
 			devCfg.batt_interval,
 			devCfg.averaging_measurements,
@@ -2032,6 +2079,33 @@ function setBindKey() {
 		}
 		addLog(`${i18n.getTag('INVALID_BINDKEY_LENGTH')}!`)
 	}
+}
+function getGetFindMyKey() {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x19])).catch(error => { addLog("getFindmyKey() Error: " + error); });
+	}
+}
+function setFindMyKey() {
+	if(cmdCharacteristic != null) {
+		let bk = $("inpFindMyKey").value;
+		if(bk.length == 44) {
+			let bkey = hexToBytes(bk);
+			if(bkey.length == 22) {
+				let blk = new Uint8Array(23);
+				blk.set(bkey,1);
+				blk[0] = 0x19;
+				addLog(`${i18n.getTag('WRITE')} FindMy: ${bytesToHex(blk.slice(1))}`);
+				cmdCharacteristic.writeValue(blk).catch(error => { addLog("setFindMyKey() Error: " + error); });
+				return;
+			}
+		}
+		addLog(`${i18n.getTag('INVALID_FINDMYKEY_LENGTH')}!`)
+	}
+}
+
+function setMaxMTU() {
+	if(cmdCharacteristic != null)
+		cmdCharacteristic.writeValue(new Uint8Array([0x71,240])).catch(error => { addLog("setMaxMTU() Error: " + error); });
 }
 
 function readFile(file) {
@@ -2373,6 +2447,12 @@ window.onload = function() {
     <td><label><input type="checkbox" id="chkCfgFahrenheit"/><span data-i18ntag="SHOW_TEMPF">Показывать температуру в градусах Фаренгейта</span></label></td>
   </tr>
 </table>
+<table id="tblButton">
+  <tr>
+    <td><label><input type="checkbox" id="chkCfgFindMy"/>FindMy</label></td>
+  </tr>
+</table>
+
 <table>
   <tr>
     <td>
@@ -2401,13 +2481,16 @@ window.onload = function() {
   </tr>
 </table>
 <table>
+  <tr id="trMeasStep">
+   <td><span data-i18ntag="MEASUREMENT_STEP">Шаг измерений</span>: <input size="4" type="text" id="inpMeasInt" onchange="chkDevCfg()" maxlength="8" title="Опрос датчика в интервалах BLE рекламы, минимум 2 интервала рекламы"><label id="lblMeasInt"></label><span data-i18ntag="MS">мс</span></td>
+  </tr>
   <tr>
-   <td><span data-i18ntag="MEASUREMENT_STEP">Шаг измерений</span>: <input size="4" type="text" id="inpMeasInt" onchange="chkDevCfg()" maxlength="8" title="Опрос датчика в интервалах BLE рекламы, минимум 2 интервала рекламы"><label id="lblMeasInt"></label></td>
+    <td><span>Number of event transmissions</span>: <input size="4" type="text" id="inpEvAdvCnt" maxlength="8" title="В штуках, минимум 6, максимум 255"></td>
   </tr>
   <tr>
     <td><span data-i18ntag="BAT_INTERVAL">Опрос батареи</span>: <input size="4" type="text" id="inpBatInt" maxlength="8" title="В секундах, обрабатывается кратно интервалу BLE рекламы, минимум 2 секунды"><span data-i18ntag="SECONDS">сек.</span></td>
   </tr>
-  <tr>
+  <tr id="trHistStep">
     <td><span data-i18ntag="HISTORY_INTERVAL">Запись истории</span>: <input size="4" type="text" id="inpAverInt" onchange="chkDevCfg()" maxlength="8" title="Запись истории: 0 - отключена, 1...255 * шаг опроса датчика = интервал записи истории"><label id="lblAverInt"></label></td>
   </tr>
 </table>
@@ -2422,6 +2505,7 @@ window.onload = function() {
 	<td><label id="lbDeltaTime"></label></td>
   </tr>
 </table>
+<div id="hrPres">
 <hr>
 <table id="tblComfort">
   <tr>
@@ -2448,9 +2532,9 @@ window.onload = function() {
 	<td><button type="button"id="btnSetTrg" onclick="setTrgCfg()" data-i18ntag="WRITE">Записать</button></td>
   </tr>
 </table>
-<hr id="hrPres">
+<hr>
   <span data-i18ntag="SENSOR_PARAMS">Параметры сенсора</span>&emsp;<b><label id="lblSensor">?</label></b>
-<table>
+<table id="tblSensorTH">
   <tr>
     <th></th>
     <th data-i18ntag="TEMPERATURE">Температура</th>
@@ -2474,6 +2558,7 @@ window.onload = function() {
 <button type="button"id="btnGetSens" onclick="getSensCfg()" data-i18ntag="READ">Прочитать</button>
 <button type="button"id="btnSetSens" onclick="setSensCfg()" data-i18ntag="WRITE">Записать</button>
 <button type="button"id="btnRstSens" onclick="resetSensCfg()" title="Восстановить стандартные параметры сенсора" data-i18ntag="RESTORE">Восстановить</button>
+</div>
 </div>
 
 <div id="tabOTA" class="tabcontent">
@@ -2513,7 +2598,7 @@ window.onload = function() {
   <tr>
 	<td style="width:100px;"><span data-i18ntag="COMMAND">Команда</span>:</td>
 	<td><button type="button" id="btnSendCommand" onclick="sendCommand()" style="width:120px;" data-i18ntag="SEND">Выполнить</button></td>
-	<td><input type="text" id="inpCmdData" value="55" maxlength="40"></td>
+	<td><input type="text" id="inpCmdData" value="55" maxlength="50"></td>
   </tr>
 </table>
 <hr>
@@ -2545,6 +2630,21 @@ window.onload = function() {
 	<td><button type="button" id="btnBindKey" onclick="setBindKey()" data-i18ntag="WRITE">Записать</button></td>
   </tr>
  </table>
+</div>
+<div id="divFindMyKey">
+ <hr>
+ <table>
+  <tr>
+	<td style="width:100px;">FindMy Key:</td>
+	<td><button type="button" id="btnGetFindMyKey" onclick="getGetFindMyKey()" data-i18ntag="READ">Прочитать</button></td>
+	<td><input size="43" maxlength="44" title="FindMy Key должен содержать 22 байта в hex виде" type="text" id="inpFindMyKey" value="?"></td>
+	<td><button type="button" id="btnSetFindMyKey" onclick="setFindMyKey()" data-i18ntag="WRITE">Записать</button></td>
+  </tr>
+ </table>
+</div>
+<div>
+ <hr>
+	<button type="button" id="btnSetMaxMTU" onclick="setMaxMTU()">SetMaxMTU</button>
 </div>
 </div>
 <hr>

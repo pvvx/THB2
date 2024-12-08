@@ -72,6 +72,7 @@
 //#define SERVICE_IUS		0x00080000	// use I and U sensor (INA226) (пока нет реализации)
 //#define SERVICE_PLM		0x00100000	// use PWM-RH and NTC (пока нет реализации)
 #define SERVICE_BUTTON		0x00200000	// кнопка, активность только при нажатии
+#define SERVICE_FINDMY		0x00400000	// FindMy
 
 #define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
 #define OTA_TYPE_BOOT	SERVICE_OTA		// вариант для прошивки boot + OTA
@@ -362,11 +363,13 @@
 #if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
 		| SERVICE_BINDKEY \
 )
 #else
 #define DEV_SERVICES (OTA_TYPE \
 		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
 		| SERVICE_BINDKEY \
 )
 #endif
@@ -382,6 +385,8 @@
 #define LED_OFF		0
 
 #define GPIO_BUZZER	GPIO_P09
+#define BUZZER_ON	1
+#define BUZZER_OFF	0
 
 //#define GPIO_INP	GPIO_P15
 
@@ -398,6 +403,7 @@
 #error "Not SERVICE_TH_TRG!"
 #endif
 
+
 // Minimum connection interval (units of 1.25ms, 80=100ms) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_MIN_CONN_INTERVAL		24 // 12 -> 15 ms
 // Maximum connection interval (units of 1.25ms, 800=1000ms) if automatic parameter update request is enabled
@@ -413,7 +419,7 @@ typedef struct _cfg_t {
 	uint8_t rf_tx_power; // 0..0x3F
 	uint8_t advertising_interval; // multiply by 62.5 for value in ms (1..160,  62.5 ms .. 10 sec)
 	uint8_t connect_latency; // +1 x 0.03 sec ( = connection interval), Tmin = 1*30 = 30 ms, Tmax = 256 * 30 = 7680 ms
-	uint8_t reserved1;
+	uint8_t adv_event_cnt;
 
 	uint8_t measure_interval; // measure TH sensor count * advertising_interval
 	uint8_t batt_interval; // measure battery * seconds
@@ -430,6 +436,7 @@ extern const cfg_t def_cfg;
 #define FLG_DISPLAY_OFF		0x00000010	// отключить дисплей
 #define FLG_ADV_CRYPT		0x00000020	// Зашифрованная BLE реклама (bindkey)
 #define FLG_SHOW_TF			0x00000040	// Show temperature in F.
+#define FLG_FINDMY			0x00000080	// FindMy
 
 typedef struct _adv_work_t {
 	uint32_t	measure_interval_ms;

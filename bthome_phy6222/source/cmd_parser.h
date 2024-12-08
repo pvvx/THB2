@@ -30,6 +30,7 @@ typedef enum {
 	CMD_ID_DEV_MAC	= 0x10, // Get/Set MAC [+RandMAC], [size]<mac[6][randmac[2]]>
 	CMD_ID_FIX_MAC	= 0x11, // Fixed MAC (не безопасная операция, переписывает сектор 0x0 Flash)
 	CMD_ID_BKEY		= 0x18, // Get/Set beacon bindkey in EEP
+	CMD_ID_FDMKEY	= 0x19, // Get/Set FindMy key in EEP
 	CMD_ID_COMFORT  = 0x20, // Get/Set comfort parameters
 	CMD_ID_EXTDATA  = 0x22, // Get/Set show ext. data
 	CMD_ID_UTC_TIME = 0x23, // Get/Set utc time (if USE_CLOCK = 1)
@@ -48,7 +49,7 @@ typedef enum {
 	CMD_ID_LCD_DUMP = 0x60, // Get/Set lcd buf
 	CMD_ID_LCD_FLG  = 0x61, // Start/Stop notify lcd dump and ...
 	CMD_ID_PINCODE  = 0x70, // Set new PinCode 0..999999
-	CMD_ID_MTU		= 0x71, // Request Mtu Size Exchange (23..255)
+	CMD_ID_MTU		= 0x71, // Request Mtu Size Exchange (23..247)
 	CMD_ID_REBOOT	= 0x72, // Set Reboot on disconnect
 	CMD_ID_SET_OTA	= 0x73, // Extension BigOTA: Get/set address and size OTA, erase sectors
 

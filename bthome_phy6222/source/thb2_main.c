@@ -153,10 +153,17 @@ static void set_mac(void)
 			// Tuya mac[0:3]
 			ownPublicAddr[3] = 0x8d;
 			ownPublicAddr[4] = 0x1f;
+#if (DEV_SERVICES & SERVICE_FINDMY)
+			ownPublicAddr[5] = 0xf8; // random mac
+#else
 			ownPublicAddr[5] = 0x38;
+#endif
 		}
 		flash_write_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN);
 	}
+#if (DEV_SERVICES & SERVICE_FINDMY)
+	ownPublicAddr[5] |= 0xc0; // random mac
+#endif
 	pGlobal_config[MAC_ADDRESS_LOC] = (uint32_t)ownPublicAddr;
 	// device name
 	set_dev_name();
@@ -225,7 +232,7 @@ static void adv_measure(void) {
 			if(clkt.utc_time_tik - adv_wrk.rds_timer_tik >= (RDS_EVENT_STEP_SEC << 15)) { //  шаг дублирования передачи 30 минут
 				adv_wrk.rds_timer_tik = clkt.utc_time_tik;
 				adv_wrk.adv_event = 1;
-				adv_wrk.adv_reload_count = RDS_EVENT_ADV_COUNT; // 16
+				adv_wrk.adv_reload_count = cfg.adv_event_cnt; // 16
 				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 				set_new_adv_interval(DEF_EVENT_ADV_INERVAL); // 50 ms (in 625us)
 				return;
@@ -299,15 +306,30 @@ static void adv_measure(void) {
 #endif
 #if	(DEV_SERVICES & SERVICE_BUTTON)
 				if(adv_wrk.adv_event) { // передавались event ?
-					adv_wrk.adv_reload_count = RDS_EVENT_ADV_COUNT;
+#ifdef GPIO_LED
+					hal_gpio_write(GPIO_LED, LED_OFF);
+#endif
+					adv_wrk.adv_reload_count = cfg.adv_event_cnt;
 					if(!measured_data.button) {
 						if(adv_wrk.new_battery) {
 							adv_wrk.new_battery = 0;
 							check_battery();
 						}
+#ifdef GPIO_BUZZER
+						hal_gpio_write(GPIO_BUZZER, BUZZER_ON);
+#endif
 						measured_data.count++;
+#ifdef GPIO_BUZZER
+						hal_gpio_write(GPIO_BUZZER, BUZZER_OFF);
+#endif
 						LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
+#ifdef GPIO_BUZZER
+						hal_gpio_write(GPIO_BUZZER, BUZZER_ON);
+#endif
 						adv_wrk.adv_event = 0;
+#ifdef GPIO_BUZZER
+						hal_gpio_write(GPIO_BUZZER, BUZZER_OFF);
+#endif
 						set_new_adv_interval(DEF_EVENT_ADV_INERVAL);
 					}
 				} else {
@@ -543,6 +565,15 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 		// Set the GAP Role Parameters
 		// device starts advertising upon initialization
 		gatrole_advert_enable(FALSE);
+#if (DEV_SERVICES & SERVICE_FINDMY)
+		if (cfg.flg & FLG_FINDMY) {
+			extern uint8_t findmy_beacon(void * padbuf);
+			gapRole_AdvEventType = LL_ADV_NONCONNECTABLE_UNDIRECTED_EVT;
+			gapRole_AdvertDataLen = findmy_beacon((void *)gapRole_AdvertData);
+		} else {
+			gapRole_AdvEventType = LL_ADV_CONNECTABLE_UNDIRECTED_EVT;
+		}
+#endif
 		// gapRole_AdvertOffTime = 0; // already set default
 		GAP_UpdateAdvertisingData( gapRole_TaskID, TRUE, gapRole_AdvertDataLen, gapRole_AdvertData );
 		GAP_UpdateAdvertisingData( gapRole_TaskID, FALSE, gapRole_ScanRspDataLen, gapRole_ScanRspData );
@@ -777,7 +808,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 			if(gapRole_AdvEnabled) {
 				measured_data.count++;
 				adv_wrk.adv_event = 1;
-				adv_wrk.adv_reload_count = RDS_EVENT_ADV_COUNT;
+				adv_wrk.adv_reload_count = cfg.adv_event_cnt;
 				adv_wrk.rds_timer_tik = clkt.utc_time_tik - (RDS_EVENT_DOUBLE_SEC << 15);
 				LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
 				set_new_adv_interval(DEF_EVENT_ADV_INERVAL); // 50ms, actual time * 625us

@@ -23,6 +23,7 @@ extern "C" {
 #define EEP_ID_TIM (0x0ADA) // EEP ID time adjust
 #define EEP_ID_KEY (0xBC0D) // EEP ID bindkey
 #define EEP_ID_VER (0x5555) // EEP ID blk: unsigned int = minimum supported version
+#define EEP_ID_FDK (0xF1D1) // EEP ID findmy key
 //-----------------------------------------------------------------------------
 #ifndef FLASH_BASE_ADDR
 #define FLASH_BASE_ADDR			0x11000000
