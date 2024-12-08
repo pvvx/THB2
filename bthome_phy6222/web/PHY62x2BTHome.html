@@ -1484,7 +1484,7 @@ function parseBlkCustom(value) {
 	// CMD_ID_DEVID Get dev id, version, services
 		devSrv.revision = value.getUint8(1);
 		devSrv.hw_version = value.getUint16(2, true);
-		if(devSrv.hw_version >= 19 && devSrv.hw_version < 30) {
+		if(devSrv.hw_version >= 19 && devSrv.hw_version < 128) {
 			hwver_id = devSrv.hw_version - 19;
 			console.log("Set hwver_id: " + hwver_id);
 			menuOtaUpgrade();
@@ -1835,7 +1835,7 @@ function getDevName() {
 
 function chkDevCfg() {
 		if(devCfg.flg == null) return;
-		devCfg.flg &= 0xffffffc0;
+		devCfg.flg &= 0xffffff00;
 	    devCfg.flg |= ($('chkCfgNotify').checked) ? 1 : 0;
 	    devCfg.flg |= ($('chkCfgClock').checked) ? 2 : 0;
 	    devCfg.flg |= ($('chkCfgSmiley').checked) ? 4 : 0;
