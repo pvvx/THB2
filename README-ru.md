@@ -13,7 +13,7 @@
 
 | [KEY2](https://pvvx.github.io/iSearching) |
 |:---:|
-| ![KEY2](https://pvvx.github.io/iSearching/img/key2.jpg |
+| ![KEY2](https://pvvx.github.io/iSearching/img/key2.jpg) |
 | Поддерживает "FindMy" |
 
 Прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
