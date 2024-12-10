@@ -1,6 +1,6 @@
 <html class="phy6222Class"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHY62x2 BTHome v1.7</title>
+<title>PHY62x2 BTHome v1.8</title>
 <!--<link rel="stylesheet" type="text/css" href="styles.css" />
 <link rel="stylesheet" type="text/css" href="chart.css" />
 <script type="text/javascript" src="dygraph.min.js" /></script> /-->
@@ -476,9 +476,9 @@ div#divChart {
 			MEASUREMENT_STEP: { en: 'Measurement step' },
 			BAT_INTERVAL: { en: 'Battery survey interval' },
 			HISTORY_INTERVAL: { en: 'History interval' },
-			READ: { en: 'Read' },
-			WRITE: { en: 'Write' },
-			RESTORE: { en: 'Restore' },
+			READ: { en: 'Read'},
+			WRITE: { en: 'Write'},
+			RESTORE: { en: 'Restore'},
 			GET_DEVICETIME: { en: 'Get device time' },
 			SET_DEVICETIME: { en: 'Set device time', ru: 'Авто установка часов устройства' },
 			COMFORT: { en: 'Comfort' },
@@ -589,11 +589,12 @@ div#divChart {
 			CORRECT_DEVICENAME_LENGTH: { en: 'Save DeviceName...', ru: 'Сохранение имени устройства...' },
 			INVALID_DEVICENAME_LENGTH: { en: 'Devicename length must be 1 to 19 bytes (UTF-8 characters consume 2 bytes)', ru: 'Имя устройства должно быть от 1 до 19 символов, включая кодирование UTF-8' },
 			INVALID_BINDKEY_LENGTH: { en: 'Bindkey must be 16 bytes, hex encoded (=32 characters)', ru: 'BindKey должен соднержать 16 байт в HEX виде (32 символа)' },
-			INVALID_FINDMYKEY_LENGTH: { en: 'FindMyKey must be 22 bytes, hex encoded (=44 characters)', ru: 'BindKey должен соднержать 22 байта в HEX виде (44 символа)' },
+			INVALID_FINDMYKEY_LENGTH: { en: 'FindMyKey must be 28 bytes, Format Base64', ru: 'BindKey должен содержать 28 байта, формат Base64' },
 			UPLOAD_FIRMWARE: { en: 'Download firmware file', ru: 'Загрузка firmware файла' },
 			WARNING_BOOT_FW: { en: 'Attention!: Uploading boot FW is not safe. In order to avoid firmware failure use a fresh battery!', ru: 'Внимание!: Обновление  Boot fw не безопасно. Во избежание сбоя прошивки желательно использование полной батареи!' },
 			MEMO_OFF: {en: 'Disabled', ru: 'Отключено'},
 			SHOW_TEMPF: {en: 'Show Temperature in Fahrenheit', ru: 'Показывать температуру в градусах Фаренгейта'},
+			DEVICE_MAC: {en: 'MAC', ru: 'MAC'}
 		};
 
 		function getUserLang() {
@@ -1089,12 +1090,6 @@ function hex(number, len) {
 	return str;
 }
 
-function hexToBytes(hex) {
-	for (var bytes = [], c = 0; c < hex.length; c += 2)
-		bytes.push(parseInt(hex.substr(c, 2), 16));
-	return new Uint8Array(bytes);
-}
-
 function dump(ar, len) {
 	let s = '';
 	for(let i=0; i < len; i++) {
@@ -1118,6 +1113,13 @@ function hex2ascii(hexx) {
 		(i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
 		str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
 	return str;
+}
+
+function concatTypedArrays(a, b) { // a, b TypedArray of same type
+	let c = new (a.constructor)(a.length + b.length);
+    c.set(a, 0);
+    c.set(b, a.length);
+    return c;
 }
 
 function crc16_modbus(buffer) {
@@ -1670,16 +1672,36 @@ function parseBlkCustom(value) {
 			$("inpBindKey").value = i18n.getTag('NOT_SUPPORTED');
 		}
 	} else if(blkId == 0x19 && len >= 1) { // Get/set findmy bkey in EEP
-		if(len > 22) {
-			devKeys.cfindmykey = value.buffer.slice(1,23);
-			let s = bytesToHex(devKeys.cfindmykey,22);
-			addLog("FindMy key # "+ s);
-			$("inpFindMyKey").value = s;
-		} else {
-			addLog(`${i18n.getTag('READ_ERROR')} FindMy key!`);
 			console.log('blk: ' + dump8(value, value.byteLength));
-			$("inpFindMyKey").value = "none";
-		}
+			let cid = value.getUint8(1);
+			if(cid == 1) {
+				devKeys.cfindmykey_tmp = value.buffer.slice(2,16);
+				cmdCharacteristic.writeValue(new Uint8Array([0x19, 2])).catch(error => { addLog("setFindMyKey() Error: " + error); });
+			} else if(cid == 3 && len == 16) {
+				devKeys.cfindmykey_tmp = value.buffer.slice(2,16);
+				let blk = new Uint8Array(16);
+				blk.set(devKeys.cfindmykey.slice(14),2);
+				blk[0] = 0x19;
+				blk[1] = 4;
+				cmdCharacteristic.writeValue(blk).catch(error => { addLog("setFindMyKey() Error: " + error); });
+			} else if(cid == 2 || (cid == 4 && len == 16)) {
+				//addLog("### "+ bytesToHex(devKeys.cfindmykey_tmp, 14) + bytesToHex(value.buffer.slice(2,16), 14));
+				devKeys.cfindmykey = new Uint8Array(28);
+				devKeys.cfindmykey.set(new Uint8Array(devKeys.cfindmykey_tmp));
+				devKeys.cfindmykey.set(new Uint8Array(value.buffer.slice(2,16)), 14);
+				addLog("FindMy key # "+ bytesToHex(devKeys.cfindmykey, 28));
+				let s = btoa(String.fromCharCode.apply(null,new Uint8Array(devKeys.cfindmykey)));
+				addLog("FindMy key Base64: "+ s);
+				$("inpFindMyKey").value = s;
+			} else if(cid == 0xfe) {
+				addLog(`${i18n.getTag('READ_ERROR')} FindMy key!`);
+				console.log('blk[' +len+']:' + dump8(value, value.byteLength));
+				$("inpFindMyKey").value = "none";
+			} else {
+				addLog(`${i18n.getTag('READ_ERROR')} FindMy key!`);
+				console.log('blk[' +len+']:' + dump8(value, value.byteLength));
+				$("inpFindMyKey").value = "error";
+			}
 	} else if(blkId == 0x23 && len >= 4) {
 		devTime.cur = value.getUint32(1,true);
 		console.log('Device Time: 0x' + hex(devTime.cur, 8));
@@ -2071,8 +2093,7 @@ function setBindKey() {
 				let blk = new Uint8Array(17);
 				blk.set(bkey,1);
 				blk[0] = 0x18;
-				//console.log("Send bindkey...");
-				addLog(`${i18n.getTag('WRITE')} BindKey: ${bytesToHex(blk.slice(1))}`);
+				addLog(`Send BindKey: ${bytesToHex(blk.slice(1))}`);
 				cmdCharacteristic.writeValue(blk).catch(error => { addLog("setBindKey() Error: " + error); });
 				return;
 			}
@@ -2082,19 +2103,22 @@ function setBindKey() {
 }
 function getGetFindMyKey() {
 	if(cmdCharacteristic != null) {
-		cmdCharacteristic.writeValue(new Uint8Array([0x19])).catch(error => { addLog("getFindmyKey() Error: " + error); });
+		cmdCharacteristic.writeValue(new Uint8Array([0x19,1])).catch(error => { addLog("getFindmyKey() Error: " + error); });
 	}
 }
+
 function setFindMyKey() {
 	if(cmdCharacteristic != null) {
-		let bk = $("inpFindMyKey").value;
-		if(bk.length == 44) {
-			let bkey = hexToBytes(bk);
-			if(bkey.length == 22) {
-				let blk = new Uint8Array(23);
-				blk.set(bkey,1);
+		let sk = $("inpFindMyKey").value;
+		if(sk.length > 35) {
+			let bk = Uint8Array.from(atob(sk), c => c.charCodeAt(0));
+			if(bk.length == 28) {
+				devKeys.cfindmykey = bk;
+				let blk = new Uint8Array(16);
+				blk.set(bk.slice(0,14),2);
 				blk[0] = 0x19;
-				addLog(`${i18n.getTag('WRITE')} FindMy: ${bytesToHex(blk.slice(1))}`);
+				blk[1] = 3;
+				addLog("Send FindMy key # " + bytesToHex(bk));
 				cmdCharacteristic.writeValue(blk).catch(error => { addLog("setFindMyKey() Error: " + error); });
 				return;
 			}
@@ -2637,7 +2661,7 @@ window.onload = function() {
   <tr>
 	<td style="width:100px;">FindMy Key:</td>
 	<td><button type="button" id="btnGetFindMyKey" onclick="getGetFindMyKey()" data-i18ntag="READ">Прочитать</button></td>
-	<td><input size="43" maxlength="44" title="FindMy Key должен содержать 22 байта в hex виде" type="text" id="inpFindMyKey" value="?"></td>
+	<td><input size="43" maxlength="50" title="FindMy Key должен содержать 22 байта в hex виде" type="text" id="inpFindMyKey" value="?"></td>
 	<td><button type="button" id="btnSetFindMyKey" onclick="setFindMyKey()" data-i18ntag="WRITE">Записать</button></td>
   </tr>
  </table>
