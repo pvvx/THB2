@@ -110,6 +110,8 @@ The sensors are detected automatically, but have different ports depending on th
 
 ## Firmware
 
+* [Programming the key fob with ST17H66B is described separately](https://github.com/pvvx/THB2/issues/94#issuecomment-2529295288)
+
 It is possible to flash the device with the Boot program via USB-COM adapter with 3.3V outputs.
 
 1. Connect GND, TX, RX, RTS-RESET, VCC (+3.3B):
