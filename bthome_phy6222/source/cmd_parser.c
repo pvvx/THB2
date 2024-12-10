@@ -208,16 +208,56 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 #endif
 #if (DEV_SERVICES & SERVICE_FINDMY)
 		} else if (cmd == CMD_ID_FDMKEY) { // Get/set findmy key
-			if (len == sizeof(findmy_key) + 1) {
-				if(memcmp(findmy_key, &ibuf[1], sizeof(findmy_key))) {
-					memcpy(findmy_key, &ibuf[1], sizeof(findmy_key));
-					flash_write_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key));
+			if (len == sizeof(findmy_key)/2 + 2) {
+				if(ibuf[1] == 3) {
+					memcpy(findmy_key_new, &ibuf[2], SIZE_FINDMY_KEY/2);
+					memcpy(&obuf[2], findmy_key_new, SIZE_FINDMY_KEY/2);
+					obuf[1] = 3;
+					olen = SIZE_FINDMY_KEY/2 + 2;
+				} else if(ibuf[1] == 4) {
+					memcpy(&findmy_key_new[SIZE_FINDMY_KEY/2], &ibuf[2], SIZE_FINDMY_KEY/2);
+					memcpy(&obuf[2], &findmy_key_new[SIZE_FINDMY_KEY/2], SIZE_FINDMY_KEY/2);
+					if(memcmp(findmy_key, findmy_key_new, SIZE_FINDMY_KEY)) {
+						memcpy(findmy_key, findmy_key_new, SIZE_FINDMY_KEY);
+						flash_write_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key));
+						findmy_key_new[0] |= 0xC0;
+						swap_mac(findmy_key_new, findmy_key_new);
+						if(memcmp(ownPublicAddr, findmy_key_new, MAC_LEN)) {
+							memcpy(ownPublicAddr, findmy_key_new, MAC_LEN);
+							flash_write_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN);
+							wrk.reboot |= 1;
+						}
+					}
+					obuf[1] = 4;
+					olen = SIZE_FINDMY_KEY/2 + 2;
+				} else {
+					obuf[1] = 0xff;
+					olen = 2;
 				}
-			}
-			if (flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key)) == sizeof(findmy_key)) {
-				memcpy(&obuf[1], findmy_key, sizeof(findmy_key));
-				olen = sizeof(findmy_key) + 1;
-			} else { // No findmy key in EEP!
+			} else if (len == 2) {
+				if(ibuf[1] == 1) {
+					if (flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key)) == sizeof(findmy_key)) {
+						memcpy(&obuf[2], findmy_key, SIZE_FINDMY_KEY/2);
+						obuf[1] = 1;
+						olen = SIZE_FINDMY_KEY/2 + 2;
+					} else { // No findmy key in EEP!
+						obuf[1] = 0xfe;
+						olen = 2;
+					}
+				} else if(ibuf[1] == 2) {
+					if (flash_read_cfg(findmy_key, EEP_ID_FDK, sizeof(findmy_key)) == sizeof(findmy_key)) {
+						memcpy(&obuf[2], &findmy_key[SIZE_FINDMY_KEY/2], SIZE_FINDMY_KEY/2);
+						obuf[1] = 2;
+						olen = SIZE_FINDMY_KEY/2 + 2;
+					} else { // No findmy key in EEP!
+						obuf[1] = 0xfe;
+						olen = 2;
+					}
+				} else {
+					obuf[1] = 0xff;
+					olen = 2;
+				}
+			} else {
 				obuf[1] = 0xff;
 				olen = 2;
 			}

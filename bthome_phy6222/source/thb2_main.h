@@ -91,6 +91,8 @@ void SimpleBLEPeripheral_Init( uint8_t task_id );
 
 uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events );
 
+void swap_mac(uint8_t * d, uint8_t * s);
+
 void set_def_name(void);
 
 void set_dev_name(void);

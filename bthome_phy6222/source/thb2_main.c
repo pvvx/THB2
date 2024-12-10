@@ -144,6 +144,18 @@ void set_dev_name(void)
 	GGS_SetParameter( GGS_DEVICE_NAME_ATT, p[0] - 1, (void *)&p[2] ); // GAP_DEVICE_NAME_LEN, attDeviceName );
 }
 
+void swap_mac(uint8_t * d, uint8_t * s)
+{
+	uint8_t buf[6];
+	buf[0] = s[5];
+	buf[1] = s[4];
+	buf[2] = s[3];
+	buf[3] = s[2];
+	buf[4] = s[1];
+	buf[5] = s[0];
+	memcpy(d, buf, 6);
+}
+
 static void set_mac(void)
 {
 	//extern uint8_t ownPublicAddr[LL_DEVICE_ADDR_LEN];
@@ -153,17 +165,10 @@ static void set_mac(void)
 			// Tuya mac[0:3]
 			ownPublicAddr[3] = 0x8d;
 			ownPublicAddr[4] = 0x1f;
-#if (DEV_SERVICES & SERVICE_FINDMY)
-			ownPublicAddr[5] = 0xf8; // random mac
-#else
 			ownPublicAddr[5] = 0x38;
-#endif
 		}
 		flash_write_cfg(ownPublicAddr, EEP_ID_MAC, MAC_LEN);
 	}
-#if (DEV_SERVICES & SERVICE_FINDMY)
-	ownPublicAddr[5] |= 0xc0; // random mac
-#endif
 	pGlobal_config[MAC_ADDRESS_LOC] = (uint32_t)ownPublicAddr;
 	// device name
 	set_dev_name();

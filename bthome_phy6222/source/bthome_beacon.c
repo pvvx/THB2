@@ -89,7 +89,7 @@ uint8_t adv_set_data(void * pd) {
 	p->v_id = BtHomeID_voltage;
 	p->battery_mv = measured_data.battery_mv; // x mV
 #if (DEV_SERVICES & SERVICE_BUTTON)
-	p->u_id = BtHomeID_button;
+	p->u_id = BtHomeID_button; // or BtHomeID_opened ?
 	p->button = measured_data.button;
 	p->c_id = BtHomeID_count32;
 	p->counter = adv_wrk.rds_count;
@@ -111,7 +111,7 @@ uint8_t adv_set_event(void * ped) {
 #elif (DEV_SERVICES & SERVICE_BUTTON)
 uint8_t adv_set_event(void * ped) {
 	padv_bthome_event1_t p = (padv_bthome_event1_t)ped;
-	p->b_id = BtHomeID_button;
+	p->b_id = BtHomeID_button; // or BtHomeID_opened ?
 	p->button = measured_data.button;
 	p->c_id = BtHomeID_count32;
 	p->counter = adv_wrk.rds_count;
