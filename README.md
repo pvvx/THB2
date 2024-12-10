@@ -104,7 +104,7 @@ The sensors are detected automatically, but have different ports depending on th
 | 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
 | 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 | 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
-| 2.0beta4 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li></ul> |
+| 2.0beta5 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li></ul> |
 
 
 

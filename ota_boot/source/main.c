@@ -140,7 +140,7 @@ void copy_app_code(void) {
 			wfaddr += blksize;
 			count -= blksize;
 		}
-		spif_erase_sector(FADDR_APP_SEC);
+		flash_erase_sector(FADDR_APP_SEC);
 	}
     //__disable_irq();
     m_in_critical_region++;

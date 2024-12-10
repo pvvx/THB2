@@ -29,7 +29,11 @@ extern "C" {
 #define FLASH_BASE_ADDR			0x11000000
 #endif
 #ifndef FLASH_SIZE
+#if DEVICE == DEVICE_KEY2
+#define FLASH_SIZE				(256*1024)
+#else
 #define FLASH_SIZE				(512*1024)
+#endif
 #endif
 #ifndef FLASH_SECTOR_SIZE
 #define FLASH_SECTOR_SIZE		4096
