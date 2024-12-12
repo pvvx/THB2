@@ -23,13 +23,9 @@ extern "C"
 /*********************************************************************
  * CONSTANTS
  */
-#if	(DEV_SERVICES & SERVICE_BUTTON)
-#define DEF_ADV_INERVAL  			16000 // = 10 sec, actual time = advInt * 625us
-#define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 10000 ms
-#else
 #define DEF_ADV_INERVAL  			8000 // = 5 sec, actual time = advInt * 625us
 #define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 5000 ms
-#endif
+
 #define DEF_CON_ADV_INERVAL 		2500 // 1.5625 sec
 #define DEF_CON_ADV_INERVAL_MS 		((DEF_CON_ADV_INERVAL*625)/1000) // 1562 ms
 #if	(DEV_SERVICES & SERVICE_BUTTON)

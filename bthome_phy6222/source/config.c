@@ -160,8 +160,8 @@ void test_config(void) {
 #endif
 	if(cfg.advertising_interval == 0)
 		cfg.advertising_interval = 1;
-	else if(cfg.advertising_interval > 160)
-		cfg.advertising_interval = 160;
+//	else if(cfg.advertising_interval > 160)
+//		cfg.advertising_interval = 160;
 	if(cfg.measure_interval < 2)
 		cfg.measure_interval = 2;
 	adv_wrk.measure_interval_ms = (cfg.advertising_interval * cfg.measure_interval * 625) / 10;

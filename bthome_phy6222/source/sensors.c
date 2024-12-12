@@ -77,8 +77,8 @@ int read_sensor_cht821x(pdev_i2c_t pi2c_dev) {
 	uint8_t reg_data[4];
 	uint32_t _r32;
 	int16_t _r16;
-	if (read_i2c_bytes(pi2c_dev, thsensor_cfg.i2c_addr, CHT83xx_REG_TMP, reg_data, 2) == 0
-		&& read_i2c_bytes(pi2c_dev, thsensor_cfg.i2c_addr, CHT83xx_REG_HMD, &reg_data[2], 2) == 0) {
+	if (read_i2c_bytes(pi2c_dev, thsensor_cfg.i2c_addr, CHT8215_REG_TMP, reg_data, 2) == 0
+		&& read_i2c_bytes(pi2c_dev, thsensor_cfg.i2c_addr, CHT8215_REG_HMD, &reg_data[2], 2) == 0) {
 		_r16 = (reg_data[0] << 8) | reg_data[1];
 		measured_data.temp = ((int32_t)(_r16 * thsensor_cfg.coef.temp_k) >> 16)  + thsensor_cfg.coef.temp_z;; // x 0.01 C
 		_r32 = ((reg_data[2] << 8) | reg_data[3]); // & 0x7fff;

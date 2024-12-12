@@ -46,7 +46,7 @@
 #define DEVICE_KEY2		30
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_KEY2
+#define DEVICE		DEVICE_THB2
 #endif
 
 // supported services by the device (bits)
