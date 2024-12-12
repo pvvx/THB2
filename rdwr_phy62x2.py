@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# rdwr_phy62x2.py 08.12.2024 pvvx #
+# rdwr_phy62x2.py 12.12.2024 pvvx #
 
 import serial
 import time
@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2/ST17H66B Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "08.12.24"
+__version__ = "12.12.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -354,24 +354,6 @@ class phyflasher:
 					self.old_erase_end = offset + PHY_FLASH_SECTOR_SIZE
 					offset += PHY_FLASH_SECTOR_SIZE
 					count -= 1
-		else:
-			return False
-		return True
-	def EraseSectorsFlash2(self, offset = 0, size = MAX_FLASH_SIZE):
-		count = int((size + PHY_FLASH_SECTOR_SIZE - 1) / PHY_FLASH_SECTOR_SIZE)
-		offset &= PHY_FLASH_SECTOR_MASK
-		if count > 0 and count < 0x10000 and offset >= 0: # 1 byte .. 16 Mbytes
-			while count > 0:
-				if (offset & 0x0FFFF) == 0 and count > 15:
-					if not self.cmd_era64k(offset):
-						return False
-					offset += 0x10000
-					count-=16
-				else:
-					if not self.cmd_era4k(offset):
-						return False
-					offset += PHY_FLASH_SECTOR_SIZE
-					count-=1
 		else:
 			return False
 		return True
