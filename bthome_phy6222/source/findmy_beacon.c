@@ -34,7 +34,7 @@ typedef struct __attribute__((packed)) _adv_bthome_noencrypt_t {
 	uint8_t 	end;
 } adv_findmy_t, * padv_findmy_t;
 
-static uint8 findmy_head[] = {
+static const uint8 findmy_head[] = {
 	0x1e, /* Length (30) */
 	0xff, /* Manufacturer Specific Data (type 0xff) */
 	0x4c, 0x00, /* Company ID (Apple) */

@@ -262,6 +262,14 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 				olen = 2;
 			}
 #endif
+#if defined(GPIO_BUZZER) && defined(PWM_CHL_BUZZER)
+		} else if (cmd == CMD_ID_BUZZER) {
+			if(len == 2 && ibuf[1] == 0)
+				pwm_buzzer_stop();
+			else
+				pwm_buzzer_start();
+			olen = 2;
+#endif
 		} else if (cmd == CMD_ID_SERIAL) {
 			memcpy(&obuf[1], devInfoSerialNumber, sizeof(devInfoSerialNumber)-1);
 			olen = 1 + sizeof(devInfoSerialNumber)-1;

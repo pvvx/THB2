@@ -46,7 +46,7 @@
 #define DEVICE_KEY2		30
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_THB2
+#define DEVICE		DEVICE_KEY2
 #endif
 
 // supported services by the device (bits)
@@ -384,7 +384,8 @@
 #define LED_ON		1
 #define LED_OFF		0
 
-#define GPIO_BUZZER	GPIO_P09
+#define GPIO_BUZZER	   GPIO_P09
+#define PWM_CHL_BUZZER PWM_CH0
 #define BUZZER_ON	1
 #define BUZZER_OFF	0
 

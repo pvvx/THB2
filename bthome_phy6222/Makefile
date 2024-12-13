@@ -31,6 +31,7 @@ SRC_PRJ += lcd_th05f.c
 SRC_PRJ += lcd_thb1.c
 SRC_PRJ += ble_ota.c
 SRC_PRJ += logger.c
+SRC_PRJ += buzzer.c
 
 INCLUDES = -I$(SRC_PATH)
 

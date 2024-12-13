@@ -13,7 +13,7 @@ Custom firmware for Tuya devices based on the PHY622x2 chipset.
 
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |  [KEY2](https://pvvx.github.io/iSearching) |
 |:---:|:---:|:---:|:---:|
-| <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/iSearching/img/key2.jpg" width="120"/> |
+| <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> |
 | | | | Support "FindMy" |
 
 
@@ -104,7 +104,7 @@ The sensors are detected automatically, but have different ports depending on th
 | 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
 | 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 | 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
-| 2.0beta5 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li></ul> |
+| 2.0 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li></ul> |
 
 
 

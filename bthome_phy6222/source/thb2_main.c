@@ -19,6 +19,7 @@
 #include "OSAL_PwrMgr.h"
 #include "gatt.h"
 #include "hci.h"
+#include "buzzer.h"
 #include "gapgattserver.h"
 #include "gattservapp.h"
 #include "devinfoservice.h"
@@ -196,6 +197,8 @@ static void set_serial_number(void)
 #endif
 }
 
+
+
 extern gapPeriConnectParams_t periConnParameters;
 extern uint16_t gapParameters[];
 static void set_adv_interval(uint16_t advInt);
@@ -320,19 +323,19 @@ static void adv_measure(void) {
 							adv_wrk.new_battery = 0;
 							check_battery();
 						}
-#ifdef GPIO_BUZZER
+#if defined(GPIO_BUZZER) && (!defined(PWM_CHL_BUZZER))
 						hal_gpio_write(GPIO_BUZZER, BUZZER_ON);
 #endif
 						measured_data.count++;
-#ifdef GPIO_BUZZER
+#if defined(GPIO_BUZZER) && (!defined(PWM_CHL_BUZZER))
 						hal_gpio_write(GPIO_BUZZER, BUZZER_OFF);
 #endif
 						LL_SetAdvData(bthome_data_beacon((void *) gapRole_AdvertData), gapRole_AdvertData);
-#ifdef GPIO_BUZZER
+#if defined(GPIO_BUZZER) && (!defined(PWM_CHL_BUZZER))
 						hal_gpio_write(GPIO_BUZZER, BUZZER_ON);
 #endif
 						adv_wrk.adv_event = 0;
-#ifdef GPIO_BUZZER
+#if defined(GPIO_BUZZER) && (!defined(PWM_CHL_BUZZER))
 						hal_gpio_write(GPIO_BUZZER, BUZZER_OFF);
 #endif
 						set_new_adv_interval(DEF_EVENT_ADV_INERVAL);
@@ -717,6 +720,12 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 		gatrole_advert_enable(TRUE);
 		return ( events ^ SBP_RESET_ADV_EVT );
 	}
+#if defined(GPIO_BUZZER) && defined(PWM_CHL_BUZZER)
+	if( events & BUZZER_TONE_EVT) {
+		pwm_buzzer_event();
+		return ( events ^ BUZZER_TONE_EVT);
+	}
+#endif
 	if( events & TIMER_BATT_EVT) {
 		LOG("TIMER_EVT\n");
 		get_utc_time_sec(); // счет UTC timestamp
@@ -791,6 +800,10 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 			}
 			measured_data.flg.pin_input = 1;
 		} else {
+#if defined(GPIO_BUZZER) && defined(PWM_CHL_BUZZER)
+			pwm_buzzer_stop();
+#endif
+
 //			if(measured_data.flg.pin_input)
 //				ev = 1;
 			measured_data.flg.pin_input = 0;

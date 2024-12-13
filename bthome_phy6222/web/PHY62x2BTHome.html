@@ -949,10 +949,12 @@ function auxControls(state)
 		$('tblButton').style.display  = "block";
 		$('trMeasStep').style.display  = "none";
 		$('divFindMyKey').style.display  = "block";
+		$('tblBuzzer').style.display  = "block";
 	} else {
 		$('tblButton').style.display  = "none";
 		$('trMeasStep').style.display  = "block";
 		$('divFindMyKey').style.display  = "none";
+		$('tblBuzzer').style.display  = "none";
 	}
 	if (devSrv.services & SERVICE_HISTORY) {
 		$('trHistStep').style.display  = "block";
@@ -2101,6 +2103,11 @@ function setBindKey() {
 		addLog(`${i18n.getTag('INVALID_BINDKEY_LENGTH')}!`)
 	}
 }
+function setBuzzer(m) {
+	if(cmdCharacteristic != null) {
+		cmdCharacteristic.writeValue(new Uint8Array([0x1A,m])).catch(error => { addLog("setBuzzer() Error: " + error); });
+	}
+}
 function getGetFindMyKey() {
 	if(cmdCharacteristic != null) {
 		cmdCharacteristic.writeValue(new Uint8Array([0x19,1])).catch(error => { addLog("getFindmyKey() Error: " + error); });
@@ -2476,7 +2483,6 @@ window.onload = function() {
     <td><label><input type="checkbox" id="chkCfgFindMy"/>FindMy</label></td>
   </tr>
 </table>
-
 <table>
   <tr>
     <td>
@@ -2527,6 +2533,12 @@ window.onload = function() {
 	<td><button type="button" id="btnGetDevTime" onclick="getDevTime()" data-i18ntag="GET_DEVICETIME">Время устройства</button></td>  
 	<td><button type="button" id="btnSetDevTime" onclick="setDevTime()" data-i18ntag="SET_DEVICETIME">Установить время</button></td>
 	<td><label id="lbDeltaTime"></label></td>
+  </tr>
+</table>
+<table id="tblBuzzer">
+  <tr>
+	<td><button type="button" id="btnBuzzerOn" onclick="setBuzzer(1)">Buzzer On</button></td>  
+	<td><button type="button" id="btnBuzzerOOff" onclick="setBuzzer(0)">Buzzer Off</button></td>
   </tr>
 </table>
 <div id="hrPres">

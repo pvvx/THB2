@@ -31,6 +31,7 @@ typedef enum {
 	CMD_ID_FIX_MAC	= 0x11, // Fixed MAC (не безопасная операция, переписывает сектор 0x0 Flash)
 	CMD_ID_BKEY		= 0x18, // Get/Set beacon bindkey in EEP
 	CMD_ID_FDMKEY	= 0x19, // Get/Set FindMy key in EEP
+	CMD_ID_BUZZER	= 0x1A, // Get/Set Buzzer tone
 	CMD_ID_COMFORT  = 0x20, // Get/Set comfort parameters
 	CMD_ID_EXTDATA  = 0x22, // Get/Set show ext. data
 	CMD_ID_UTC_TIME = 0x23, // Get/Set utc time (if USE_CLOCK = 1)

@@ -66,6 +66,7 @@ extern "C"
 #define ADV_BROADCAST_EVT			0x0020  // Advent. Event Done Notice
 #define	WRK_NOTIFY_EVT				0x0040  // work notify
 #define	PIN_INPUT_EVT				0x0080  // pin input event
+#define	BUZZER_TONE_EVT				0x0100  // Buzzer new tone
 
 /*********************************************************************
  * MACROS
