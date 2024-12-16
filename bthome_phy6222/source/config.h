@@ -43,7 +43,7 @@
 #define DEVICE_TH05D	24  // TH05_V1.3
 #define DEVICE_TH05F	25  // TH05Y_V1.2
 #define DEVICE_THB3		26
-#define DEVICE_KEY2		30
+#define DEVICE_KEY2		32
 
 #ifndef DEVICE
 #define DEVICE		DEVICE_KEY2

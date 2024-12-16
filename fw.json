@@ -7,7 +7,7 @@
 "bin/TH05D_v20.bin",
 "bin/TH05F_v20.bin",
 "bin/THB3_v20.bin",
-"?","?","?",
+"?","?","?","?","?",
 "bin/KEY2_v20.bin"],
 "custom":[
 "bin/THB2_v19.bin",
@@ -18,7 +18,7 @@
 "bin/TH05D_v19.bin",
 "bin/TH05F_v19.bin",
 "bin/THB3_v19.bin",
-"?","?","?","?"],
+"?","?","?","?","?","?"],
 "updateboot":[
 "update_boot/BOOT_THB2_v20.bin",
 "update_boot/BOOT_BTH01_v20.bin",
@@ -28,6 +28,6 @@
 "update_boot/BOOT_TH05D_v20.bin",
 "update_boot/BOOT_TH05F_v20.bin",
 "update_boot/BOOT_THB3_v20.bin",
-"?","?","?",
+"?","?","?","?","?",
 "update_boot/BOOT_KEY2_v20.bin"]
 }
