@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# rdwr_phy62x2.py 12.12.2024 pvvx #
+# rdwr_phy62x2.py 20.12.2024 pvvx #
 
 import serial
 import time
@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2/ST17H66B Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "12.12.24"
+__version__ = "20.12.24"
 
 def ParseHexFile(hexfile):
 	try:
@@ -184,11 +184,14 @@ class phyflasher:
 		read = self._port.read(26)
 		if len(read) == 26 and read[0:2] == b'0x' and read[20:26] == b'#OK>>:':
 			print('Revision:', read[2:19])
-			if read[11:15] != b'6222':
-				print('Wrong Version!')
-			self.flash_id = int(read[2:11], 16)
-			self.flash_size = 1 << ((self.flash_id >> 16) & 0xff)
-			print('FlashID: %06x, size: %d kbytes' % (self.flash_id, self.flash_size >> 10))
+			if read[11:15] == b'6230':
+				print('Chip PHY6230: OTP Version!')
+			else:
+				if read[11:15] != b'6222':
+					print('Wrong Version!')
+				self.flash_id = int(read[2:11], 16)
+				self.flash_size = 1 << ((self.flash_id >> 16) & 0xff)
+				print('FlashID: %06x, size: %d kbytes' % (self.flash_id, self.flash_size >> 10))
 			return True
 		else:
 			print('Error read Revision!')

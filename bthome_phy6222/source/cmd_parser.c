@@ -30,6 +30,7 @@
 #include "lcd.h"
 #include "logger.h"
 #include "trigger.h"
+#include "buzzer.h"
 #include "bthome_beacon.h"
 #include "findmy_beacon.h"
 /*********************************************************************/
@@ -297,16 +298,36 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			olen = make_measure_msg(obuf);
 #if (DEV_SERVICES & SERVICE_SCREEN)
 		} else if (cmd == CMD_ID_LCD_DUMP) { // Get/set lcd buf
-			if (--len > sizeof(display_buff))
-				len = sizeof(display_buff);
+			if (--len > sizeof(lcdd.display_buff))
+				len = sizeof(lcdd.display_buff);
 			if (len) {
-				wrk.lcd_ext_chow = 1;
-				memcpy(display_buff, &ibuf[1], len);
+				lcdd.chow_ext_ut = clkt.utc_time_sec + 600;
+				memcpy(lcdd.display_buff, &ibuf[1], len);
 				update_lcd();
-			} else
-				wrk.lcd_ext_chow = 0;
-			memcpy(&obuf[1], display_buff, sizeof(display_buff));
-			olen = 1 + sizeof(display_buff);
+			} else {
+				lcdd.chow_ext_ut = 0;
+				chow_lcd(1);
+			}
+			memcpy(&obuf[1], lcdd.display_buff, sizeof(lcdd.display_buff));
+			olen = 1 + sizeof(lcdd.display_buff);
+#endif
+#if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
+		} else if (cmd == CMD_ID_EXTDATA) { // Show ext. small and big number
+			if (--len > sizeof(lcdd.ext))
+				len = sizeof(lcdd.ext);
+			if (len) {
+				memcpy(&lcdd.ext, &ibuf[1], len);
+				if(lcdd.ext.vtime_sec == 0xffff)
+					lcdd.chow_ext_ut = 0xffffffff;
+				else
+					lcdd.chow_ext_ut = clkt.utc_time_sec + lcdd.ext.vtime_sec;
+				chow_ext_data();
+			} else {
+				lcdd.chow_ext_ut = 0;
+				chow_lcd(1);
+			}
+			memcpy(&obuf[1], &lcdd.ext, sizeof(lcdd.ext));
+			olen = 1 + sizeof(lcdd.ext);
 #endif
 		} else if (cmd == CMD_ID_UTC_TIME) { // Get/set utc time
 			if (len > 4) {

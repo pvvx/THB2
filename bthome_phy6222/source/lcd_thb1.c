@@ -59,13 +59,7 @@ const uint8_t display_numbers[] = {
 #define LCD_SYM_a  0b001101110 // "a"
 #define LCD_SYM_P  0b001110011 // "P"
 
-uint8_t lcd_i2c_addr; // = 0x3E
-
-uint8_t display_buff[LCD_BUF_SIZE] = {
-		LCD_SYM_o, LCD_SYM_o, LCD_SYM_o,
-};
-uint8_t display_out_buff[LCD_BUF_SIZE+1] = { 0 };
-/* blink off: display_out_buff[0] = 0xf0, on: display_out_buff[0] = 0xf2 */
+lcd_data_t lcdd;
 
 const uint8_t lcd_init_cmd[]	=	{
 		// LCD controller initialize:
@@ -89,10 +83,10 @@ const uint8_t lcd_init_cmd[]	=	{
  * 0x6 = " ="
  * 0x7 = "°E" */
 void show_temp_symbol(LCD_TEMP_SYMBOLS symbol) {
-	display_buff[3] &= ~(BIT(1)|BIT(2)|BIT(3)) ;
-	display_buff[3] |= (symbol << 2) & BIT(2);
-	display_buff[3] |= (symbol << 2) & BIT(3);
-	display_buff[3] |= (symbol >> 1) & BIT(1);
+	lcdd.display_buff[3] &= ~(BIT(1)|BIT(2)|BIT(3)) ;
+	lcdd.display_buff[3] |= (symbol << 2) & BIT(2);
+	lcdd.display_buff[3] |= (symbol << 2) & BIT(3);
+	lcdd.display_buff[3] |= (symbol >> 1) & BIT(1);
 }
 
 /* 0 = "     " off,
@@ -105,108 +99,103 @@ void show_temp_symbol(LCD_TEMP_SYMBOLS symbol) {
  * 7 = "(ooo)" */
 void show_smiley(LCD_SMILEY_SYMBOLS symbol) {
 	if(symbol & 4)
-		display_buff[4] |= BIT(7);
+		lcdd.display_buff[4] |= BIT(7);
 	else
-		display_buff[4] &= ~BIT(7);
-	display_buff[6] = symbol << 6;
+		lcdd.display_buff[4] &= ~BIT(7);
+	lcdd.display_buff[6] = symbol << 6;
 }
 
 void show_ble_symbol(bool state) {
 	if (state)
-		display_buff[1] |= BIT(7);
+		lcdd.display_buff[1] |= BIT(7);
 	else
-		display_buff[1] &= ~BIT(7);
-}
-
-void show_battery(uint8_t level) {
-	display_buff[3] &= ~(BIT(4) | BIT(5) | BIT(6) | BIT(7));
-	if(level > 80)
-		display_buff[3] |=  BIT(4);
-	if(level > 60)
-		display_buff[3] |=  BIT(5);
-	if(level > 40)
-		display_buff[3] |=  BIT(6);
-	if(level > 20)
-		display_buff[3] |=  BIT(7);
-	display_buff[3] |= BIT(0);
+		lcdd.display_buff[1] &= ~BIT(7);
 }
 
 void show_battery_symbol(bool state) {
-	if (state)
-		display_buff[3] |= BIT(0);
-	else
-		display_buff[3] &= ~(BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7));
+	lcdd.display_buff[3] &= ~(BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7));
+	if (state) {
+		if(measured_data.battery > 80)
+			lcdd.display_buff[3] |=  BIT(4);
+		if(measured_data.battery > 60)
+			lcdd.display_buff[3] |=  BIT(5);
+		if(measured_data.battery > 40)
+			lcdd.display_buff[3] |=  BIT(6);
+		if(measured_data.battery > 20)
+			lcdd.display_buff[3] |=  BIT(7);
+		lcdd.display_buff[3] |= BIT(0);
+	}
 }
 
 void show_big_number_x10(int16_t number) {
-	display_buff[1] &= BIT(7); // connect
+	lcdd.display_buff[1] &= BIT(7); // connect
 	if (number > 19995) {
-   		display_buff[0] = LCD_SYM_H; // "H"
-   		display_buff[1] |= LCD_SYM_i; // "i"
+   		lcdd.display_buff[0] = LCD_SYM_H; // "H"
+   		lcdd.display_buff[1] |= LCD_SYM_i; // "i"
 	} else if (number < -995) {
-   		display_buff[0] = LCD_SYM_L; // "L"
-   		display_buff[1] |= LCD_SYM_o; // "o"
+   		lcdd.display_buff[0] = LCD_SYM_L; // "L"
+   		lcdd.display_buff[1] |= LCD_SYM_o; // "o"
 	} else {
-		display_buff[0] = 0;
+		lcdd.display_buff[0] = 0;
 		/* number: -995..19995 */
 		if (number > 1995 || number < -95) {
-			display_buff[2] = 0; // no point, show: -99..1999
+			lcdd.display_buff[2] = 0; // no point, show: -99..1999
 			if (number < 0){
 				number = -number;
-				display_buff[0] = BIT(5); // "-"
+				lcdd.display_buff[0] = BIT(5); // "-"
 			}
 			number = (number + 5) / 10; // round(div 10)
 		} else { // show: -9.9..199.9
-			display_buff[2] = BIT(7); // point,
+			lcdd.display_buff[2] = BIT(7); // point,
 			if (number < 0){
 				number = -number;
-				display_buff[0] = BIT(5); // "-"
+				lcdd.display_buff[0] = BIT(5); // "-"
 			}
 		}
 		/* number: -99..1999 */
-		if (number > 999) display_buff[0] |= BIT(7); // "1" 1000..1999
-		if (number > 99) display_buff[0] |= display_numbers[number / 100 % 10];
-		if (number > 9) display_buff[1] |= display_numbers[number / 10 % 10];
-		else display_buff[1] |= LCD_SYM_0; // "0"
-	    display_buff[2] |= display_numbers[number %10];
+		if (number > 999) lcdd.display_buff[0] |= BIT(7); // "1" 1000..1999
+		if (number > 99) lcdd.display_buff[0] |= display_numbers[number / 100 % 10];
+		if (number > 9) lcdd.display_buff[1] |= display_numbers[number / 10 % 10];
+		else lcdd.display_buff[1] |= LCD_SYM_0; // "0"
+	    lcdd.display_buff[2] |= display_numbers[number %10];
 	}
 }
 
 /* -9 .. 99 */
 void show_small_number(int16_t number, bool percent) {
 
-	display_buff[4] &= BIT(7); // smiley
-	display_buff[5] = percent? BIT(7) : 0;
+	lcdd.display_buff[4] &= BIT(7); // smiley
+	lcdd.display_buff[5] = percent? BIT(7) : 0;
 	if (number > 99) {
-		display_buff[4] |= LCD_SYM_H; // "H"
-		display_buff[5] |= LCD_SYM_i; // "i"
+		lcdd.display_buff[4] |= LCD_SYM_H; // "H"
+		lcdd.display_buff[5] |= LCD_SYM_i; // "i"
 	} else if (number < -9) {
-		display_buff[4] |= LCD_SYM_L; // "L"
-		display_buff[5] |= LCD_SYM_o; // "o"
+		lcdd.display_buff[4] |= LCD_SYM_L; // "L"
+		lcdd.display_buff[5] |= LCD_SYM_o; // "o"
 	} else {
 		if (number < 0) {
 			number = -number;
-			display_buff[4] = BIT(2); // "-"
+			lcdd.display_buff[4] = BIT(2); // "-"
 		}
-		if (number > 9) display_buff[4] |= display_numbers[number / 10 % 10];
-		display_buff[5] |= display_numbers[number %10];
+		if (number > 9) lcdd.display_buff[4] |= display_numbers[number / 10];
+		lcdd.display_buff[5] |= display_numbers[number %10];
 	}
 }
 
 void lcd_show_version(void) {
-	display_buff[1] &= BIT(7); // connect
+	lcdd.display_buff[1] &= BIT(7); // connect
 #if OTA_TYPE
-	display_buff[0] = LCD_SYM_b;
-	display_buff[1] |= LCD_SYM_o;
-	display_buff[2] = LCD_SYM_t;
+	lcdd.display_buff[0] = LCD_SYM_b;
+	lcdd.display_buff[1] |= LCD_SYM_o;
+	lcdd.display_buff[2] = LCD_SYM_t;
 #else
-	display_buff[0] = LCD_SYM_A;
-	display_buff[1] |= LCD_SYM_P;
-	display_buff[2] = LCD_SYM_P;
+	lcdd.display_buff[0] = LCD_SYM_A;
+	lcdd.display_buff[1] |= LCD_SYM_P;
+	lcdd.display_buff[2] = LCD_SYM_P;
 #endif
-	display_buff[3] &= BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7); // bat
-	display_buff[4] = display_numbers[(APP_VERSION>>4) & 0x0f];
-	display_buff[5] = display_numbers[APP_VERSION & 0x0f];
+	lcdd.display_buff[3] &= BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7); // bat
+	lcdd.display_buff[4] = display_numbers[(APP_VERSION>>4) & 0x0f];
+	lcdd.display_buff[5] = display_numbers[APP_VERSION & 0x0f];
 	update_lcd();
 }
 
@@ -214,14 +203,14 @@ void chow_clock(void) {
 	uint32_t tmp = clkt.utc_time_sec / 60;
 	uint32_t min = tmp % 60;
 	uint32_t hrs = (tmp / 60) % 24;
-	display_buff[0] = 0;
-	display_buff[1] &= BIT(7); // connect
-	display_buff[1] |= display_numbers[(hrs / 10) % 10];
-	display_buff[2] = display_numbers[hrs % 10];
-	display_buff[3] &= BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7); // bat
-	display_buff[4] = display_numbers[(min / 10) % 10];
-	display_buff[5] = display_numbers[min % 10];
-	display_buff[6] = 0;
+	lcdd.display_buff[0] = 0;
+	lcdd.display_buff[1] &= BIT(7); // connect
+	lcdd.display_buff[1] |= display_numbers[hrs / 10];
+	lcdd.display_buff[2] = display_numbers[hrs % 10];
+	lcdd.display_buff[3] &= BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7); // bat
+	lcdd.display_buff[4] = display_numbers[min / 10];
+	lcdd.display_buff[5] = display_numbers[min % 10];
+	lcdd.display_buff[6] = 0;
 	update_lcd();
 }
 
@@ -238,7 +227,7 @@ static void chow_measure(void) {
 	if(h > 99)
 		h = 99;
 	show_small_number(h, true);
-	show_battery(measured_data.battery);
+	show_battery_symbol(1);
 #if (OTA_TYPE == OTA_TYPE_APP)
 	if(cfg.flg & FLG_SHOW_SMILEY) {
 #if (DEV_SERVICES & SERVICE_TH_TRG)
@@ -282,13 +271,30 @@ static void chow_measure(void) {
 	update_lcd();
 }
 
+#if (OTA_TYPE == OTA_TYPE_APP)
+
+void chow_ext_data(void) {
+	show_big_number_x10(lcdd.ext.big_number);
+	show_small_number(lcdd.ext.small_number, lcdd.ext.flg.percent_on);
+	show_battery_symbol(lcdd.ext.flg.battery);
+	show_smiley(lcdd.ext.flg.smiley);
+	show_temp_symbol(lcdd.ext.flg.temp_symbol);
+	update_lcd();
+}
+#endif
+
 /* flg != 0 -> chow_measure */
 void chow_lcd(int flg) {
 #if OTA_TYPE == OTA_TYPE_BOOT
+	if(clkt.utc_time_sec < lcdd.chow_ext_ut)
+		return;
 	if(flg)
 		chow_measure();
 #else
-	if(cfg.flg & FLG_DISPLAY_OFF) return;
+	if(cfg.flg & FLG_DISPLAY_OFF)
+		return;
+	if(clkt.utc_time_sec < lcdd.chow_ext_ut)
+		return;
 	if(cfg.flg & FLG_SHOW_TIME) {
 		if(wrk.lcd_count++ & 1)
 			chow_clock();
@@ -301,9 +307,9 @@ void chow_lcd(int flg) {
 }
 
 void send_to_lcd(uint8_t *pbuf, int len) {
-	if (lcd_i2c_addr) {
+	if (lcdd.lcd_i2c_addr) {
 		init_i2c(&i2c_dev1);
-		send_i2c_buf(&i2c_dev1, lcd_i2c_addr, pbuf, len);
+		send_i2c_buf(&i2c_dev1, lcdd.lcd_i2c_addr, pbuf, len);
 		deinit_i2c(&i2c_dev1);
 	}
 }
@@ -311,12 +317,12 @@ void send_to_lcd(uint8_t *pbuf, int len) {
 
 void update_lcd(void) {
 #if (OTA_TYPE == OTA_TYPE_APP)
-	if(lcd_i2c_addr == 0 || (cfg.flg & FLG_DISPLAY_OFF) != 0)
+	if(lcdd.lcd_i2c_addr == 0 || (cfg.flg & FLG_DISPLAY_OFF) != 0)
 		return;
 #endif
-	if(memcmp(&display_out_buff[1], display_buff, sizeof(display_buff))) {
-		memcpy(&display_out_buff[1], display_buff, sizeof(display_buff));
-		send_to_lcd(display_out_buff, sizeof(display_out_buff));
+	if(memcmp(&lcdd.display_out_buff[1], lcdd.display_buff, sizeof(lcdd.display_buff))) {
+		memcpy(&lcdd.display_out_buff[1], lcdd.display_buff, sizeof(lcdd.display_buff));
+		send_to_lcd(lcdd.display_out_buff, sizeof(lcdd.display_out_buff));
 	}
 }
 
@@ -330,9 +336,9 @@ void init_lcd(void) {
 //		else
 //			send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd8); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
 #endif
-		lcd_i2c_addr = LCD_I2C_ADDR;
+		lcdd.lcd_i2c_addr = LCD_I2C_ADDR;
 	} else
-		lcd_i2c_addr = 0;
+		lcdd.lcd_i2c_addr = 0;
 	deinit_i2c(&i2c_dev1);
 //	i2c_dev1.speed = I2C_400KHZ;
 }

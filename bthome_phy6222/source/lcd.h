@@ -127,9 +127,6 @@
 #error "DEVICE Not released!"
 #endif
 
-extern uint8_t lcd_i2c_addr; // LCD controller I2C address
-extern uint8_t display_buff[LCD_BUF_SIZE];
-
 
 /* 0x0 = "  "
  * 0x1 = "°Г"
@@ -147,14 +144,6 @@ typedef enum {
 	LCD_TSYMBOL_E = 7	// "°E"
 } LCD_TEMP_SYMBOLS;
 
-/* 0 = "     " off,
- * 1 = " ^_^ " happy
- * 2 = " -^- " sad
- * 3 = " ooo "
- * 4 = "(   )"
- * 5 = "(^_^)" happy
- * 6 = "(-^-)" sad
- * 7 = "(ooo)" */
 typedef enum {
 	LD_SSYMBOL_OFF,		// 0 = "     " off,
 	LD_SSYMBOL__HAPPY,	// 1 = " ^_^ " happy
@@ -166,20 +155,62 @@ typedef enum {
 	LD_SSYMBOL_ALL,		// 7 = "(ooo)"
 } LCD_SMILEY_SYMBOLS;
 
+typedef struct _ext_lcd_data_t {
+	int16_t		big_number; 	// -995..19995, x0.1
+	int16_t		small_number;	// -9..99, x1
+	uint16_t 	vtime_sec;		// validity time, in sec
+	struct __attribute__((packed)) {
+		/* 0 = "     " off,
+		 * 1 = " ^_^ "
+		 * 2 = " -^- "
+		 * 3 = " ooo "
+		 * 4 = "(   )"
+		 * 5 = "(^_^)" happy
+		 * 6 = "(-^-)" sad
+		 * 7 = "(ooo)" */
+		uint8_t smiley			: 3;
+		uint8_t percent_on		: 1;
+		uint8_t battery			: 1;
+		/* 0 = "  ", shr 0x00
+		 * 1 = "°Г", shr 0x20
+		 * 2 = " -", shr 0x40
+		 * 3 = "°F", shr 0x60
+		 * 4 = " _", shr 0x80
+		 * 5 = "°C", shr 0xa0
+		 * 6 = " =", shr 0xc0
+		 * 7 = "°E", shr 0xe0 */
+		uint8_t temp_symbol		: 3;
+	} flg;
+} ext_lcd_data_t, * pext_lcd_data_t;
+
+typedef struct _lcd_data_t {
+	uint32_t chow_ext_ut;
+#if (OTA_TYPE == OTA_TYPE_APP)
+	ext_lcd_data_t ext;
+#endif
+	uint8_t lcd_i2c_addr; // LCD controller I2C address
+	uint8_t display_buff[LCD_BUF_SIZE];
+	uint8_t display_out_buff[LCD_BUF_SIZE+1];
+} lcd_data_t;
+
+extern lcd_data_t lcdd;
+
 void init_lcd(void);
 void update_lcd(void);
-void show_small_number(int16_t number, bool percent);
-void show_big_number_x10(int16_t number);
-void show_battery_symbol(bool state);
+//void show_small_number(int16_t number, bool percent);
+//void show_big_number_x10(int16_t number);
+//void show_battery_symbol(bool state);
 void show_ble_symbol(bool state);
-void show_smiley(LCD_SMILEY_SYMBOLS symbol);
-void show_temp_symbol(LCD_TEMP_SYMBOLS symbol);
-//void chow_clock(void);
-//void chow_measure(void);
+//void show_smiley(LCD_SMILEY_SYMBOLS symbol);
+//void show_temp_symbol(LCD_TEMP_SYMBOLS symbol);
 
 void chow_lcd(int flg);
 void lcd_show_version(void);
 extern void send_to_lcd(uint8_t *pbuf, int len);
+
+#if (OTA_TYPE == OTA_TYPE_APP)
+void chow_ext_data(void);
+#endif
 
 #endif // (DEV_SERVICES & SERVICE_SCREEN)
 #endif /* _LCD_TH05_H_ */

@@ -46,24 +46,24 @@
 #define DEVICE_KEY2		32
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_KEY2
+#define DEVICE		DEVICE_TH05D
 #endif
 
 // supported services by the device (bits)
 #define SERVICE_OTA			0x00000001	// есть функция OTA
-#define SERVICE_OTA_EXT		0x00000002	// пока нет // есть расширенная функция OTA
-#define SERVICE_PINCODE 	0x00000004	// пока нет // есть установка pin-code
+//#define SERVICE_OTA_EXT		0x00000002	// пока нет // есть расширенная функция OTA
+//#define SERVICE_PINCODE 	0x00000004	// пока нет // есть установка pin-code
 #define SERVICE_BINDKEY 	0x00000008	// есть шифрование
 #define SERVICE_HISTORY 	0x00000010	// есть запись истории
 #define SERVICE_SCREEN		0x00000020	// есть экран
-#define SERVICE_LE_LR		0x00000040	// пока нет // Есть поддержка рекламы в LE Long Range
+//#define SERVICE_LE_LR		0x00000040	// пока нет // Есть поддержка рекламы в LE Long Range
 #define SERVICE_THS			0x00000080	// есть датчик температуры и влажности
 #define SERVICE_RDS			0x00000100	// есть обслуживние геркона/счета импульсов
 #define SERVICE_KEY			0x00000200	// есть кнопка
-#define SERVICE_OUTS		0x00000400	// пока нет // есть обслуживние выходных пинов
-#define SERVICE_INS			0x00000800	// пока нет // есть обслуживние входных пинов
+//#define SERVICE_OUTS		0x00000400	// пока нет // есть обслуживние выходных пинов
+//#define SERVICE_INS			0x00000800	// пока нет // есть обслуживние входных пинов
 //#define SERVICE_TIME_ADJUST 0x00001000	// пока нет // есть функция коррекции счета времени
-#define SERVICE_HARD_CLOCK	0x00002000	// пока нет // есть реальные часы RTC
+//#define SERVICE_HARD_CLOCK	0x00002000	// пока нет // есть реальные часы RTC
 #define SERVICE_TH_TRG		0x00004000	// триггер по температуре и влажности
 #define SERVICE_LED			0x00008000	// use led
 //#define SERVICE_MI_KEYS	0x00010000	// use mi keys (не используется)
@@ -462,7 +462,7 @@ typedef struct _work_parm_t {
 #if (DEV_SERVICES & SERVICE_SCREEN)
 	uint8_t lcd_count;
 #endif
-	uint8_t lcd_ext_chow; // показ TH/Clock отключен
+//	uint8_t lcd_ext_chow; // показ TH/Clock отключен
 	uint8_t reboot; // reboot on disconnect, записывается в [OTA_MODE_SELECT_REG]
 	uint8_t boot_flg; // байт из [OTA_MODE_SELECT_REG]
 } work_parm_t;
