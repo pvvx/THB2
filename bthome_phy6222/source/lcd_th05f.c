@@ -28,8 +28,6 @@ dev_i2c_t i2c_dev1 = {
 		.i2c_num = 0
 };
 
-uint8_t lcd_i2c_addr; // = 0x3E
-
 /* 0,1,2,3,4,5,6,7,8,9,A,b,C,d,E,F*/
 const uint8_t display_numbers[] = {
 		// 76543210 
@@ -310,7 +308,7 @@ void chow_lcd(int flg) {
 void send_to_lcd(uint8_t *pbuf, int len) {
 	if (lcdd.lcd_i2c_addr) {
 		init_i2c(&i2c_dev1);
-		send_i2c_buf(&i2c_dev1, lcd_i2c_addr, pbuf, len);
+		send_i2c_buf(&i2c_dev1, lcdd.lcd_i2c_addr, pbuf, len);
 		deinit_i2c(&i2c_dev1);
 	}
 }
@@ -329,6 +327,7 @@ void update_lcd(void) {
 
 void init_lcd(void) {
 	i2c_dev1.speed = I2C_100KHZ;
+	lcdd.display_out_buff[0] = 8;
 #if (OTA_TYPE == OTA_TYPE_APP)
 	if(hal_gpio_read(GPIO_LPWR) == 0) {
 		hal_gpio_write(GPIO_LPWR, 1);
@@ -338,7 +337,6 @@ void init_lcd(void) {
 	init_i2c(&i2c_dev1);
 	if(!send_i2c_buf(&i2c_dev1, LCD_I2C_ADDR, (uint8_t *) lcd_init_cmd, sizeof(lcd_init_cmd))) {
 #if (OTA_TYPE == OTA_TYPE_APP)
-		//display_out_buff[0] = 8;
 		if(cfg.flg & FLG_DISPLAY_OFF) {
 			send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd0); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
 			deinit_i2c(&i2c_dev1);
