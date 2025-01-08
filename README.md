@@ -94,19 +94,17 @@ The sensors are detected automatically, but have different ports depending on th
 
 | Version | Description |
 |---|--- |
-| 1.0 | <ul><li>First release version.</li></ul> |
-| 1.1 | <ul><li>Added trigger - TX2 output triggered by set temperature and/or humidity values with hysteresis. Transmission of the state of the RX2 output when connected.</li><li>Added display of smiley face with "comfort" for thermometers with screen.</li><li>Changed device name and MAC.</li></ul> |
-| 1.2 | <ul><li>Processing and transmission of open/close events with counter from the output labelled "RX2" (for THB2 - "RX1").</li></ul> |
-| 1.3 | <ul><li>Added THB1 and TH05_V1.3.</li><li>Next step is to reduce consumption for versions with LCD display by adding an option to switch off the display.</li></ul>
-| 1.4 | <ul><li>Stabilized connection for all device variants.</li><li>Added [TH05F](https://pvvx.github.io/TH05F).</li><li>Fixed RTC progress.</li><li>Changed BLE name for TH05_V1.3 to "TH05D".</li><li>Added files for OTA Boot update.</li></ul> |
-| 1.5 | <ul><li>Added option to encrypt BLE ads with BindKey.</li></ul> |
-| 1.6 | <ul><li>Added averaging of battery voltage calculation</li><li>Added duplication of open/close contact</li><li>Added counter status 12..20 sec (multiple of ad interval) after triggering and then every 30 min. |
-| 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
+| 2.0 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li><li>Fixed display errors for TH05D</li></ul> |
 | 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 | 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
-| 2.0 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li><li>Fixed display errors for TH05D</li></ul> |
-
-
+| 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
+| 1.6 | <ul><li>Added averaging of battery voltage calculation</li><li>Added duplication of open/close contact</li><li>Added counter status 12..20 sec (multiple of ad interval) after triggering and then every 30 min. |
+| 1.5 | <ul><li>Added option to encrypt BLE ads with BindKey.</li></ul> |
+| 1.4 | <ul><li>Stabilized connection for all device variants.</li><li>Added [TH05F](https://pvvx.github.io/TH05F).</li><li>Fixed RTC progress.</li><li>Changed BLE name for TH05_V1.3 to "TH05D".</li><li>Added files for OTA Boot update.</li></ul> |
+| 1.3 | <ul><li>Added THB1 and TH05_V1.3.</li><li>Next step is to reduce consumption for versions with LCD display by adding an option to switch off the display.</li></ul>
+| 1.2 | <ul><li>Processing and transmission of open/close events with counter from the output labelled "RX2" (for THB2 - "RX1").</li></ul> |
+| 1.1 | <ul><li>Added trigger - TX2 output triggered by set temperature and/or humidity values with hysteresis. Transmission of the state of the RX2 output when connected.</li><li>Added display of smiley face with "comfort" for thermometers with screen.</li><li>Changed device name and MAC.</li></ul> |
+| 1.0 | <ul><li>First release version.</li></ul> |
 
 ## Firmware
 
