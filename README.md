@@ -23,7 +23,7 @@ All firmware supports any of these sensors: [CHT8215](pvvx.github.io/THB2/CHT831
 
 **Software for setting up and making BLE OTA: [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).**
 
-* The OTA protocol used is not part of the PHY SDK, but is designed specifically for custom firmware. This protocol, boot-loader and Flash distribution system are incompatible with other devices on PHY62x2 chips assembled on the original SDK. The SDK used is completely redesigned and has full sources for building in GCC.
+* The OTA protocol used is not part of the PHY SDK, but is designed specifically for custom firmware. This protocol, bootloader, and Flash area allocation scheme are incompatible with other PHY62x2 devices built on the original SDK. The SDK used has been completely redesigned and has full sources for building in GCC.
   
 > Uploading OTA files to [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) is automatic. You don't need to download files from this repository for OTA.
   
