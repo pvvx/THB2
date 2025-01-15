@@ -22,6 +22,9 @@ This firmware works with [Home Assistant](https://www.home-assistant.io/) and ot
 All firmware supports any of these sensors: [CHT8215](pvvx.github.io/THB2/CHT8315%20Advanced%20Datasheet%20Ver1.6%2020230927.pdf) ([CHT8310](https://pvvx.github.io/THB2/CHT8310%20Advanced%20Datasheet%20Ver1.1%2020230927.pdf)), [CHT8305](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8305C%20Advanced%20Datasheet%20Ver2.5%202021-10-26.pdf), [CHT832x](pvvx.github.io/THB2/CHT832X%20Advanced%20Datasheet%20Ver1.pdf), AHT20..30.
 
 **Software for setting up and making BLE OTA: [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).**
+
+* The OTA protocol used is not part of the PHY SDK, but is designed specifically for custom firmware. This protocol, boot-loader and Flash distribution system are incompatible with other devices on PHY62x2 chips assembled on the original SDK. The SDK used is completely redesigned and has full sources for building in GCC.
+  
 > Uploading OTA files to [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) is automatic. You don't need to download files from this repository for OTA.
   
 > To run [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) offline, just copy the [html](bthome_phy6222/web/PHY62x2BTHome.html) file to a local folder.
