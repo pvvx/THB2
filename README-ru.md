@@ -20,9 +20,13 @@
 
 Все прошивки поддерживают любой из датчиков: [CHT8215](pvvx.github.io/THB2/CHT8315%20Advanced%20Datasheet%20Ver1.6%2020230927.pdf) ([CHT8310](https://pvvx.github.io/THB2/CHT8310%20Advanced%20Datasheet%20Ver1.1%2020230927.pdf)), [CHT8305](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8305C%20Advanced%20Datasheet%20Ver2.5%202021-10-26.pdf), [CHT832x](pvvx.github.io/THB2/CHT832X%20Advanced%20Datasheet%20Ver1.pdf), AHT20..30.
 
-* Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).
-* Подгрузка файлов OTA в [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) производится автоматически - загружать из файлы из данного репозитория для OTA не требуется.
-* Для автономной работы [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) достаточно скопировать [html](https://github.com/pvvx/THB2/blob/master/bthome_phy6222/web/PHY62x2BTHome.html) файл в локальную папку.
+* **Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).**
+
+> Подгрузка файлов OTA в [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) производится автоматически - загружать из файлы из данного репозитория для OTA не требуется.
+
+> Для автономной работы [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html) достаточно скопировать [html](https://github.com/pvvx/THB2/blob/master/bthome_phy6222/web/PHY62x2BTHome.html) файл в локальную папку.
+
+_Используемый протокол OTA не является частью PHY SDK, а разработан специально для кастомной прошивки. Этот протокол, загрузчик и схема распределения Flash несовместимы с другими устройствами на чипах PHY62x2, собранными на оригинальном SDK. Используемый SDK полностью переработан и имеет полные исходники для сборки в GCC._
 
 ## Начало работы с устройством 
 
