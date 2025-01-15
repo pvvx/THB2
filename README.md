@@ -11,7 +11,7 @@ Custom firmware for Tuya devices based on the PHY622x2 chipset.
 |:---:|:---:|:---:|:---:|
 | <img src="https://pvvx.github.io/THB1/img/THB1.jpg" width="120"/> | <img src="https://pvvx.github.io/THB2/img/THB2.jpg" width="80"/> | <img src="https://pvvx.github.io/THB3/img/THB3.jpg" width="120"/> | <img src="https://pvvx.github.io/BTH01/img/BTH01.jpg" width="100"/> |
 
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |  [KEY2](https://pvvx.github.io/iSearching) |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |  [KEY2 (iSearching)](https://pvvx.github.io/iSearching) |
 |:---:|:---:|:---:|:---:|
 | <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> |
 | | | | Support "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
