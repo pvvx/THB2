@@ -190,7 +190,7 @@ python3 rdwr_phy62x2.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 3. Run:
 
 ```
-python3 rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
+python rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
 ```
 
 > Not all USB-COM adapters support 1Mbit. Then remove the `-b 1000000` option or select a different baud rate (115200, 250000, 500000, 1000000).
@@ -235,8 +235,8 @@ There are two ways to force a reboot to `FW Boot` from `FW APP`:
 
 Through USB-UART adapter, APP can be written immediately after boot. For example:
 ```
-python3 rdwr_phy62x2.py -p COM11 -e wh ./bin/BOOT_TH05V13_v13.hex
-python3 rdwr_phy62x2.py -p COM11 -r we 0x10000 ./bin/TH05V13_v13.bin
+python rdwr_phy62x2.py -p COM11 -e wh ./bin/BOOT_TH05V13_v13.hex
+python rdwr_phy62x2.py -p COM11 -r we 0x10000 ./bin/TH05V13_v13.bin
 ```
 
 ## Open/Close event and pulse counting
