@@ -298,3 +298,16 @@ The GNU Arm Embedded Toolchain is used to build the firmware.
 To work in Eclipse, use project import and install toolchain.path.
 
 See [this](https://github.com/pvvx/PHY62x2) for more information on PHY62xx chips.
+
+## Auto Time Sync
+
+The python script `auto_time_sync.py` could be executed by a scheduled cron job for instance
+to rectify the time drift of the devices.  
+It continuously scans for devices that advertise the BTHome service UUID (0xFCD2) and ensures their 
+internal clocks are synchronized with the host computer's time.
+
+Usage:
+Run the script directly to start the auto time sync service:
+```
+python auto_time_sync.py
+```
