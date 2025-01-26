@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# rdwr_phy62x2.py 20.12.2024 pvvx #
+# rdwr_phy62x2.py 27.01.2025 pvvx #
 
 import serial
 import time
@@ -24,7 +24,7 @@ PHY_WR_BLK_SIZE = 0x2000
 
 __progname__ = 'PHY62x2/ST17H66B Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "20.12.24"
+__version__ = "27.01.25"
 
 def ParseHexFile(hexfile):
 	try:
@@ -71,6 +71,7 @@ def ParseHexFile(hexfile):
 
 class phyflasher:
 	def __init__(self, port='COM1'):
+		self.autoerase = True
 		self.old_erase_start = EXT_FLASH_ADD
 		self.old_erase_end = EXT_FLASH_ADD
 		self.port = port
@@ -441,7 +442,7 @@ class phyflasher:
 			offset+=sblk
 			size-=sblk
 		return True
-	def HexStartSend(self):
+	def SpifsInit(self):
 		return self.write_cmd('spifs 0 1 3 0 ') and self.write_cmd('sfmod 2 2 ') and self.write_cmd('cpnum ffffffff ')
 	def HexfHeader(self, hp, start = DEF_START_RUN_APP_ADDR, raddr = DEF_START_WR_FLASH_ADDR):
 		if len(hp) > 1:
@@ -619,6 +620,9 @@ def main():
 			stream.close()
 			print ('Error: Write File size = 0!')
 			sys.exit(1)
+		if not phy.SpifsInit():
+			print ('Error: Spifs start init error!')
+			sys.exit(2)
 		aerase = args.operation == 'we'
 		if args.erase == True or args.allerase == True:
 			aerase = False
@@ -654,7 +658,8 @@ def main():
 		if hexf == None:
 			sys.exit(2)
 		hp[0][1] = hexf
-		if not phy.HexStartSend():
+		if not phy.SpifsInit():
+			print ('Error: Spifs start init error!')
 			sys.exit(2)
 		print ('----------------------------------------------------------')
 		aerase = True
