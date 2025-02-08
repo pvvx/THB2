@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# rdwr_phy62x2.py 20.12.2024 pvvx #
+# rdwr_phy62x2.py 27.01.2025 pvvx #
 
 import serial
 import time
@@ -22,9 +22,12 @@ PHY_FLASH_SECTOR_SIZE = 4096
 PHY_FLASH_SECTOR_MASK = 0xfffff000
 PHY_WR_BLK_SIZE = 0x2000
 
-__progname__ = 'PHY62x2/ST17H66B Utility'
+PHY_FLASH_ADDR = 0x11000000
+PHY_SRAM_ADDR = 0x1fff0000
+
+__progname__ = 'PHY62x2/ST17H66B/TG7100B Utility'
 __filename__ = 'rdwr_phy62x2.py'
-__version__ = "20.12.24"
+__version__ = "08.02.25"
 
 def ParseHexFile(hexfile):
 	try:
@@ -70,11 +73,18 @@ def ParseHexFile(hexfile):
 	return table
 
 class phyflasher:
-	def __init__(self, port='COM1'):
+	def __init__(self, port='COM1', tm = False):
+		self.tm = tm
+		self.chip = 'Unknown'
+		self.cpbin = 0
+		self.autoerase = True
 		self.old_erase_start = EXT_FLASH_ADD
 		self.old_erase_end = EXT_FLASH_ADD
 		self.port = port
-		self.baud = START_BAUD
+		if tm:
+			self.baud = DEF_RUN_BAUD
+		else:
+			self.baud = START_BAUD
 		try:
 			self._port = serial.Serial(self.port, self.baud)
 			self._port.timeout = 1
@@ -103,8 +113,15 @@ class phyflasher:
 	def write_reg(self, addr, data):
 		return self.write_cmd('wrreg%08x %08x ' % (addr, data))
 	def ExpFlashSize(self):
-		if not self.write_reg(0x1fff0898, EXT_FLASH_ADD):
-			print('Error set ext.Flash size %08x!' % EXT_FLASH_ADD)
+		if self.tg7100:
+			addr = 0x1fff1080
+			size = self.flash_size * 2
+			#return True
+		else:
+			addr = 0x1fff0898
+			size = EXT_FLASH_ADD
+		if not self.write_reg(addr, size):
+			print('Error set ext.Flash size %08x!' % size)
 			return False
 		return True
 	def wr_flash_cmd(self, cmd, data = 0, wrlen = 0, addr = 0, addrlen = 0, rdlen = 0, mbit = 0, dummy = 0):
@@ -182,13 +199,25 @@ class phyflasher:
 		self._port.write(str.encode('rdrev+ '))
 		self._port.timeout = 0.1
 		read = self._port.read(26)
+		#print(read)
+		if len(read) == 16 and read[0:2] == b'0x' and read[10:16] == b'#OK>>:':
+			print('Revision:', read[2:10])
+			self.flash_id = int(read[2:10], 16)
+			self.flash_size = 1 << (self.flash_id  & 0xff)
+			self.chip = 'TG7100B'
+			self.tg7100 = True
+			print('FlashID: %06x, size: %d kbytes' % (self.flash_id, self.flash_size >> 10))
+			return True
+		self.tg7100 = False
 		if len(read) == 26 and read[0:2] == b'0x' and read[20:26] == b'#OK>>:':
 			print('Revision:', read[2:19])
 			if read[11:15] == b'6230':
+				self.chip = 'PHY6230'
 				print('Chip PHY6230: OTP Version!')
 			else:
 				if read[11:15] != b'6222':
 					print('Wrong Version!')
+				self.chip = 'PHY6222'
 				self.flash_id = int(read[2:11], 16)
 				self.flash_size = 1 << ((self.flash_id >> 16) & 0xff)
 				print('FlashID: %06x, size: %d kbytes' % (self.flash_id, self.flash_size >> 10))
@@ -199,35 +228,35 @@ class phyflasher:
 	def SetBaud(self, baud):
 		if self._port.baudrate != baud:
 			print ('Reopen %s port %i baud...' % (self.port, baud), end = ' '),
+			self._port.timeout = 0.7
 			self._port.write(str.encode("uarts%i" % baud))
-			self._port.timeout = 1
 			read = self._port.read(3)
-			if read == b'#OK':
-				print ('ok')
-				self.baud = baud
-				try:
-					self._port.baudrate = baud
-				except Exception as e:
-					print ('Error set %i baud on %s port!' % (baud, self.port))
-					sys.exit(1)			
-			else:
-				print ('error!')
+			self.baud = baud
+			try:
+				self._port.baudrate = baud
+			except Exception as e:
 				print ('Error set %i baud on %s port!' % (baud, self.port))
-				self._port.close()
-				sys.exit(3)
+				sys.exit(1)
+			if read != b'#OK':
+				if self.read_reg(PHY_SRAM_ADDR) == None:
+					print ('error!')
+					print ('Error set %i baud on %s port!' % (baud, self.port))
+					self._port.close()
+					sys.exit(3)
+			print ('ok')
 			self._port.timeout = 0.2
 			time.sleep(0.05)
 			self._port.flushOutput()
 			self._port.flushInput()
 		return True
 	def Connect(self, baud=DEF_RUN_BAUD):
-		self._port.setDTR(True) #TM   (lo)
 		self._port.setRTS(True) #RSTN (lo)
+		self._port.setDTR(True) #TM   (lo)
 		time.sleep(0.1)
 		self._port.flushOutput()
 		self._port.flushInput()
 		time.sleep(0.1)
-		print('PHY62x2: Release RST_N if RTS is not connected...')
+		print('PHY62x2/TG7100B: Release RST_N if RTS is not connected...')
 		print('ST17H66B: Turn on the power...')
 		self._port.setDTR(False) #TM  (hi)
 		self._port.setRTS(False) #RSTN (hi)
@@ -246,14 +275,14 @@ class phyflasher:
 			ttcl = ttcl - 1
 			if ttcl < 1:
 				print('Chip Reset error! Response: %s' % read)
-				print('Check connection TX->RX, RX<-TX, RTS->RESET and Chip Power!')
+				print('Check connection TX->RX, RX<-TX, RTS->RESET, TM, and Chip Power!')
 				self._port.close()
 				exit(4)
 		print('Chip Reset Ok. Response: %s' % read)
 		self._port.baudrate = DEF_RUN_BAUD
 		self._port.timeout = 0.2
 		if fct_mode:
-			print('PHY62x2 in FCT mode!')
+			print('Chip in FCT mode!')
 			return False
 		if not self.ReadRevision():
 			self._port.close()
@@ -261,25 +290,26 @@ class phyflasher:
 		if not self.FlashUnlock():
 			self._port.close()
 			exit(4)
-		if not self.write_reg(0x4000f054, 0):
-			print('PHY62x2 - Error init1!')
-			self._port.close()
-			exit(4)
-		if not self.write_reg(0x4000f140, 0):
-			print('PHY62x2 - Error init2!')
-			self._port.close()
-			exit(4)
-		if not self.write_reg(0x4000f144, 0):
-			print('PHY62x2 - Error init3!')
-			self._port.close()
-			exit(4)
-		print('PHY62x2 - connected Ok')
+		if not self.tg7100:
+			if not self.write_reg(0x4000f054, 0):
+				print('PHY62x2 - Error init1!')
+				self._port.close()
+				exit(4)
+			if not self.write_reg(0x4000f140, 0):
+				print('PHY62x2 - Error init2!')
+				self._port.close()
+				exit(4)
+			if not self.write_reg(0x4000f144, 0):
+				print('PHY62x2 - Error init3!')
+				self._port.close()
+				exit(4)
+		print(self.chip, '- connected Ok')
 		return self.SetBaud(baud)
 	def cmd_era4k(self, offset):
 		print ('Erase sector Flash at 0x%08x...' % offset, end = ' ')
 		tmp = self._port.timeout
 		self._port.timeout = 0.5
-		ret = self.write_cmd('era4k %X' % (offset | MAX_FLASH_SIZE))
+		ret = self.write_cmd('era4k %X' % (offset | self.flash_size))
 		self._port.timeout = tmp
 		if not ret:
 			print ('error!')
@@ -290,7 +320,7 @@ class phyflasher:
 		print ('Erase block 64k Flash at 0x%08x...' % offset, end = ' '),
 		tmp = self._port.timeout
 		self._port.timeout = 2
-		ret = self.write_cmd('er64k %X' % (offset | MAX_FLASH_SIZE))
+		ret = self.write_cmd('er64k %X' % (offset | self.flash_size))
 		self._port.timeout = tmp
 		if not ret:
 			print ('error!')
@@ -301,7 +331,10 @@ class phyflasher:
 		print ('Erase block 512k Flash at 0x%08x...' % offset, end = ' '),
 		tmp = self._port.timeout
 		self._port.timeout = 2
-		ret = self.write_cmd('er512 %X' % (offset | MAX_FLASH_SIZE))
+		if self.tg7100:
+			ret = self.write_cmd('er512 ')
+		else:
+			ret = self.write_cmd('er512 %X' % (offset | self.flash_size))
 		self._port.timeout = tmp
 		if not ret:
 			print ('error!')
@@ -312,7 +345,10 @@ class phyflasher:
 		print ('Erase Flash work area...', end = ' '),
 		tmp = self._port.timeout
 		self._port.timeout = 7
-		ret = self.write_cmd('erall ')
+		if self.tg7100:
+			ret = self.write_cmd('etcpf ')
+		else:
+			ret = self.write_cmd('erall ')
 		self._port.timeout = tmp
 		if not ret:
 			print ('error!')
@@ -360,50 +396,63 @@ class phyflasher:
 		else:
 			return False
 		return True
-	def send_blk(self, stream, offset, size, blkcnt, blknum):
+	def send_blk(self, stream, offset, size, blkcnt, blknum, segment = 0):
 		self._port.timeout = 1
 		print ('Write 0x%08x bytes to Flash at 0x%08x...' % (size, offset), end = ' '),
-		if blknum == 0:  
-			if not self.write_cmd('cpnum %d ' % blkcnt):
-				print ('error!')
-				return False
-		self._port.write(str.encode('cpbin c%d %X %X %X' % (blknum, offset | MAX_FLASH_SIZE, size, 0x1FFF0000 + offset)))
+		#if blknum == 0:  
+			#if not self.write_cmd('cpnum %d ' % blkcnt):
+			#	print ('error')
+			#	print ('Error cmd cpnum!', read)
+			#	return False
+		if self.tg7100:
+			self._port.write(str.encode('cpbin c%d %X %X %X' % (blknum, offset | self.flash_size, size, segment + offset)))
+		else:
+			self._port.write(str.encode('cpbin c%d %X %X %X' % (blknum, offset | self.flash_size, size, segment + offset)))
 		read = self._port.read(12)
 		if read != b'by hex mode:':
 			print ('error!')
+			print ('Error cmd cpbin!', read)
 			return False
 		data = stream.read(size)
 		self._port.write(data)
-		read = self._port.read(23)  #'checksum is: 0x00001d1e'
-		#print ('%s' % read),
-		if read[0:15] != b'checksum is: 0x':
-			print ('error!')
-			return False
-		self._port.write(read[15:])
+		if self.tg7100:
+			read = self._port.read(25)  #' checksum is: 0x00001d1e'
+			if read[0:16] != b' checksum is: 0x': # TG7100
+				print ('error!')
+				print ('Error send bin data! ', read)
+				return False
+			self._port.write(read[16:24])
+		else:
+			read = self._port.read(23)  #'checksum is: 0x00001d1e'
+			if read[0:15] != b'checksum is: 0x':
+				print ('error!')
+				print ('Error send bin data! ', read)
+				return False
+			self._port.write(read[15:])
 		read = self._port.read(6)
 		if read != b'#OK>>:':
 			print ('error!')
+			print ('Error CRC!', read)
 			return False
 		print ('ok')
 		return True
-	def WriteBlockFlash(self, stream, offset = 0, size = 0x8000):
+	def WriteBlockFlash(self, stream, offset = 0, size = 0x8000, segment = PHY_SRAM_ADDR):
 		offset &= 0x00ffffff
 		if self.autoerase:
 			if not self.EraseSectorsFlash(offset, size):	
 				return False
 		sblk = PHY_WR_BLK_SIZE
 		blkcount = (size + sblk - 1) / sblk
-		blknum = 0
 		while(size > 0):
 			if size < sblk:
 				sblk = size
-			if not self.send_blk(stream, offset, sblk, blkcount, blknum):
+			if not self.send_blk(stream, offset, sblk, blkcount, self.cpbin, segment):
 				return False
-			blknum+=1
+			self.cpbin+=1
 			offset+=sblk
 			size-=sblk
 		return True
-	def ReadBusToFile(self, ff, addr=0x11000000, size=0x80000):
+	def ReadBusToFile(self, ff, addr=PHY_FLASH_ADDR, size=0x80000):
 		flg = size > 128
 		if not flg:
 			print('\rRead 0x%08x...' % addr, end=' ') #, flush=True
@@ -421,30 +470,67 @@ class phyflasher:
 			size -= 4
 		print('ok')
 		return True
-	def WriteHexf(self, sn, ph):
-		offset = ph[2]
-		offset &= 0x00ffffff
-		idx = 0
-		size = len(ph[1])
-		if self.autoerase:
-			if not self.EraseSectorsFlash(offset, size):	
-				return False
-		sblk = PHY_WR_BLK_SIZE
-		blkcount = (size + sblk - 1) / sblk
-		blknum = 0
-		while(size > 0):
-			if size < sblk:
-				sblk = size
-			if not self.send_blk(stream, offset, sblk, blkcount, blknum):
-				return False
-			blknum+=1
-			offset+=sblk
-			size-=sblk
-		return True
-	def HexStartSend(self):
-		return self.write_cmd('spifs 0 1 3 0 ') and self.write_cmd('sfmod 2 2 ') and self.write_cmd('cpnum ffffffff ')
+	def ReadAllFlash(self, ff):
+		addr = PHY_FLASH_ADDR
+		size = self.flash_size
+		print('Read at 0x%08x, size: 0x%08x:' % (addr, size))
+		while size > 0:
+			if addr & 127 == 0:
+				print('\rRead 0x%08x...' % addr, end=' ') #, flush=True
+			rw = self.read_reg(addr)
+			if rw == None:
+				print('error!')
+				print('\rError read address 0x%08x!' % addr)
+				return None
+			dw = struct.pack('<I',rw)
+			ff.write(dw)
+			addr += 4
+			size -= 4
+		print('ok')
+		return self.flash_size
+	def SpifsInit(self):
+		if self.tm:
+			return self.write_cmd('cpnum ffffffff ')
+		else:
+			return self.write_cmd('spifs 0 1 3 0 ') and self.write_cmd('sfmod 2 2 ') and self.write_cmd('cpnum ffffffff ')
 	def HexfHeader(self, hp, start = DEF_START_RUN_APP_ADDR, raddr = DEF_START_WR_FLASH_ADDR):
 		if len(hp) > 1:
+			if self.tg7100:
+				hp[0][2] = 0x2100
+				hexf = bytearray(b'\xff')*(4)
+				hexf[0:4] = int.to_bytes(len(hp)-1, 4, byteorder='little')
+				#sections = 0
+				faddr_min = MAX_FLASH_SIZE-1
+				faddr_max = 0
+				rsize = 0
+				for ihp in hp:
+					if (ihp[0] & PHY_SRAM_ADDR) == PHY_SRAM_ADDR:	# SRAM
+						rsize += len(ihp[1])
+					elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == PHY_FLASH_ADDR: # Flash
+						offset = ihp[0] & (MAX_FLASH_SIZE-1)
+						if faddr_min > offset:
+							faddr_min = offset
+						send = offset + len(ihp[1])
+						if faddr_max <= send:
+							faddr_max = send
+				if (raddr + rsize) >= faddr_min:
+					raddr = (faddr_max + 15) & 0xfffffff0
+				print ('---- Segments Table -------------------------------------')
+				for ihp in hp:
+					if (ihp[0] & PHY_SRAM_ADDR) == PHY_SRAM_ADDR:	# SRAM
+						faddr = raddr
+						raddr += (len(ihp[1])+15) & 0xfffffff0
+					elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == PHY_FLASH_ADDR: # Flash
+						faddr = ihp[0] & (MAX_FLASH_SIZE-1)
+					elif ihp[0] == 0:
+						continue
+					else:
+						print('Invalid Segment Address 0x%08x!' % ihp[0])
+						return None
+					ihp[2] = faddr
+					print('Segment: %08x <- Flash addr: %08x, Size: %08x' % (ihp[0], faddr, len(ihp[1])))
+					hexf.extend(bytearray(struct.pack('<III', faddr, len(ihp[1]), ihp[0])))
+				return hexf
 			hexf = bytearray(b'\xff')*(0x100)
 			hexf[0:4] = int.to_bytes(len(hp)-1, 4, byteorder='little')
 			hexf[8:12] = int.to_bytes(start, 4, byteorder='little')
@@ -453,9 +539,9 @@ class phyflasher:
 			faddr_max = 0
 			rsize = 0
 			for ihp in hp:
-				if (ihp[0] & 0x1fff0000) == 0x1fff0000:	# SRAM
+				if (ihp[0] & PHY_SRAM_ADDR) == PHY_SRAM_ADDR:	# SRAM
 					rsize += len(ihp[1])
-				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000: # Flash
+				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == PHY_FLASH_ADDR: # Flash
 					offset = ihp[0] & (MAX_FLASH_SIZE-1)
 					if faddr_min > offset:
 						faddr_min = offset
@@ -467,10 +553,10 @@ class phyflasher:
 			#print('Test: Flash addr min: %08x, max: %08x, RAM addr: %08x' % (faddr_min, faddr_max, raddr))
 			print ('---- Segments Table -------------------------------------')
 			for ihp in hp:
-				if (ihp[0] & 0x1fff0000) == 0x1fff0000:	# SRAM
+				if (ihp[0] & PHY_SRAM_ADDR) == PHY_SRAM_ADDR:	# SRAM
 					faddr = raddr
 					raddr += (len(ihp[1])+3) & 0xfffffffc
-				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == 0x11000000: # Flash
+				elif (ihp[0] & (~(MAX_FLASH_SIZE-1))) == PHY_FLASH_ADDR: # Flash
 					faddr = ihp[0] & (MAX_FLASH_SIZE-1)
 				elif ihp[0] == 0:
 					continue
@@ -505,6 +591,7 @@ def main():
 	parser.add_argument('--reset', '-r',  action='store_true', help = 'Post-processing: Reset')
 	parser.add_argument('--start', '-s',  help = 'Application start address for hex writer (default: 0x%08x)' % DEF_START_RUN_APP_ADDR, type = arg_auto_int, default = DEF_START_RUN_APP_ADDR)
 	parser.add_argument('--write', '-w',  help = 'Flash starting address for hex writer (default: 0x%08x)' % DEF_START_WR_FLASH_ADDR, type = arg_auto_int, default = DEF_START_WR_FLASH_ADDR)
+	parser.add_argument('--tm', '-t',  action='store_true', help = 'If pin TM is set "1"')
 
 	subparsers = parser.add_subparsers(
 			dest='operation',
@@ -548,7 +635,13 @@ def main():
 	parser_read_chip.add_argument('size', help = 'Size of region', type = arg_auto_int)
 	parser_read_chip.add_argument('filename', help = 'Name of binary file')
 
-	parser_read_flash = subparsers.add_parser(
+	parser_read_all_flash = subparsers.add_parser(
+			'rf',
+			help = 'Read all Flash',
+			)
+	parser_read_all_flash.add_argument('filename', help = 'Name of binary file')
+
+	parser_read_info = subparsers.add_parser(
 			'i', help = 'Chip Information')
 	
 	args = parser.parse_args()
@@ -556,7 +649,7 @@ def main():
 	print('=========================================================')
 	print('%s version %s' % (__progname__, __version__))
 	print('---------------------------------------------------------')
-	phy = phyflasher(args.port)
+	phy = phyflasher(args.port, args.tm)
 	print ('Connecting...')
 	#--------------------------------
 	if not phy.Connect(args.baud):
@@ -579,6 +672,21 @@ def main():
 			print ('Error Flash read Unique ID!')			
 			sys.exit(3)
 		print ('Flash Serial Number:', rb.hex()) # Unique ID
+	if args.operation == 'rf':
+		try:
+			ff = open(args.filename, "wb")
+		except:
+			print("Error file open '%s'" % args.filename)
+			exit(2)
+		size = phy.ReadAllFlash(ff)
+		if  size == None:
+			ff.close()
+			exit(4)
+		#print
+		print ('\r---------------------------------------------------------')
+		byteSaved = (size + 3) & 0xfffffffc
+		print("%.3f KBytes saved to file '%s'" % (byteSaved/1024, args.filename))
+		ff.close()
 	if args.operation == 'rc':
 		#filename = "r%08x-%08x.bin" % (addr, length)
 		if args.size == 0:
@@ -619,6 +727,9 @@ def main():
 			stream.close()
 			print ('Error: Write File size = 0!')
 			sys.exit(1)
+		if not phy.SpifsInit():
+			print ('Error: Spifs start init error!')
+			sys.exit(2)
 		aerase = args.operation == 'we'
 		if args.erase == True or args.allerase == True:
 			aerase = False
@@ -654,7 +765,8 @@ def main():
 		if hexf == None:
 			sys.exit(2)
 		hp[0][1] = hexf
-		if not phy.HexStartSend():
+		if not phy.SpifsInit():
+			print ('Error: Spifs start init error!')
 			sys.exit(2)
 		print ('----------------------------------------------------------')
 		aerase = True
@@ -662,13 +774,11 @@ def main():
 			aerase = False
 			if args.allerase == True:
 				if not phy.cmd_erase_all_flash():
-					stream.close()
 					print ('Error: Erase All Flash!')
 					sys.exit(3)
 			else:
 				if args.erase == True:
 					if not phy.cmd_erase_work_flash():
-						stream.close()
 						print ('Error: Erase Flash!')
 						sys.exit(3)
 		phy.SetAutoErase(aerase)
@@ -681,7 +791,7 @@ def main():
 			else:
 				print('Segment: %08x <- Flash addr: %08x, Size: %08x' % (ihp[0], ihp[2], len(ihp[1])))
 			stream = io.BytesIO(ihp[1])
-			if not phy.WriteBlockFlash(stream, ihp[2], len(ihp[1])):
+			if not phy.WriteBlockFlash(stream, ihp[2], len(ihp[1]), 0):
 				stream.close()
 				sys.exit(2)
 			stream.close()
