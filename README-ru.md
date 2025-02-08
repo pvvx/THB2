@@ -13,7 +13,7 @@
 
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) | [TH04 V1.5](https://pvvx.github.io/TH04) |
 |:---:|:---:|:---:|:---:|
-| <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/TH04/img/TH04.jpg" width="120"/> |
+| <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/TH04/img/th04.jpg" width="120"/> |
 
 | [KEY2 (iSearching)](https://pvvx.github.io/iSearching) |
 |:---:|
