@@ -44,9 +44,10 @@
 #define DEVICE_TH05F	25  // TH05Y_V1.2
 #define DEVICE_THB3		26
 #define DEVICE_KEY2		32
+#define DEVICE_TH04 	34
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05D
+#define DEVICE		DEVICE_TH04
 #endif
 
 // supported services by the device (bits)
@@ -105,6 +106,8 @@
 		| SERVICE_BINDKEY \
 )
 #endif
+
+#define PERIOD_BEACON_EVENT 120
 
 #define ADC_PIN_USE_OUT		0 //  есть резистор 0 к +Vbat
 #define ADC_PIN				GPIO_P11
@@ -395,6 +398,43 @@
 #define DEF_HARDWARE_REVISION		"0020"
 #define DEF_MANUFACTURE_NAME_STR	"DIY"
 
+#elif DEVICE == DEVICE_TH04
+
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_SCREEN \
+		| SERVICE_THS \
+		| SERVICE_KEY \
+		| SERVICE_HISTORY \
+		| SERVICE_TH_TRG \
+		| SERVICE_RDS \
+		| SERVICE_BINDKEY \
+)
+#endif
+
+// TODO: I still need to figure this out
+#define ADC_PIN_USE_OUT		1
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
+
+#define GPIO_KEY	GPIO_P24
+#define KEY_PRESSED	0
+
+#define I2C_SDA 	GPIO_P07 // SDA
+#define I2C_SCL 	GPIO_P03 // SCL
+
+#define GPIO_TRG	GPIO_P09 // mark TX
+#define GPIO_INP	GPIO_P10 // mark RX
+
+#define DEF_MODEL_NUMBER_STR		"TH04"
+#define DEF_HARDWARE_REVISION		"0022" 
+#define DEF_MANUFACTURE_NAME_STR	"Tuya" 
 
 #else
 #error "DEVICE Not released!"

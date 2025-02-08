@@ -159,7 +159,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		} else if (cmd == CMD_ID_SEN_ID) {
 			memcpy(&obuf[1], (uint8_t *)&thsensor_cfg.mid, 6);
 			olen = 1 + 5;
-#if (OTA_TYPE == OTA_TYPE_APP) && ((DEV_SERVICES & SERVICE_TH_TRG) || (DEV_SERVICES & SERVICE_SCREEN))
+#if (OTA_TYPE == OTA_TYPE_APP) && (DEV_SERVICES & SERVICE_TH_TRG)
 		} else if (cmd == CMD_ID_TRG) {	// Get/Set tigger data config
 			if (--len > trigger_send_size)
 				len = trigger_send_size;

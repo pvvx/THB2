@@ -2,7 +2,7 @@
 PROJECT_NAME ?= bthome_phy6222
 #POJECT_DEF ?= -DDEVICE=DEVICE_THB2
 ##############################################################################
-COM_PORT = COM5
+COM_PORT = COM6
 ##############################################################################
 # Source
 SRC_PATH = ./source
@@ -29,6 +29,7 @@ SRC_PRJ += lcd_th05.c
 SRC_PRJ += lcd_th05d.c
 SRC_PRJ += lcd_th05f.c
 SRC_PRJ += lcd_thb1.c
+SRC_PRJ += lcd_th04.c
 SRC_PRJ += ble_ota.c
 SRC_PRJ += logger.c
 SRC_PRJ += buzzer.c
@@ -306,7 +307,7 @@ flash:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex
 
 flash_ota:
-	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -r we 0x10000 $(BIN_OTA)
+	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -e -r we 0x10000 $(BIN_OTA)
 
 erase_and_flash:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b 1000000 -e -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex

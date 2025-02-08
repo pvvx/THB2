@@ -93,6 +93,11 @@ uint8_t adv_set_data(void * pd) {
 	p->button = measured_data.button;
 	p->c_id = BtHomeID_count32;
 	p->counter = adv_wrk.rds_count;
+#elif (DEV_SERVICES & SERVICE_RDS)
+	p->o_id = BtHomeID_opened;
+	p->opened = measured_data.flg.pin_input;
+	p->c_id = BtHomeID_count32;
+	p->counter = adv_wrk.rds_count;
 #endif
 	return sizeof(adv_bthome_data2_t);
 }

@@ -58,6 +58,13 @@
 @if not exist "build\KEY2%SWVER%.hex" goto :error
 @copy "build\KEY2%SWVER%.bin" .\bin
 @
+@del /Q "build\TH04%SWVER%.hex"
+@del /Q "build\TH04%SWVER%.bin"
+@make -s clean
+@make -s -j PROJECT_NAME=TH04%SWVER% POJECT_DEF="-DDEVICE=DEVICE_TH04"
+@if not exist "build\TH04%SWVER%.hex" goto :error
+@copy "build\TH04%SWVER%.bin" .\bin
+@
 @del /Q "build\BOOT_THB2%SWVER%.hex"
 @make -s clean
 @make -s -j PROJECT_NAME=BOOT_THB2%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_THB2"
@@ -113,6 +120,13 @@
 @if not exist "build\BOOT_KEY2%SWVER%.hex" goto :error
 @copy "build\BOOT_KEY2%SWVER%.hex" .\bin
 @copy "build\BOOT_KEY2%SWVER%.bin" .\boot
+@
+@del /Q "build\BOOT_TH04%SWVER%.hex"
+@make -s clean
+@make -s -j PROJECT_NAME=BOOT_TH04%SWVER% BOOT_OTA=1 POJECT_DEF="-DDEVICE=DEVICE_TH04"
+@if not exist "build\BOOT_TH04%SWVER%.hex" goto :error
+@copy "build\BOOT_TH04%SWVER%.hex" .\bin
+@copy "build\BOOT_TH04%SWVER%.bin" .\boot
 @exit
 :error
 @echo "Error!" 

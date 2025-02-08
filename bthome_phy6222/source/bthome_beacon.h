@@ -131,6 +131,11 @@ typedef struct __attribute__((packed)) _adv_bthome_data2_t {
 	uint8_t		button; //  =1 press, =2 double_press ... https://bthome.io/format/
 	uint8_t		c_id;	// = BtHomeID_count32
 	uint32_t	counter;
+#elif (DEV_SERVICES & SERVICE_RDS)
+	uint8_t		o_id;	// = BtHomeID_opened ?
+	uint8_t		opened;
+	uint8_t		c_id;	// = BtHomeID_count32
+	uint32_t	counter;
 #endif
 } adv_bthome_data2_t, * padv_bthome_data2_t; // size: 5
 

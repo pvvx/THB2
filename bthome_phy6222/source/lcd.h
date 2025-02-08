@@ -10,8 +10,9 @@
 
 #include "config.h"
 #if (DEV_SERVICES & SERVICE_SCREEN)
+#include "dev_i2c.h"
 
-/*
+/*  DEVICE_TH05D
  *  TH-05 v1.3 LCD buffer:  byte.bit
                --7.7--         --6.7--            --4.3--             
         |    |         |     |         |        |         |           
@@ -36,6 +37,34 @@
 */
 
 /*
+ *  DEVICE_TH04
+ *  LCD buffer:  byte.bit
+
+              --0.7--         --1.7--            --2.7--          BAT
+       |    |         |     |         |        |         |        3.6
+       |   0.6       0.3   1.6       1.3      2.6       2.3
+       |    |         |     |         |        |         |      o 3.5
+-3.0- 0.0     --0.2--         --1.2--            --2.2--          +--- 3.5
+       |    |         |     |         |        |         |     3.5|
+       |   0.5       0.1   1.5       1.1      2.5       2.1       ---- 3.4
+       |    |         |     |         |  1.0   |         |     3.5|
+              --0.4--         --1.4--     *      --2.4--          ---- 2.0
+
+                                        --4.7--         --5.7--
+                                      |         |     |         |
+          3.3      3.3               4.6       4.3   5.6       5.3
+          / \      / \                |         |     |         |
+    3.7(  \_/  3.2 \_/  )3.7            --4.2--         --5.2--
+          3.2  / \ 3.2                |         |     |         |
+               \_/                   4.5       4.1   5.5       5.1     %
+               3.3                    |         |     |         |     4.0
+                                        --4.4--         --5.4--
+                           OO 5.0
+ None: 3.1
+*/
+
+/*
+ *  DEVICE_TH05
  *  TH-05 v1.4 LCD buffer:  byte.bit
 
          --0.4--         --1.4--            --2.4--          BAT
@@ -61,7 +90,7 @@
  None: 3.1, 3.3
 */
 
-/*
+/*  DEVICE_TH05F
  *  THB05F LCD buffer:  byte.bit
 
          --0.4--         --1.4--            --2.4--          BAT
@@ -88,6 +117,7 @@
 */
 
 /*
+ *  DEVICE_THB1, DEVICE_THB3
  *  THB1 LCD buffer:  byte.bit
 
          --0.0--         --1.0--            --2.0--          BAT
@@ -123,6 +153,8 @@
 #define LCD_BUF_SIZE	6
 #elif (DEVICE == DEVICE_TH05F)
 #define LCD_BUF_SIZE	6
+#elif (DEVICE == DEVICE_TH04)
+#define LCD_BUF_SIZE	8
 #else
 #error "DEVICE Not released!"
 #endif

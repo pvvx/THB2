@@ -10,7 +10,10 @@
 "?","?","?",
 "bin/KEY2_v20.bin",
 "?",
-"bin/KEY2_v20.bin"],
+"bin/KEY2_v20.bin",
+"?",
+"bin/TH04_v20.bin"
+],
 "updateboot":[
 "update_boot/BOOT_THB2_v20.bin",
 "update_boot/BOOT_BTH01_v20.bin",
@@ -21,5 +24,7 @@
 "update_boot/BOOT_TH05F_v20.bin",
 "update_boot/BOOT_THB3_v20.bin",
 "?","?","?","?","?",
-"update_boot/BOOT_KEY2_v20.bin"]
+"update_boot/BOOT_KEY2_v20.bin",
+"?",
+"update_boot/BOOT_TH04_v20.bin"]
 }

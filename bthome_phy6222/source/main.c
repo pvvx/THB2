@@ -310,6 +310,31 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P18, GPIO_PULL_DOWN }, // PN10 ?
 		{ GPIO_P20, GPIO_FLOATING }, // connect to GND
 		{ GPIO_P34, GPIO_FLOATING }  // connect to +Vbat
+
+#elif (DEVICE == DEVICE_TH04)
+		{ GPIO_P00, GPIO_PULL_DOWN },
+		{ GPIO_P02, GPIO_PULL_DOWN },
+		{ GPIO_P03, GPIO_FLOATING  },	// SCL
+		{ GPIO_P07, GPIO_FLOATING  },	// SDA
+#ifdef GPIO_TRG
+		{ GPIO_P09, GPIO_FLOATING }, // TX - GPIO_TRG
+#else
+		{ GPIO_P09, GPIO_PULL_UP }, // TX
+#endif
+		{ GPIO_P10, GPIO_PULL_DOWN },	// RX
+		{ GPIO_P11, GPIO_PULL_UP   },  	// VBat
+		{ GPIO_P14, GPIO_PULL_DOWN },
+		{ GPIO_P15, GPIO_PULL_DOWN },
+		{ GPIO_P16, GPIO_PULL_DOWN },
+		{ GPIO_P17, GPIO_PULL_DOWN },
+		{ GPIO_P18, GPIO_PULL_DOWN },
+		{ GPIO_P20, GPIO_PULL_DOWN },
+		{ GPIO_P23, GPIO_PULL_DOWN },
+		{ GPIO_P24, GPIO_PULL_UP   },	// Key
+		{ GPIO_P31, GPIO_PULL_DOWN },
+		{ GPIO_P32, GPIO_PULL_DOWN },
+		{ GPIO_P33, GPIO_PULL_DOWN },
+		{ GPIO_P34, GPIO_PULL_DOWN }
 #else
 #error "DEVICE Not released!"
 #endif

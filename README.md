@@ -11,10 +11,14 @@ Custom firmware for Tuya devices based on the PHY622x2 chipset.
 |:---:|:---:|:---:|:---:|
 | <img src="https://pvvx.github.io/THB1/img/THB1.jpg" width="120"/> | <img src="https://pvvx.github.io/THB2/img/THB2.jpg" width="80"/> | <img src="https://pvvx.github.io/THB3/img/THB3.jpg" width="120"/> | <img src="https://pvvx.github.io/BTH01/img/BTH01.jpg" width="100"/> |
 
-| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) |  [KEY2 (iSearching)](https://pvvx.github.io/iSearching) |
+| [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | [TH05_V1.4](https://pvvx.github.io/TH-05) | [TH05F](https://pvvx.github.io/TH05F) | [TH04 V1.5](https://pvvx.github.io/TH04) |
 |:---:|:---:|:---:|:---:|
-| <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> |
-| | | | Support "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
+| <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/TH04/img/TH04.jpg" width="120"/> |
+
+|  [KEY2 (iSearching)](https://pvvx.github.io/iSearching) |
+|:---:|
+| <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> |
+| Support "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
 
 
 This firmware works with [Home Assistant](https://www.home-assistant.io/) and other software running in the [BTHome](https://bthome.io/) format.
@@ -44,10 +48,11 @@ The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only u
 
 | Device | Boot file | OTA file | Printed circuit board labelling |
 |:---:|:---:|:---:|:---:|
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v20.hex | BTH01_v20.bin | no |
 | [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v20.hex | THB1_v20.bin | no |
 | [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v20.hex | THB2_v20.bin | no |
 | [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v20.hex | THB2_v20.bin | no |
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v20.hex | BTH01_v20.bin | no |
+| [TH04](https://pvvx.github.io/TH04) | BOOT_TH04_v20.hex | TH04_v20.bin | QC0000_L11_PHY6252_TEMP_HUM_V1.5 (chip: PHY6252, VKL060) |
 | [TH05_V1.4](https://pvvx.github.io/TH-05) | BOOT_TH05_v20.hex | TH05_v20.bin | TH05_V1.4, TH05_V1.5, TH05_V1.6 (chip: BL55028) |
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v20.hex | TH05D_v20.bin | RSH-TH05-V1.3 (chip: BL55072) |
 | [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v20.hex | TH05F_v20.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
@@ -107,7 +112,7 @@ The sensors are detected automatically, but have different ports depending on th
 | 1.7 | <ul><li>Fixed en error (> 42 C) for sensor CHT8305</li></ul> |
 | 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 | 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
-| 2.0 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li><li>Fixed display errors for TH05D</li></ul> |
+| 2.0 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li><li>Fixed display errors for TH05D</li><li>Added [TH04](https://pvvx.github.io/TH04)</li></ul> |
 
 
 
@@ -176,7 +181,7 @@ python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_XXX_vXX.hex
 2. Run:
 
 ```
-python3 rdwr_phy62x2.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
+python3 rdwr_phy62x2.py -p COM11 -r rf ff_thb2.bin
 ```
 
 3. Save the resulting ff_thb2.bin file.
@@ -190,10 +195,10 @@ python3 rdwr_phy62x2.py -p COM11 -r rc 0x11000000 0x80000 ff_thb2.bin
 3. Run:
 
 ```
-python rdwr_phy62x2.py -p COM11 -b 1000000 -r we 0 ff_thb2.bin
+python rdwr_phy62x2.py -p COM11 -b 500000 -r we 0 ff_thb2.bin
 ```
 
-> Not all USB-COM adapters support 1Mbit. Then remove the `-b 1000000` option or select a different baud rate (115200, 250000, 500000, 1000000).
+> Not all USB-COM adapters support 0.5Mbit. Then remove the `-b 500000` option or select a different baud rate (115200, 250000, 500000, 1000000).
 
 4. The firmware has been flashed and the device should work.
 
