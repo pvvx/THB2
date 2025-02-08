@@ -105,13 +105,13 @@ void show_temp_symbol(LCD_TEMP_SYMBOLS symbol) {
  * 7 = "(ooo)" */
 void show_smiley(LCD_SMILEY_SYMBOLS symbol) {
     if (symbol & 1)
-    	lcdd.display_buff[3] |= BIT(2);
-	else
-		lcdd.display_buff[3] &= ~BIT(2);
-	if (symbol & 2)
-		lcdd.display_buff[3] |= BIT(3);
+    	lcdd.display_buff[3] |= BIT(3);
 	else
 		lcdd.display_buff[3] &= ~BIT(3);
+	if (symbol & 2)
+		lcdd.display_buff[3] |= BIT(2);
+	else
+		lcdd.display_buff[3] &= ~BIT(2);
 	if(symbol & 4)
 		lcdd.display_buff[3] |= BIT(7);
 	else
@@ -169,24 +169,34 @@ void show_big_number_x10(int16_t number) {
     }
 }
 
+static void sumbol5(uint8_t c) {
+	lcdd.display_buff[4] |= c & 0x0e;
+	lcdd.display_buff[5] |= c & 0xf0;
+}
+
+static void sumbol4(uint8_t c) {
+	lcdd.display_buff[5] |= c & 0x0e;
+	lcdd.display_buff[4] |= c & 0xf0;
+}
+
 /* -9 .. 99 */
 void show_small_number(int16_t number, bool percent) {
 
-	lcdd.display_buff[4] = percent? BIT(0) : 0;
+	lcdd.display_buff[4] = percent? BIT(0) : 0; // "%"
 	lcdd.display_buff[5] &= BIT(0); // connect
 	if (number > 99) {
-		lcdd.display_buff[4] |= LCD_SYM_H; // "H"
-		lcdd.display_buff[5] |= LCD_SYM_i; // "i"
+		sumbol4(LCD_SYM_H); // "H"
+		sumbol5(LCD_SYM_i); // "i"
 	} else if (number < -9) {
-		lcdd.display_buff[4] |= LCD_SYM_L; // "L"
-		lcdd.display_buff[5] |= LCD_SYM_o; // "o"
+		sumbol4(LCD_SYM_L); // "L"
+		sumbol5(LCD_SYM_o); // "o"
 	} else {
 		if (number < 0) {
 			number = -number;
-			lcdd.display_buff[4] |= BIT(2); // "-"
+			lcdd.display_buff[5] |= BIT(2); // "-"
 		}
-		if (number > 9) lcdd.display_buff[4] |= display_numbers[number / 10];
-		lcdd.display_buff[5] |= display_numbers[number %10];
+		if (number > 9) sumbol4(display_numbers[number / 10]);
+		sumbol5(display_numbers[number %10]);
 	}
 }
 
@@ -201,10 +211,11 @@ void lcd_show_version(void) {
 	lcdd.display_buff[1] = LCD_SYM_P;
 	lcdd.display_buff[2] = LCD_SYM_P;
 #endif
-	lcdd.display_buff[3] &= BIT(6); // bat
-	lcdd.display_buff[4] &= BIT(3); // connect
-	lcdd.display_buff[4] |= display_numbers[(APP_VERSION>>4) & 0x0f];
-	lcdd.display_buff[5] = display_numbers[APP_VERSION & 0x0f];
+	lcdd.display_buff[3] = 0; // bat
+	lcdd.display_buff[4] = 0; // %
+	lcdd.display_buff[5] = 0; // connect
+	sumbol4(display_numbers[(APP_VERSION>>4) & 0x0f]);
+	sumbol5(display_numbers[APP_VERSION & 0x0f]);
 	update_lcd();
 }
 
@@ -212,14 +223,14 @@ void lcd_show_version(void) {
 void chow_clock(void) {	uint32_t tmp = clkt.utc_time_sec / 60;
 	uint32_t min = tmp % 60;
 	uint32_t hrs = (tmp / 60) % 24;
-	lcdd.display_buff[0] = 0;
-	lcdd.display_buff[1] &= BIT(7); // connect
-	lcdd.display_buff[1] |= display_numbers[hrs / 10];
-	lcdd.display_buff[2] = display_numbers[hrs % 10];
-	lcdd.display_buff[3] &= BIT(0) | BIT(4) | BIT(5) | BIT(6) | BIT(7); // bat
-	lcdd.display_buff[4] = display_numbers[min / 10];
-	lcdd.display_buff[5] = display_numbers[min % 10];
-	lcdd.display_buff[6] = 0;
+	lcdd.display_buff[0] = display_numbers[hrs / 10];
+	lcdd.display_buff[1] = display_numbers[hrs % 10];
+	lcdd.display_buff[2] = 0;
+	lcdd.display_buff[3] &= BIT(6); // bat
+	lcdd.display_buff[4] = 0;
+	lcdd.display_buff[5] &= BIT(0); // connect
+	sumbol4(display_numbers[min / 10]);
+	sumbol5(display_numbers[min % 10]);
 	update_lcd();
 }
 

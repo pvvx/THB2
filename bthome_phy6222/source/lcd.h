@@ -154,7 +154,7 @@
 #elif (DEVICE == DEVICE_TH05F)
 #define LCD_BUF_SIZE	6
 #elif (DEVICE == DEVICE_TH04)
-#define LCD_BUF_SIZE	8
+#define LCD_BUF_SIZE	6
 #else
 #error "DEVICE Not released!"
 #endif
