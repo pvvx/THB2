@@ -371,7 +371,7 @@ class phyflasher:
 		print ('Timeout!')
 		return False
 	def EraseSectorsFlash(self, offset = 0, size = MAX_FLASH_SIZE):
-		count = int((size + PHY_FLASH_SECTOR_SIZE - 1) / PHY_FLASH_SECTOR_SIZE)
+		count = int((size + PHY_FLASH_SECTOR_SIZE - 1 + (offset & (PHY_FLASH_SECTOR_SIZE - 1))) / PHY_FLASH_SECTOR_SIZE)
 		offset &= PHY_FLASH_SECTOR_MASK
 		if count > 0 and count < 0x10000 and offset >= 0: # 1 byte .. 16 Mbytes
 			while count > 0:
