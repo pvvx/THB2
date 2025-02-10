@@ -228,6 +228,7 @@ typedef struct _lcd_data_t {
 extern lcd_data_t lcdd;
 
 void init_lcd(void);
+void power_off_lcd(void);
 void update_lcd(void);
 //void show_small_number(int16_t number, bool percent);
 //void show_big_number_x10(int16_t number);

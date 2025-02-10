@@ -210,6 +210,27 @@ thsensor_def_cfg_t * init_cht83xx_sensor(void) {
 }
 
 __ATTR_SECTION_XIP__
+void power_off_sensor(void) {
+	if(thsensor_cfg.i2c_addr) {
+		if(thsensor_cfg.i2c_addr) {
+			init_i2c(&i2c_dev0);
+			if(thsensor_cfg.i2c_addr == AHT2x_I2C_ADDR) {
+				// Soft reset command
+				send_i2c_byte(&i2c_dev0, thsensor_cfg.i2c_addr, AHT2x_CMD_RST);
+			} else if(thsensor_cfg.vid == CHT8305_VID) {
+				// Soft reset command
+				send_i2c_wreg(&i2c_dev0, thsensor_cfg.i2c_addr, CHT8305_REG_CFG,
+				CHT8305_CFG_SOFT_RESET | CHT8305_CFG_MODE);
+			} else if(thsensor_cfg.vid == CHT832x_VID) {
+				// Soft reset command
+				send_i2c_wcmd(&i2c_dev0, thsensor_cfg.i2c_addr, CHT832x_CMD_RST);
+			}
+			deinit_i2c(&i2c_dev0);
+		}
+	}
+}
+
+__ATTR_SECTION_XIP__
 void init_sensor(void) {
 	thsensor_def_cfg_t *ptabinit = NULL;
 	thsensor_cfg.read_sensor = NULL;

@@ -303,6 +303,13 @@ void send_to_lcd(uint8_t *pbuf, int len) {
 	}
 }
 
+void power_off_lcd(void) {
+	if (lcdd.lcd_i2c_addr) {
+		init_i2c(&i2c_dev1);
+		send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd0); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
+		deinit_i2c(&i2c_dev1);
+	}
+}
 
 void update_lcd(void) {
 #if (OTA_TYPE == OTA_TYPE_APP)

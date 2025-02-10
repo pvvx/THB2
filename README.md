@@ -113,7 +113,7 @@ The sensors are detected automatically, but have different ports depending on th
 | 1.8 | <ul><li>Added display of temperature in degrees Fahrenheit</li></ul> |
 | 1.9 | <ul><li>Fixed the bug of restoring the changed device name after power reset</li></ul> |
 | 2.0 | <ul><li>Added processing of the CHT832x sensor (Support board TH05Y_v3.1)</li><li>Fixing a bug in BOOT OTA bin files</li><li>Added sleep function when battery is completely discharged</li><li>Added experimental firmware for [iSearching](https://pvvx.github.io/iSearching) key fobs on ST17H66B chip (support "FindMy")</li><li>Fixed display errors for TH05D</li><li>Added [TH04](https://pvvx.github.io/TH04)</li></ul> |
-
+| 2.1 | <ul><li>Changed battery voltage averaging, switching to deep sleep mode for 60 minutes when voltage drops below 1.9 V and turning off all loads. </li></ul> |
 
 
 ## Firmware

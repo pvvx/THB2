@@ -31,6 +31,7 @@
 #define CHT832x_MID_CRC		0x535959 // CRC, MID
 #define CHT832x_VID			0x2083	// VID
 #define CHT832x_CMD_OSM		0x2400	// start measure T/H (One-shot mode)
+#define CHT832x_CMD_RST		0x30A2	// start measure T/H (One-shot mode)
 
 /* CHT8310 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310 Advanced Datasheet Ver1.1 20230927.pdf */
 /* CHT8315 https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8315 Advanced Datasheet Ver1.6 20230927.pdf */
@@ -205,6 +206,7 @@ extern thsensor_cfg_t thsensor_cfg;
 #define thsensor_cfg_send_size 19
 
 void init_sensor(void);
+void power_off_sensor(void);
 void start_measure(void);
 int read_sensors(void);
 

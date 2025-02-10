@@ -10,6 +10,9 @@
 #include "pwrmgr.h"
 #include "jump_function.h"
 #include "sensors.h"
+#if (DEV_SERVICES & SERVICE_SCREEN)
+#include "lcd.h"
+#endif
 /*
 #ifndef ADC_PIN
 #define ADC_PIN GPIO_P11
@@ -20,17 +23,12 @@
 */
 #define MIN_ADC_CH 2
 
-//--- check battery
-#define BAT_AVERAGE1_SHL		3 // 8*4 = 32 минуты если шаг измерения 60 сек
-#define BAT_AVERAGE1_COUNT	(1 << BAT_AVERAGE1_SHL) // 8
-#define BAT_AVERAGE2_SHL		2
-#define BAT_AVERAGE2_COUNT	(1 << BAT_AVERAGE2_SHL) // 4
+#define BAT_AVERAGE_COUNT	32
+
 struct {
-	uint32_t buf2[BAT_AVERAGE2_COUNT];
-	uint16_t buf1[BAT_AVERAGE1_COUNT];
+	uint32_t summ;
+	uint16_t count;
 	uint16_t battery_mv;
-	uint8_t index1;
-	uint8_t index2;
 } bat_average;
 
 static void init_adc_batt(void);
@@ -162,28 +160,31 @@ static void init_adc_batt(void) {
 }
 
 void low_vbat(void) {
-#if (DEV_SERVICES & SERVICE_BUTTON)
-	pwroff_cfg_t pwr_wkp_cfg[]= {
-#if (DEV_SERVICES & SERVICE_BUTTON)
-			{ GPIO_KEY, KEY_PRESSED, 0 },
+#if (DEV_SERVICES & SERVICE_SCREEN)
+    power_off_lcd();
 #endif
-//#if (DEV_SERVICES & SERVICE_RDS)
-//			{ GPIO_INP, POL_FALLING, 0 }
-//#endif
-	};
-    // 0.48 uA at 3.0V
-    hal_pwrmgr_poweroff( pwr_wkp_cfg, sizeof(pwr_wkp_cfg)/sizeof(pwr_wkp_cfg[0]) );
-#else
+#if (DEV_SERVICES & SERVICE_THS)
+    power_off_sensor();
+#endif
+#ifdef GPIO_SPWR  // питание сенсора CHT8305_VDD
+	hal_gpio_pull_set(GPIO_SPWR, GPIO_FLOATING);
+	hal_gpio_pull_set(I2C_SDA, GPIO_FLOATING);
+	hal_gpio_pull_set(I2C_SCL, GPIO_FLOATING);
+	hal_gpio_write(GPIO_SPWR, 0);
+#endif
+#ifdef GPIO_LPWR // питание LCD драйвера
+	hal_gpio_pull_set(GPIO_LPWR, GPIO_FLOATING);
+	hal_gpio_write(GPIO_LPWR, 0);
+#endif
+#ifdef GPIO_LED
+	hal_gpio_write(GPIO_LED, LED_OFF);
+#endif
     // 1.67 uA at 3.0V
     hal_pwrmgr_enter_sleep_rtc_reset((60*60)<<15); // 60 minutes
-#endif
-
 }
 
 
 void check_battery(void) {
-	uint32_t i;
-	uint32_t summ;
 	if(bat_average.battery_mv == 0)
 		return;
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
@@ -193,30 +194,17 @@ void check_battery(void) {
 	if (bat_average.battery_mv < 1900)
 		low_vbat();
 #endif
-	if(bat_average.buf1[0] == 0) {
-		for(i = 0; i < BAT_AVERAGE1_COUNT; i++)
-			bat_average.buf1[i] = bat_average.battery_mv;
-		summ = bat_average.battery_mv << BAT_AVERAGE1_SHL;
-		for(i = 0; i < BAT_AVERAGE2_COUNT; i++)
-			bat_average.buf2[i] = summ;
-		measured_data.battery_mv = bat_average.battery_mv;
-	} else {
-		bat_average.index1++;
-		bat_average.index1 &= BAT_AVERAGE1_COUNT - 1;
-		if(bat_average.index1 == 0) {
-			bat_average.index2++;
-			bat_average.index2 &= BAT_AVERAGE2_COUNT - 1;
-		}
-		bat_average.buf1[bat_average.index1] = bat_average.battery_mv;
-		summ = 0;
-		for(i = 0; i < BAT_AVERAGE1_COUNT; i++)
-			summ += bat_average.buf1[i];
-		bat_average.buf2[bat_average.index2] = summ;
-		summ = 0;
-		for(i = 0; i < BAT_AVERAGE2_COUNT; i++)
-			summ += bat_average.buf2[i];
-		measured_data.battery_mv = summ >> (BAT_AVERAGE1_SHL + BAT_AVERAGE2_SHL);
+
+	bat_average.summ += bat_average.battery_mv;
+	bat_average.count++;
+
+	measured_data.battery_mv = bat_average.summ / bat_average.count;
+
+	if(bat_average.count >= BAT_AVERAGE_COUNT) {
+		bat_average.summ >>= 1;
+		bat_average.count >>= 1;
 	}
+
 	if (measured_data.battery_mv < 3000)
 		if (measured_data.battery_mv > 2000)
 			measured_data.battery = (measured_data.battery_mv - 2000) / 10;
