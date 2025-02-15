@@ -142,14 +142,14 @@ void show_big_number_x10(int16_t number) {
 			lcdd.display_buff[1] = 0; // no point, show: -99..1999
 			if (number < 0){
 				number = -number;
-				lcdd.display_buff[0] = BIT(2); // "-"
+				lcdd.display_buff[0] = BIT(1); // "-"
 			}
 			number = (number + 5) / 10; // round(div 10)
 		} else { // show: -9.9..199.9
 			lcdd.display_buff[1] = BIT(3); // point,
 			if (number < 0){
 				number = -number;
-				lcdd.display_buff[0] = BIT(2); // "-"
+				lcdd.display_buff[0] = BIT(1); // "-"
 			}
 		}
 		/* number: -99..1999 */
