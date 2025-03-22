@@ -65,7 +65,7 @@ if __name__ == "__main__":
         app_hex.unlink(missing_ok=True)
         app_bin.unlink(missing_ok=True)
         make('clean')
-        make('-j', f'PROJECT_NAME={device}{SWVER}', f'POJECT_DEF="-DDEVICE=DEVICE_{device}"')
+        make('-j', f'PROJECT_NAME={device}{SWVER}', f'PROJECT_DEF="-DDEVICE=DEVICE_{device}"')
         ensure_existing(app_bin)
         shutil.copy(app_bin, bin_dir)
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         boot_hex.unlink(missing_ok=True)
         boot_bin.unlink(missing_ok=True)
         make('clean')
-        make('-j', f'PROJECT_NAME=BOOT_{device}{SWVER}', 'BOOT_OTA=1', f'POJECT_DEF="-DDEVICE=DEVICE_{device}"')
+        make('-j', f'PROJECT_NAME=BOOT_{device}{SWVER}', 'BOOT_OTA=1', f'PROJECT_DEF="-DDEVICE=DEVICE_{device}"')
         ensure_existing(boot_hex)
         ensure_existing(boot_bin)
         shutil.copy(boot_hex, bin_dir)

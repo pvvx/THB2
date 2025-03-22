@@ -1,6 +1,6 @@
 ##############################################################################
 PROJECT_NAME ?= bthome_phy6222
-#POJECT_DEF ?= -DDEVICE=DEVICE_THB2
+#PROJECT_DEF ?= -DDEVICE=DEVICE_THB2
 ##############################################################################
 COM_PORT = COM6
 ##############################################################################
@@ -39,7 +39,7 @@ INCLUDES = -I$(SRC_PATH)
 SRCS = $(addprefix $(SRC_PATH)/, $(SRC_PRJ))
 ##############################################################################
 DEFINES += -D__GCC
-DEFINES += $(POJECT_DEF)
+DEFINES += $(PROJECT_DEF)
 DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
 #DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_NO_SLEEP
 DEFINES += -DDEBUG_INFO=0
