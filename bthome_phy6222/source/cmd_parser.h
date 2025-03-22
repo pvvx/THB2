@@ -42,7 +42,7 @@ typedef enum {
 	CMD_ID_LOGGER   = 0x35, // Read memory measures
 	CMD_ID_CLRLOG	= 0x36, // Clear memory measures
 	CMD_ID_RDS      = 0x40, // Get/Set Reed switch config (DIY devices)
-	CMD_ID_TRG      = 0x44, // Get/Set tigger data config
+	CMD_ID_TRG      = 0x44, // Get/Set trigger data config
 	CMD_ID_TRG_OUT  = 0x45, // Get/Set trg out, Send Reed switch and trg data
 	CMD_ID_HXC      = 0x49, // Get/Set HX71X config
 	CMD_ID_CFG      = 0x55,	// Get/Set device config

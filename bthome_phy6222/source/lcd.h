@@ -239,7 +239,8 @@ void show_ble_symbol(bool state);
 
 void chow_lcd(int flg);
 void lcd_show_version(void);
-extern void send_to_lcd(uint8_t *pbuf, int len);
+void lcd_show_reset(void);
+void send_to_lcd(uint8_t *pbuf, int len);
 
 #if (OTA_TYPE == OTA_TYPE_APP)
 void chow_ext_data(void);

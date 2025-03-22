@@ -27,6 +27,22 @@ dev_i2c_t i2c_dev1 = {
 		.i2c_num = 0
 };
 
+#define LCD_SYM67_A  0b011101110 // "A"
+#define LCD_SYM67_a  0b010110110 // "a"
+#define LCD_SYM67_b  0b000111110 // "b"
+#define LCD_SYM67_C  0b010011010 // "C"
+#define LCD_SYM67_d  0b001110110 // "d"
+#define LCD_SYM67_E  0b010011110 // "E"
+#define LCD_SYM67_F  0b010001110 // "F"
+#define LCD_SYM67_H  0b001101110 // "H"
+#define LCD_SYM67_h  0b001001110 // "h"
+#define LCD_SYM67_i  0b000000010 // "i"
+#define LCD_SYM67_L  0b000011010 // "L"
+#define LCD_SYM67_o  0b000110110 // "o"
+#define LCD_SYM67_P  0b011001110 // "P"
+#define LCD_SYM67_r  0b000000110 // "r"
+#define LCD_SYM67_t  0b000011110 // "t"
+
 /* 0,1,2,3,4,5,6,7,8,9,A,b,C,d,E,F*/
 const uint8_t display_numbers67[] = {
 		// 76543210
@@ -40,24 +56,29 @@ const uint8_t display_numbers67[] = {
 		0b011100000, // 7
 		0b011111110, // 8
 		0b011111100, // 9
-		0b011101110, // A
-		0b000111110, // b
-		0b010011010, // C
-		0b001110110, // d
-		0b010011110, // E
-		0b010001110  // F
+		LCD_SYM67_A,
+		LCD_SYM67_b,
+		LCD_SYM67_C,
+		LCD_SYM67_d,
+		LCD_SYM67_E,
+		LCD_SYM67_F
 };
-#define LCD_SYM67_b  0b000111110 // "b"
-#define LCD_SYM67_H  0b001101110 // "H"
-#define LCD_SYM67_h  0b001001110 // "h"
-#define LCD_SYM67_i  0b000000010 // "i"
-#define LCD_SYM67_L  0b000011010 // "L"
-#define LCD_SYM67_o  0b000110110 // "o"
-#define LCD_SYM67_t  0b000011110 // "t"
-#define LCD_SYM67_0  0b011111010 // "0"
-#define LCD_SYM67_A  0b011101110 // "A"
-#define LCD_SYM67_a  0b010110110 // "a"
-#define LCD_SYM67_P  0b011001110 // "P"
+
+#define LCD_SYM45_A  0b011101110 // "A"
+#define LCD_SYM45_a  0b001101111 // "a"
+#define LCD_SYM45_b  0b011100011 // "b"
+#define LCD_SYM45_C  0b010101001 // "C"
+#define LCD_SYM45_d  0b001100110 // "d"
+#define LCD_SYM45_E  0b011101001 // "E"
+#define LCD_SYM45_F  0b011101000 // "F"
+#define LCD_SYM45_H  0b011100110 // "H"
+#define LCD_SYM45_h  0b011100010 // "h"
+#define LCD_SYM45_i  0b000100000 // "i"
+#define LCD_SYM45_L  0b010100001 // "L"
+#define LCD_SYM45_o  0b001100011 // "o"
+#define LCD_SYM45_P  0b011101100 // "P"
+#define LCD_SYM45_S  0b011001011 // "S"
+#define LCD_SYM45_t  0b011100001 // "t"
 
 const uint8_t display_numbers45[] = {
 		// 76543210
@@ -71,25 +92,28 @@ const uint8_t display_numbers45[] = {
 		0b000001110, // 7
 		0b011101111, // 8
 		0b011001111, // 9
-		0b011101110, // A
-		0b011000011, // b
-		0b010101001, // C
-		0b001100110, // d
-		0b011101001, // E
-		0b011101000  // F
+		LCD_SYM45_A, // A
+		LCD_SYM45_b, // b
+		LCD_SYM45_C, // C
+		LCD_SYM45_d, // d
+		LCD_SYM45_E, // E
+		LCD_SYM45_F  // F
 };
 
-#define LCD_SYM45_b  0b011100011 // "b"
-#define LCD_SYM45_H  0b011100110 // "H"
-#define LCD_SYM45_h  0b011100010 // "h"
-#define LCD_SYM45_i  0b000100000 // "i"
-#define LCD_SYM45_L  0b010100001 // "L"
-#define LCD_SYM45_o  0b001100011 // "o"
-#define LCD_SYM45_t  0b011100001 // "t"
-#define LCD_SYM45_0  0b010101111 // "0"
-#define LCD_SYM45_A  0b011101110 // "A"
-#define LCD_SYM45_a  0b001101111 // "a"
-#define LCD_SYM45_P  0b011101100 // "P"
+#define LCD_SYM12_A  0b001110111 // "A"
+#define LCD_SYM12_a  0b001101101 // "a"
+#define LCD_SYM12_b  0b001111100 // "b"
+#define LCD_SYM12_C  0b001011001 // "C"
+#define LCD_SYM12_d  0b001101110 // "d"
+#define LCD_SYM12_E  0b001111001 // "E"
+#define LCD_SYM12_F  0b001110001 // "F"
+#define LCD_SYM12_H  0b001110110 // "H"
+#define LCD_SYM12_h  0b001110100 // "h"
+#define LCD_SYM12_i  0b001000000 // "i"
+#define LCD_SYM12_L  0b001011000 // "L"
+#define LCD_SYM12_o  0b001101100 // "o"
+#define LCD_SYM12_P  0b001110011 // "P"
+#define LCD_SYM12_t  0b001111000 // "t"
 
 const uint8_t display_numbers12[] = {
 		// 76543210
@@ -103,25 +127,13 @@ const uint8_t display_numbers12[] = {
 		0b000000111, // 7
 		0b001111111, // 8
 		0b000111111, // 9
-		0b001110111, // A
-		0b001111100, // b
-		0b001011001, // C
-		0b001101110, // d
-		0b001111001, // E
-		0b001110001  // F
+		LCD_SYM12_A,
+		LCD_SYM12_b,
+		LCD_SYM12_C,
+		LCD_SYM12_d,
+		LCD_SYM12_E,
+		LCD_SYM12_F
 };
-
-#define LCD_SYM12_b  0b001111100 // "b"
-#define LCD_SYM12_H  0b001110110 // "H"
-#define LCD_SYM12_h  0b001110100 // "h"
-#define LCD_SYM12_i  0b001000000 // "i"
-#define LCD_SYM12_L  0b001011000 // "L"
-#define LCD_SYM12_o  0b001101100 // "o"
-#define LCD_SYM12_t  0b001111000 // "t"
-#define LCD_SYM12_0  0b001011111 // "0"
-#define LCD_SYM12_A  0b001110111 // "A"
-#define LCD_SYM12_a  0b001101101 // "a"
-#define LCD_SYM12_P  0b001110011 // "P"
 
 lcd_data_t lcdd;
 
@@ -134,7 +146,7 @@ const uint8_t lcd_init_cmd[]	=	{
 		0xf0, // blink control off,  0xf2 - blink
 		0xfc, // All pixel control (APCTL): Normal
 		0x60,
-		0x00,0x00,000,0x00,0x00,0x00,0x00,0x00,0x00
+		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 };
 
 /* 0x0 = "  "
@@ -229,7 +241,7 @@ void show_big_number_x10(int16_t number) {
 		if (number > 999) lcdd.display_buff[7] = BIT(0); // "1" 1000..1999
 		if (number > 99) lcdd.display_buff[7] |= display_numbers67[(number / 100) % 10];
 		if (number > 9) lcdd.display_buff[6] |= display_numbers67[(number / 10) % 10];
-		else lcdd.display_buff[6] |= LCD_SYM67_0; // "0"
+		else lcdd.display_buff[6] |= display_numbers67[0];
 	    lcdd.display_buff[4] |= display_numbers45[number %10] & 0x0f;
 	    lcdd.display_buff[5] |= display_numbers45[number %10] & 0xe0;
 	}
@@ -277,6 +289,18 @@ void lcd_show_version(void) {
 #endif
 	lcdd.display_buff[1] = display_numbers12[(APP_VERSION>>4) & 0x0f];
 	lcdd.display_buff[2] = display_numbers12[APP_VERSION & 0x0f];
+	update_lcd();
+}
+
+void lcd_show_reset(void) {
+	lcdd.display_buff[7] = LCD_SYM67_r;
+	lcdd.display_buff[6] = LCD_SYM67_E;
+	lcdd.display_buff[5] = LCD_SYM45_S & 0xe0;
+	lcdd.display_buff[4] = LCD_SYM45_S & 0x0f;
+	lcdd.display_buff[1] = LCD_SYM12_E;
+	lcdd.display_buff[2] = LCD_SYM12_t;
+	lcdd.display_buff[3] = 0x00;
+	lcdd.display_buff[0] = 0x00;
 	update_lcd();
 }
 
