@@ -182,12 +182,12 @@ python3 rdwr_phy62x2.py -p COM11 -r we 0x10000 xxx_vxx.bin
 2. Запустить:
 
 ```
-python3 rdwr_phy62x2.py -p COM11 -b 500000 -r rf ff_thb2.bin
+python3 rdwr_phy62x2.py -p COM11 -b 500000 -r rf fullflash.bin
 ```
 
 Не все адаптеры USB-COM поддерживают 0.5Mbit. Тогда удалите опцию `-b 500000` или выберите другой вариант Baud rate (115200, 250000, 500000, 1000000).
 
-3. Полученный файл ff_thb2.bin сохранить.
+3. Полученный файл fullflash.bin сохранить.
 
 ## Восстановление оригинальной прошивки
 

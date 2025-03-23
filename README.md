@@ -181,10 +181,10 @@ python3 rdwr_phy62x2.py -p COM11 -e -r wh BOOT_XXX_vXX.hex
 2. Run:
 
 ```
-python3 rdwr_phy62x2.py -p COM11 -r rf ff_thb2.bin
+python3 rdwr_phy62x2.py -p COM11 -r rf fullflash.bin
 ```
 
-3. Save the resulting ff_thb2.bin file.
+3. Save the resulting fullflash.bin file.
 
 ## Restoring the original firmware
 
