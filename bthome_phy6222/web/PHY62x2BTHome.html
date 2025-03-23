@@ -458,7 +458,7 @@ div#divChart {
 		const lang = getUserLang();
 
 		const tags = {
-			PREFIX: { en: 'Prefix named after devices(а)' },
+			PREFIX: { en: 'Device name prefix(es)' },
 			CONNECT: { en: 'Connect' },
 			DISCONNECT: { en: 'Disconnect', ru: 'Отключение' },
 			RECONNECT: { en: 'Reconnect', ru: 'Переподключение' },
@@ -470,6 +470,7 @@ div#divChart {
 			SHOW_SMILEY: { en: 'Show smiley' },
 			SHOW_TRIGGER: { en: 'Show trigger' },
 			DISCONNECT_DISPLAY: { en: 'Disconnect display' },
+			DISPLAY_SLEEP: { en: 'Automatic display sleep' },
 			ENCRYPTED_AD: { en: 'Encrypted advertising' },
 			MS: { en: 'ms' },
 			AD_INTERVAL: { en: 'Advertizing interval' },
@@ -1454,6 +1455,7 @@ function showConfig() {
 	$('chkCfgBindKey').checked = (devCfg.flg & 32) != 0;
 	$('chkCfgFahrenheit').checked = (devCfg.flg & 64) != 0;
 	$('chkCfgFindMy').checked = (devCfg.flg & 128) != 0;
+	$('chkCfgLcdSleep').checked = (devCfg.flg & 256) != 0;
 
 	let txPwr = 31;
 	el = $('selTxPwr');
@@ -1859,7 +1861,7 @@ function getDevName() {
 
 function chkDevCfg() {
 		if(devCfg.flg == null) return;
-		devCfg.flg &= 0xffffff00;
+		devCfg.flg &= 0xfffffe00;
 	    devCfg.flg |= ($('chkCfgNotify').checked) ? 1 : 0;
 	    devCfg.flg |= ($('chkCfgClock').checked) ? 2 : 0;
 	    devCfg.flg |= ($('chkCfgSmiley').checked) ? 4 : 0;
@@ -1868,6 +1870,7 @@ function chkDevCfg() {
 	    devCfg.flg |= ($('chkCfgBindKey').checked) ? 32 : 0;
 	    devCfg.flg |= ($('chkCfgFahrenheit').checked) ? 64 : 0;
 	    devCfg.flg |= ($('chkCfgFindMy').checked) ? 128 : 0;
+		devCfg.flg |= ($('chkCfgLcdSleep').checked) ? 256 : 0;
 		devCfg.tx_power = $('selTxPwr').value & 0x3f; // 0..0x1f -> -20..+5 dBm ? нелинейное  0x1f = +0 дБм
 		let connect_latency = parseInt($('inpLat').value); // = (connect_latency + 1)*30 ms
 		if (connect_latency < 0) {
@@ -2475,6 +2478,7 @@ window.onload = function() {
     <td><label><input type="checkbox" id="chkCfgSmiley"/><span data-i18ntag="SHOW_SMILEY">Отображать смайлик</span></label></td>
     <td><label><input type="checkbox" id="chkCfgTrg"/><span data-i18ntag="SHOW_TRIGGER">Отображать триггер</span></label></td>
     <td><label><input type="checkbox" id="chkCfgLcdOff"/><span data-i18ntag="DISCONNECT_DISPLAY">Отключить дисплей</span></label></td>
+    <td><label><input type="checkbox" id="chkCfgLcdSleep"/><span data-i18ntag="DISPLAY_SLEEP">Automatic display sleep</span></label></td>
     <td><label><input type="checkbox" id="chkCfgFahrenheit"/><span data-i18ntag="SHOW_TEMPF">Показывать температуру в градусах Фаренгейта</span></label></td>
   </tr>
 </table>

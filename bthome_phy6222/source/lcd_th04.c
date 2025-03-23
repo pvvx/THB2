@@ -27,6 +27,23 @@ dev_i2c_t i2c_dev1 = {
 		.i2c_num = 0
 };
 
+#define LCD_SYM_A  0b011101110 // "A"
+#define LCD_SYM_a  0b001011110 // "a"
+#define LCD_SYM_b  0b001110110 // "b"
+#define LCD_SYM_C  0b011110000 // "C"
+#define LCD_SYM_d  0b000111110 // "d"
+#define LCD_SYM_E  0b011110100 // "E"
+#define LCD_SYM_F  0b011100100 // "F"
+#define LCD_SYM_H  0b001101110 // "H"
+#define LCD_SYM_h  0b001100110 // "h"
+#define LCD_SYM_i  0b000100000 // "i"
+#define LCD_SYM_L  0b001110000 // "L"
+#define LCD_SYM_o  0b000110110 // "o"
+#define LCD_SYM_P  0b011101100 // "P"
+#define LCD_SYM_r  0b000100100 // "r"
+#define LCD_SYM_S  0b011010110 // "S"
+#define LCD_SYM_t  0b001110100 // "t"
+
 /* 0,1,2,3,4,5,6,7,8,9,A,b,C,d,E,F*/
 const uint8_t display_numbers[] = {
 	    //76543210
@@ -40,25 +57,13 @@ const uint8_t display_numbers[] = {
 		0b10001010, // 7
 		0b11111110, // 8
 		0b11011110, // 9
-		0b11101110, // A
-		0b01110110, // b
-		0b11110000, // C
-		0b00111110, // d
-		0b11110100, // E
-		0b11100100, // F
+		LCD_SYM_A,
+		LCD_SYM_b,
+		LCD_SYM_C,
+		LCD_SYM_d,
+		LCD_SYM_E,
+		LCD_SYM_F,
 };
-
-#define LCD_SYM_b  0b001110110 // "b"
-#define LCD_SYM_H  0b001101110 // "H"
-#define LCD_SYM_h  0b001100110 // "h"
-#define LCD_SYM_i  0b000100000 // "i"
-#define LCD_SYM_L  0b001110000 // "L"
-#define LCD_SYM_o  0b000110110 // "o"
-#define LCD_SYM_t  0b001110100 // "t"
-#define LCD_SYM_0  0b011111010 // "0"
-#define LCD_SYM_A  0b011101110 // "A"
-#define LCD_SYM_a  0b001011110 // "a"
-#define LCD_SYM_P  0b011101100 // "P"
 
 lcd_data_t lcdd;
 
@@ -71,7 +76,7 @@ const uint8_t lcd_init_cmd[]	=	{
 		0xf0, // blink control off,  0xf2 - blink
 		0xfc, // All pixel control (APCTL): Normal
 		0x0b,
-		0x04,0x04,000,0x00,0x04,0x04 //"-- --"
+		0x04,0x04,0x00,0x00,0x04,0x04 //"-- --"
 };
 
 
@@ -169,12 +174,12 @@ void show_big_number_x10(int16_t number) {
     }
 }
 
-static void sumbol5(uint8_t c) {
+static void symbol5(uint8_t c) {
 	lcdd.display_buff[4] |= c & 0x0e;
 	lcdd.display_buff[5] |= c & 0xf0;
 }
 
-static void sumbol4(uint8_t c) {
+static void symbol4(uint8_t c) {
 	lcdd.display_buff[5] |= c & 0x0e;
 	lcdd.display_buff[4] |= c & 0xf0;
 }
@@ -185,18 +190,18 @@ void show_small_number(int16_t number, bool percent) {
 	lcdd.display_buff[4] = percent? BIT(0) : 0; // "%"
 	lcdd.display_buff[5] &= BIT(0); // connect
 	if (number > 99) {
-		sumbol4(LCD_SYM_H); // "H"
-		sumbol5(LCD_SYM_i); // "i"
+		symbol4(LCD_SYM_H); // "H"
+		symbol5(LCD_SYM_i); // "i"
 	} else if (number < -9) {
-		sumbol4(LCD_SYM_L); // "L"
-		sumbol5(LCD_SYM_o); // "o"
+		symbol4(LCD_SYM_L); // "L"
+		symbol5(LCD_SYM_o); // "o"
 	} else {
 		if (number < 0) {
 			number = -number;
 			lcdd.display_buff[5] |= BIT(2); // "-"
 		}
-		if (number > 9) sumbol4(display_numbers[number / 10]);
-		sumbol5(display_numbers[number %10]);
+		if (number > 9) symbol4(display_numbers[number / 10]);
+		symbol5(display_numbers[number %10]);
 	}
 }
 
@@ -214,8 +219,18 @@ void lcd_show_version(void) {
 	lcdd.display_buff[3] = 0; // bat
 	lcdd.display_buff[4] = 0; // %
 	lcdd.display_buff[5] = 0; // connect
-	sumbol4(display_numbers[(APP_VERSION>>4) & 0x0f]);
-	sumbol5(display_numbers[APP_VERSION & 0x0f]);
+	symbol4(display_numbers[(APP_VERSION>>4) & 0x0f]);
+	symbol5(display_numbers[APP_VERSION & 0x0f]);
+	update_lcd();
+}
+
+void lcd_show_reset(void) {
+	lcdd.display_buff[0] = LCD_SYM_r;
+	lcdd.display_buff[1] = LCD_SYM_E;
+	lcdd.display_buff[2] = LCD_SYM_S;
+	lcdd.display_buff[3] = 0x00;
+	symbol4(LCD_SYM_E);
+	symbol5(LCD_SYM_t);
 	update_lcd();
 }
 
@@ -229,8 +244,8 @@ void chow_clock(void) {	uint32_t tmp = clkt.utc_time_sec / 60;
 	lcdd.display_buff[3] &= BIT(6); // bat
 	lcdd.display_buff[4] = 0;
 	lcdd.display_buff[5] &= BIT(0); // connect
-	sumbol4(display_numbers[min / 10]);
-	sumbol5(display_numbers[min % 10]);
+	symbol4(display_numbers[min / 10]);
+	symbol5(display_numbers[min % 10]);
 	update_lcd();
 }
 
@@ -317,7 +332,8 @@ void chow_lcd(int flg) {
 	if(clkt.utc_time_sec < lcdd.chow_ext_ut)
 		return;
 	if(cfg.flg & FLG_SHOW_TIME) {
-		if(wrk.lcd_count++ & 1)
+		wrk.lcd_clock ^= 0x1;
+		if (wrk.lcd_clock & 0x1)
 			chow_clock();
 		else
 			chow_measure();
@@ -360,13 +376,14 @@ void init_lcd(void) {
 	init_i2c(&i2c_dev1);
 	if(!send_i2c_buf(&i2c_dev1, LCD_I2C_ADDR, (uint8_t *) lcd_init_cmd, sizeof(lcd_init_cmd))) {
 #if (OTA_TYPE == OTA_TYPE_APP)
-		if(cfg.flg & FLG_DISPLAY_OFF)
+		if ((cfg.flg & FLG_DISPLAY_OFF) || ((cfg.flg & FLG_DISPLAY_SLEEP) && wrk.lcd_sleeping))
 			send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd0); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
 #endif
 		lcdd.lcd_i2c_addr = LCD_I2C_ADDR;
 	} else
 		lcdd.lcd_i2c_addr = 0;
 	deinit_i2c(&i2c_dev1);
+	memset(lcdd.display_out_buff, 0, sizeof(lcdd.display_out_buff));
 }
 
 /****************************************************/
