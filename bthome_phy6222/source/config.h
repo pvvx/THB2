@@ -16,7 +16,7 @@
 #define APP_VERSION	0x21	// BCD
 #endif
 
-/* rf_phy_ana_cfg
+/*
 #define BOARD_LYWSD03MMC_B14		0 // number used for BLE firmware
 #define BOARD_MHO_C401				1
 #define BOARD_CGG1					2
@@ -47,7 +47,7 @@
 #define DEVICE_TH04 	34
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH04
+#define DEVICE		DEVICE_TH05F
 #endif
 
 // supported services by the device (bits)

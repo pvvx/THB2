@@ -361,7 +361,7 @@ void init_lcd(void) {
 	init_i2c(&i2c_dev1);
 	if(!send_i2c_buf(&i2c_dev1, LCD_I2C_ADDR, (uint8_t *) lcd_init_cmd, sizeof(lcd_init_cmd))) {
 #if (OTA_TYPE == OTA_TYPE_APP)
-		if ((cfg.flg & FLG_DISPLAY_OFF) || ((cfg.flg & FLG_DISPLAY_SLEEP) && wrk.lcd_sleeping))
+		if ((cfg.flg & FLG_DISPLAY_OFF) || ((cfg.flg & FLG_DISPLAY_SLEEP) && wrk.lcd_sleeping)) {
 			send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd0); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
 			deinit_i2c(&i2c_dev1);
 			hal_gpio_write(GPIO_LPWR, 0);

@@ -8,7 +8,7 @@ from typing import NoReturn
 
 # Note: Modify your PATH to include the desired compiler before launching this Script!
 
-SWVER = '_v20'
+SWVER = '_v21'
 
 BINDIR = "bin"
 BOOTDIR = "boot"

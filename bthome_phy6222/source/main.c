@@ -430,8 +430,10 @@ static void hal_rfphy_init(void) {
 
 	hal_rc32k_clk_tracking_init();
     { /* замена hal_rom_boot_init() */
+#if EFUSE_TEST
 		extern void efuse_init(void);
 		efuse_init();
+#endif	
         typedef void (*my_function)(void);
         my_function pFunc = (my_function)(0xa2e1);
         //ble_main();

@@ -23,7 +23,7 @@
 */
 #define MIN_ADC_CH 2
 
-#define BAT_AVERAGE_COUNT	32
+#define BAT_AVERAGE_COUNT_SHL	9 // 4,5,6,7,8,9,10,11,12 -> 16,32,64,128,256,512,1024,2048,4096
 
 struct {
 	uint32_t summ;
@@ -198,11 +198,12 @@ void check_battery(void) {
 	bat_average.summ += bat_average.battery_mv;
 	bat_average.count++;
 
-	measured_data.battery_mv = bat_average.summ / bat_average.count;
-
-	if(bat_average.count >= BAT_AVERAGE_COUNT) {
-		bat_average.summ >>= 1;
-		bat_average.count >>= 1;
+	if(bat_average.count >= (1<<BAT_AVERAGE_COUNT_SHL)) {
+		measured_data.battery_mv = bat_average.summ >> BAT_AVERAGE_COUNT_SHL;
+		bat_average.summ -= measured_data.battery_mv;
+		bat_average.count--;
+	} else {
+		measured_data.battery_mv = bat_average.summ / bat_average.count;
 	}
 
 	if (measured_data.battery_mv < 3000)

@@ -34,6 +34,7 @@
 #include "bthome_beacon.h"
 #include "findmy_beacon.h"
 /*********************************************************************/
+
 extern gapPeriConnectParams_t periConnParameters;
 
 #define SEND_DATA_SIZE	16
@@ -46,6 +47,44 @@ const dev_id_t dev_id = {
 		.dev_spec_data = 0,
 		.services = DEV_SERVICES
 };
+
+#if EFUSE_TEST
+//extern void efuse_init(void);
+//extern int efuse_read(int block,uint32_t* buf);
+//extern int efuse_write_x(int block,uint32_t* buf,uint32_t us);
+
+int efuse_read_p(int block, uint32_t* buf)
+{
+	uint32_t *reg = (uint32_t *)0x4000f160; // AP_PCRM->EFUSE0;
+    block &= 3;
+    AP_PCRM->SECURTY_STATE = 0x0f;
+    AP_PCRM->efuse_cfg = BIT(16 + block); //enable o_sclk_prog_hcyc,sclk high duty during time, unit:1/32M clk.prog en
+    WaitRTCCount(2); // 2*32us
+    reg += block << 1;
+    buf[0] = *((uint32_t *)reg);
+    reg++;
+    buf[1] = *((uint32_t *)reg);
+    AP_PCRM->efuse_cfg = 0x00;//disable o_sclk_prog_hcyc and clear prog data
+    return AP_PCRM->SECURTY_STATE;
+}
+
+int efuse_write_p(int block, uint32_t* buf)
+{
+    uint32_t temp_rd[2];
+    block &= 3;
+    AP_PCRM->SECURTY_STATE = 0x0f;
+    AP_PCRM->EFUSE_PROG[0] = buf[0];
+    AP_PCRM->EFUSE_PROG[1] = buf[1];
+    uint32_t temp = (BIT((28 + block)) | 0x8000);//enable o_sclk_prog_hcyc, sclk high duty during time, unit:1/32M clk.prog en
+    AP_PCRM->efuse_cfg = temp;
+    WaitRTCCount(512);//512*32us
+    AP_PCRM->efuse_cfg = 0x00;//disable o_sclk_prog_hcyc and clear prog data
+    AP_PCRM->EFUSE_PROG[0] = 0;
+    AP_PCRM->EFUSE_PROG[1] = 0;
+    efuse_read_p(block, temp_rd);
+    return (temp_rd[1] != buf[1]) || (temp_rd[0] != buf[0]);
+}
+#endif
 
 #if (OTA_TYPE == OTA_TYPE_BOOT)
 
@@ -444,6 +483,24 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 		} else if (cmd == CMD_ID_DEBUG) { // debug - send to lcd
 			if (--len) {
 				send_to_lcd(&ibuf[1], len);
+			}
+#endif
+#if EFUSE_TEST
+		} else if (cmd == CMD_ID_TEST && len > 3 && ibuf[1] == 0xce) { // Read/Write 32 bits register (aligned)
+			extern int phy_sec_efuse_lock(int block);
+			uint32_t efuse[2];
+			//efuse_init();
+			if(ibuf[2] == 0) {
+				obuf[1] = efuse_read_p(ibuf[3] & 3, efuse);
+				memcpy(&obuf[2], efuse, sizeof(efuse));
+				olen = 2 + sizeof(efuse);
+			} else if(ibuf[2] == 1) {
+				memcpy(efuse, &ibuf[4], sizeof(efuse));
+				obuf[1] = efuse_write_p(ibuf[3] & 3, efuse);
+				olen = 2;
+			} else if(ibuf[2] == 2) {
+				obuf[1] = phy_sec_efuse_lock(ibuf[3] & 3);
+				olen = 2;
 			}
 #endif
 		} else {
