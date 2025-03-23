@@ -454,6 +454,11 @@
 // Supervision timeout value (units of 10ms, 1000=10s) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_CONN_TIMEOUT			400 // 4s
 
+// For FLG_DISPLAY_SLEEP
+#define DISPLAY_SLEEP_DELAY						60 	// Seconds after which display is switched off
+#define DELAY_BEFORE_UNIT_CHANGE				3 	// Long key press: Seconds after which temp unit is changed
+#define DELAY_BEFORE_RESET						10	// Long key press: Seconds after which reset is triggered
+
 typedef struct _cfg_t {
 	uint32_t flg;
 
@@ -470,12 +475,12 @@ typedef struct _cfg_t {
 extern cfg_t cfg;
 extern const cfg_t def_cfg;
 
-#define FLG_MEAS_NOTIFY		0x00000001	// включить Notify измерений
-#define FLG_SHOW_TIME		0x00000002	// включить показ часов на LCD
-#define FLG_SHOW_SMILEY		0x00000004	// включить показ смайлика
-#define FLG_SHOW_TRG		0x00000008	// смайлик поаказывает TRG
-#define FLG_DISPLAY_OFF		0x00000010	// отключить дисплей
-#define FLG_ADV_CRYPT		0x00000020	// Зашифрованная BLE реклама (bindkey)
+#define FLG_MEAS_NOTIFY		0x00000001	// Enable sending notifications for measurements
+#define FLG_SHOW_TIME		0x00000002	// Enable clock display on LCD
+#define FLG_SHOW_SMILEY		0x00000004	// Enable smiley on display
+#define FLG_SHOW_TRG		0x00000008	// Smiley shows TRG status
+#define FLG_DISPLAY_OFF		0x00000010	// Turn off display
+#define FLG_ADV_CRYPT		0x00000020	// Encrypted BLE advertising (bindkey)
 #define FLG_SHOW_TF			0x00000040	// Show temperature in F.
 #define FLG_FINDMY			0x00000080	// FindMy
 #define FLG_DISPLAY_SLEEP	0x00000100  // Switch off display after 60 seconds, Re-enable after key press.
@@ -499,9 +504,19 @@ extern adv_work_t adv_wrk;
 #define BOOT_FLG_OTA	0x55 // перезагрузка в FW Boot для OTA (ожидание соединения 80 сек)
 #define BOOT_FLG_FW0	0x33 // перезагрузка в FW Boot
 
+// States for work_parm_t.long_press_state
+#define LONG_PRESS_NONE					0	// Default state, key not pressed
+#define LONG_PRESS_BEFORE_UNIT_CHANGE 	1	// Key just pressed, advertising frequency will be temporarily increased when the key is released in this state
+#define LONG_PRESS_UNIT_CHANGED			2	// Unit changed on display, Config is saved when key is released in this state.
+#define LONG_PRESS_DO_RESET				3	// Display shows "rESEt" and the device is rebooted when releasing the key
+
 typedef struct _work_parm_t {
 #if (DEV_SERVICES & SERVICE_SCREEN)
-	uint8_t lcd_count;
+	uint8_t lcd_clock: 1;	 // If FLG_SHOW_TIME is enabled: Toggle between clock and temp/humidity.
+	uint8_t lcd_sleeping: 1; // If 1, display is currently in sleep mode (off), but can be re-enabled by pressing the key.
+#endif
+#if (DEV_SERVICES & SERVICE_KEY)
+	uint8_t long_press_state; // see LONG_PRESS_...
 #endif
 //	uint8_t lcd_ext_chow; // показ TH/Clock отключен
 	uint8_t reboot; // reboot on disconnect, записывается в [OTA_MODE_SELECT_REG]
@@ -538,5 +553,6 @@ void restore_utc_time_sec(void);
 
 void test_config(void);
 void load_eep_config(void);
+void save_config(void);
 
 #endif /* SOURCE_CONFIG_H_ */

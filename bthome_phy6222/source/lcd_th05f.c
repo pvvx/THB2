@@ -311,7 +311,8 @@ void chow_lcd(int flg) {
 	if(clkt.utc_time_sec < lcdd.chow_ext_ut)
 		return;
 	if(cfg.flg & FLG_SHOW_TIME) {
-		if(wrk.lcd_count++ & 1)
+		wrk.lcd_clock ^= 0x1;
+		if (wrk.lcd_clock & 0x1)
 			chow_clock();
 		else
 			chow_measure();
@@ -360,7 +361,7 @@ void init_lcd(void) {
 	init_i2c(&i2c_dev1);
 	if(!send_i2c_buf(&i2c_dev1, LCD_I2C_ADDR, (uint8_t *) lcd_init_cmd, sizeof(lcd_init_cmd))) {
 #if (OTA_TYPE == OTA_TYPE_APP)
-		if(cfg.flg & FLG_DISPLAY_OFF) {
+		if ((cfg.flg & FLG_DISPLAY_OFF) || ((cfg.flg & FLG_DISPLAY_SLEEP) && wrk.lcd_sleeping))
 			send_i2c_byte(&i2c_dev1, LCD_I2C_ADDR, 0xd0); // Mode Set (MODE SET): Display disable, 1/3 Bias, power saving
 			deinit_i2c(&i2c_dev1);
 			hal_gpio_write(GPIO_LPWR, 0);
@@ -372,6 +373,7 @@ void init_lcd(void) {
 		lcdd.lcd_i2c_addr = 0;
 	i2c_dev1.speed = I2C_400KHZ;
 	deinit_i2c(&i2c_dev1);
+	memset(lcdd.display_out_buff, 0, sizeof(lcdd.display_out_buff));
 }
 
 /****************************************************/
