@@ -207,4 +207,7 @@ void load_eep_config(void) {
 	test_config();
 }
 
+void save_config(void) {
+	flash_write_cfg(&cfg, EEP_ID_CFG, sizeof(cfg));
+}
 

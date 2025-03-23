@@ -97,6 +97,26 @@ void fix_mac(int write) {
 
 #endif
 
+#if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
+static void update_display_mode(uint32_t changed_flags) {
+	if (changed_flags & FLG_DISPLAY_OFF) {
+		init_lcd(); // Enable/disable display according to config
+	} else if (changed_flags & FLG_DISPLAY_SLEEP) {
+		if ((cfg.flg & (FLG_DISPLAY_OFF | FLG_DISPLAY_SLEEP)) == 0) {
+			init_lcd(); // Switch from "sleep mode" to "always on"
+		}
+	} else {
+		return; // nothing relevant changed
+	}
+
+	wrk.lcd_sleeping = 0;
+#if (DEV_SERVICES & SERVICE_KEY)
+	wrk.long_press_state = LONG_PRESS_NONE;
+#endif
+	start_display_sleep_timer(); // Does nothing unless display and sleep mode are on
+}
+#endif
+
 int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 	int olen = 0;
 	if (len) {
@@ -120,11 +140,10 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 #endif
 				memcpy(&cfg, &ibuf[1], len);
 #if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
-				if(tmp & FLG_DISPLAY_OFF)
-					init_lcd();
+				update_display_mode(tmp);
 #endif
 				test_config();
-				flash_write_cfg(&cfg, EEP_ID_CFG, sizeof(cfg));
+				save_config();
 			}
 			memcpy(&obuf[1], &cfg, sizeof(cfg));
 			olen = sizeof(cfg) + 1;
@@ -134,11 +153,10 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 #endif
 			memcpy(&cfg, &def_cfg, sizeof(cfg));
 #if (DEV_SERVICES & SERVICE_SCREEN) && (OTA_TYPE == OTA_TYPE_APP)
-			if(tmp & FLG_DISPLAY_OFF)
-				init_lcd();
+			update_display_mode(tmp);
 #endif
 			test_config();
-			flash_write_cfg(&cfg, EEP_ID_CFG, sizeof(cfg));
+			save_config();
 			memcpy(&obuf[1], &cfg, sizeof(cfg));
 			olen = sizeof(cfg) + 1;
 #if (DEV_SERVICES & SERVICE_THS)
@@ -160,7 +178,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			memcpy(&obuf[1], (uint8_t *)&thsensor_cfg.mid, 6);
 			olen = 1 + 5;
 #if (OTA_TYPE == OTA_TYPE_APP) && (DEV_SERVICES & SERVICE_TH_TRG)
-		} else if (cmd == CMD_ID_TRG) {	// Get/Set tigger data config
+		} else if (cmd == CMD_ID_TRG) {	// Get/Set trigger data config
 			if (--len > trigger_send_size)
 				len = trigger_send_size;
 			if (len) {

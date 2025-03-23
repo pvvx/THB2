@@ -370,6 +370,13 @@ static void adv_measure(void) {
 	}
 }
 
+static void increase_advertising_frequency() {
+	if(gapRole_AdvEnabled) {
+		adv_wrk.adv_reload_count = 60000 / DEF_CON_ADV_INTERVAL_MS; // 60 sec
+		set_new_adv_interval(DEF_CON_ADV_INTERVAL); // actual time * 625us
+	}
+}
+
 #if (DEV_SERVICES & (SERVICE_KEY | SERVICE_RDS | SERVICE_BUTTON))
 /*********************************************************************
  * LED and Key
@@ -389,11 +396,8 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 			hal_gpio_write(GPIO_LED, LED_OFF);
   #endif
  #endif
- #if (DEV_SERVICES & SERVICE_KEY) && KEY_PRESSED
-			if(gapRole_AdvEnabled) {
-				adv_wrk.adv_reload_count = 60000/DEF_CON_ADV_INERVAL_MS; // 60 sec
-				set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time * 625us
-			}
+ #if (DEV_SERVICES & SERVICE_KEY)
+			osal_set_event(simpleBLEPeripheral_TaskID, KEY_CHANGE_EVT);
  #endif
  #if (DEV_SERVICES & SERVICE_BUTTON)
 			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
@@ -427,11 +431,8 @@ static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 			hal_gpio_write(GPIO_LED, LED_ON);
   #endif // KEY_PRESSED
  #endif // GPIO_LED
- #if (DEV_SERVICES & SERVICE_KEY) && (KEY_PRESSED == 0)
-			if(gapRole_AdvEnabled) {
-				adv_wrk.adv_reload_count = 60000/DEF_CON_ADV_INERVAL_MS; // 60 sec
-				set_new_adv_interval(DEF_CON_ADV_INERVAL); // actual time * 625us
-			}
+ #if (DEV_SERVICES & SERVICE_KEY)
+  			osal_set_event(simpleBLEPeripheral_TaskID, KEY_CHANGE_EVT);
  #endif // (DEV_SERVICES & SERVICE_KEY)
  #if (DEV_SERVICES & SERVICE_BUTTON)
 			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
@@ -536,7 +537,7 @@ static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs =
  *			This is called during initialization and should contain
  *			any application specific initialization (ie. hardware
  *			initialization/setup, table initialization, power up
- *			notificaiton ... ).
+ *			notification ... ).
  *
  * @param	task_id - the ID assigned by OSAL.	This ID should be
  *					  used to send messages and set timers.
@@ -603,7 +604,7 @@ void SimpleBLEPeripheral_Init( uint8_t task_id )
 #if defined(OTA_TYPE) && OTA_TYPE == OTA_TYPE_BOOT
 	if (wrk.boot_flg == BOOT_FLG_OTA) {
 		adv_wrk.adv_reload_count = 60000/DEF_OTA_ADV_INERVAL_MS; // 60 sec
-		set_adv_interval(DEF_CON_ADV_INERVAL); // actual time = advInt * 625us
+		set_adv_interval(DEF_CON_ADV_INTERVAL); // actual time = advInt * 625us
 	} else
 #endif
 	set_adv_interval(cfg.advertising_interval * 100); // actual time = advInt * 625us
@@ -784,6 +785,7 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 		//adv_wrk.meas_count = 0;
 #if (DEV_SERVICES & SERVICE_SCREEN)
 		lcd_show_version();
+		start_display_sleep_timer();
 #endif
 		// return unprocessed events
 		return ( events ^ SBP_START_DEVICE_EVT );
@@ -838,6 +840,82 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 		return(events ^ PIN_INPUT_EVT);
 	}
 #endif
+
+#if (DEV_SERVICES & SERVICE_SCREEN)
+	if (events & LCD_TIMER_EVT) {
+		if ((cfg.flg & FLG_DISPLAY_OFF) == 0) {
+			if (wrk.long_press_state == LONG_PRESS_NONE) {
+				if (cfg.flg & FLG_DISPLAY_SLEEP) {
+					// Display sleep timeout expired
+					wrk.lcd_sleeping = 1;
+					power_off_lcd();
+				}
+			} else if (wrk.long_press_state == LONG_PRESS_BEFORE_UNIT_CHANGE) {
+				// Timeout until unit change expired: Toggle Celsius/Fahrenheit
+				cfg.flg ^= FLG_SHOW_TF;
+				if (cfg.flg & FLG_SHOW_TIME) wrk.lcd_clock = 1; // next chow_lcd call switches back to T/H display
+				chow_lcd(1);
+				wrk.long_press_state = LONG_PRESS_UNIT_CHANGED;
+				osal_start_timerEx(simpleBLEPeripheral_TaskID, LCD_TIMER_EVT, DELAY_BEFORE_RESET * 1000);
+			} else if (wrk.long_press_state >= LONG_PRESS_UNIT_CHANGED) {
+				wrk.long_press_state = LONG_PRESS_DO_RESET;
+				 // reset will be done when key is released
+				lcdd.chow_ext_ut = 0xffffffff;
+				lcd_show_reset();
+			}
+		}
+
+		return (events ^ LCD_TIMER_EVT);
+	}
+#endif
+
+#if (DEV_SERVICES & SERVICE_KEY)
+	if (events & KEY_CHANGE_EVT) {
+		if(hal_gpio_read(GPIO_KEY) == KEY_PRESSED) { // key down event
+			// key down event
+#if (DEV_SERVICES & SERVICE_SCREEN)
+			if ((cfg.flg & FLG_DISPLAY_OFF) == 0) {
+				if ((cfg.flg & FLG_DISPLAY_SLEEP) && wrk.lcd_sleeping) {
+					// wake up disaplay
+					wrk.lcd_sleeping = 0;
+					init_lcd();
+					chow_lcd(1);
+				} else {
+					// pressed while display is on
+					wrk.long_press_state = LONG_PRESS_BEFORE_UNIT_CHANGE;
+					osal_start_timerEx(simpleBLEPeripheral_TaskID, LCD_TIMER_EVT, DELAY_BEFORE_UNIT_CHANGE * 1000);
+				}
+			}
+#endif
+		} else { // key up event
+#if (DEV_SERVICES & SERVICE_SCREEN)
+			if ((cfg.flg & FLG_DISPLAY_OFF) == 0) {
+				osal_stop_timerEx(simpleBLEPeripheral_TaskID, LCD_TIMER_EVT);
+
+				if (wrk.long_press_state == LONG_PRESS_BEFORE_UNIT_CHANGE) {
+					increase_advertising_frequency();
+				} else if (wrk.long_press_state == LONG_PRESS_UNIT_CHANGED) {
+					save_config();
+				} else if (wrk.long_press_state == LONG_PRESS_DO_RESET) {
+					write_reg(OTA_MODE_SELECT_REG, 0x01);
+					/* [[noreturn]] */ hal_system_soft_reset();
+				}
+				wrk.long_press_state = LONG_PRESS_NONE;
+
+				if (cfg.flg & FLG_DISPLAY_SLEEP) {
+					// start display sleep countdown
+					osal_start_timerEx(simpleBLEPeripheral_TaskID, LCD_TIMER_EVT, DISPLAY_SLEEP_DELAY * 1000);
+				}
+			} else
+#endif
+	 		{
+				increase_advertising_frequency();
+			}
+		}	
+		return (events ^ KEY_CHANGE_EVT);
+	}
+#endif
+
 #if (DEV_SERVICES & SERVICE_HISTORY)
 	if(events & WRK_NOTIFY_EVT) {
 		LOG("Wrk notify events\n");
@@ -989,3 +1067,10 @@ static void peripheralStateReadRssiCB( int8_t	 rssi )
 //	VOID gapProfileState;
 }
 
+#if (DEV_SERVICES & SERVICE_SCREEN)
+void start_display_sleep_timer(void) {
+	if (((cfg.flg & FLG_DISPLAY_OFF) == 0) && (cfg.flg & FLG_DISPLAY_SLEEP)) {
+		osal_start_timerEx(simpleBLEPeripheral_TaskID, LCD_TIMER_EVT, DISPLAY_SLEEP_DELAY * 1000);
+	}
+}
+#endif

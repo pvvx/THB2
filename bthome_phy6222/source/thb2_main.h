@@ -26,8 +26,8 @@ extern "C"
 #define DEF_ADV_INERVAL  			8000 // = 5 sec, actual time = advInt * 625us
 #define DEF_ADV_INERVAL_MS 			((DEF_ADV_INERVAL*625)/1000) // 5000 ms
 
-#define DEF_CON_ADV_INERVAL 		2500 // 1.5625 sec
-#define DEF_CON_ADV_INERVAL_MS 		((DEF_CON_ADV_INERVAL*625)/1000) // 1562 ms
+#define DEF_CON_ADV_INTERVAL 		2500 // 1.5625 sec
+#define DEF_CON_ADV_INTERVAL_MS 		((DEF_CON_ADV_INTERVAL*625)/1000) // 1562 ms
 #if	(DEV_SERVICES & SERVICE_BUTTON)
 #define DEF_EVENT_ADV_INERVAL 		200 // 95 ms
 #define RDS_EVENT_ADV_COUNT			32  // 32*95 = 3040 ms
@@ -58,15 +58,17 @@ extern "C"
 #define DEFAULT_CONN_PAUSE_PERIPHERAL			2
 
 // Simple BLE Peripheral Task Events
-#define SBP_START_DEVICE_EVT		0x0001  // start
-#define SBP_RESET_ADV_EVT			0x0002  // enable adv (from gaprole_start)
-#define	SBP_CMDDATA					0x0004  // receive command data
-#define TIMER_BATT_EVT				0x0008  // for battery detect
-#define BATT_VALUE_EVT				0x0010  // Event for battery voltage value update
-#define ADV_BROADCAST_EVT			0x0020  // Advent. Event Done Notice
-#define	WRK_NOTIFY_EVT				0x0040  // work notify
-#define	PIN_INPUT_EVT				0x0080  // pin input event
-#define	BUZZER_TONE_EVT				0x0100  // Buzzer new tone
+#define SBP_START_DEVICE_EVT  0x0001  // start
+#define SBP_RESET_ADV_EVT     0x0002  // enable adv (from gaprole_start)
+#define SBP_CMDDATA           0x0004  // receive command data
+#define TIMER_BATT_EVT        0x0008  // for battery detect
+#define BATT_VALUE_EVT        0x0010  // Event for battery voltage value update
+#define ADV_BROADCAST_EVT     0x0020  // Advent. Event Done Notice
+#define WRK_NOTIFY_EVT        0x0040  // work notify
+#define PIN_INPUT_EVT         0x0080  // pin input event
+#define BUZZER_TONE_EVT       0x0100  // Buzzer new tone
+#define KEY_CHANGE_EVT        0x0200  // Key press/release event from interrupt
+#define LCD_TIMER_EVT         0x0400  // Timer related to display sleep and key long press feature expired
 
 /*********************************************************************
  * MACROS
@@ -93,6 +95,10 @@ void swap_mac(uint8_t * d, uint8_t * s);
 void set_def_name(void);
 
 void set_dev_name(void);
+
+#if (DEV_SERVICES & SERVICE_SCREEN)
+void start_display_sleep_timer(void);
+#endif
 
 #ifdef __cplusplus
 }

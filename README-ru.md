@@ -20,9 +20,11 @@
 | <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> |
 | Поддерживает "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
 
-Прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим в формате [BTHome](https://bthome.io/).
+Прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим с форматом [BTHome](https://bthome.io/).
 
-Все прошивки поддерживают любой из датчиков: [CHT8215](pvvx.github.io/THB2/CHT8315%20Advanced%20Datasheet%20Ver1.6%2020230927.pdf) ([CHT8310](https://pvvx.github.io/THB2/CHT8310%20Advanced%20Datasheet%20Ver1.1%2020230927.pdf)), [CHT8305](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8305C%20Advanced%20Datasheet%20Ver2.5%202021-10-26.pdf), [CHT832x](pvvx.github.io/THB2/CHT832X%20Advanced%20Datasheet%20Ver1.pdf), AHT20..30.
+(!) Пожалуйста, размещайте вопросы об использовании и настройках интеграций [Home Assistant](https://www.home-assistant.io/) и другого внешнего программного обеспечения на соответствующих ресурсах!
+
+Все прошивки поддерживают любой из датчиков: [CHT8215](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8315%20Advanced%20Datasheet%20Ver1.6%2020230927.pdf), [CHT8310](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8310%20Advanced%20Datasheet%20Ver1.1%2020230927.pdf), [CHT8305](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT8305C%20Advanced%20Datasheet%20Ver2.5%202021-10-26.pdf), SHT30 ([CHT832x](https://github.com/pvvx/pvvx.github.io/blob/master/THB2/CHT832X%20Advanced%20Datasheet%20Ver1.pdf)), AHT20..30.
 
 * **Программа для настройки и BLE OTA [PHY62x2BTHome.html](https://pvvx.github.io/THB2/web/PHY62x2BTHome.html).**
 
