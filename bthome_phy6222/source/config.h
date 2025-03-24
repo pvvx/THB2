@@ -35,6 +35,19 @@
 #define BOARD_TS0201_TZ3000			17
 #define BOARD_TS0202_TZ3000			18
 #define BOARD_TH03Z   				22 // ZigBee TH03Z
+#define BOARD_ZTH01   				27 // ZigBee ZTH01
+#define BOARD_ZTH02   				28 // ZigBee ZTH02
+#define BOARD_PLM1 					29 // Tuya BLE Plant monitor ECF-SGS01-A rev1.3 (BT3L Tuya module)  (not yet published at the moment)
+#define BOARD_ZTH03   				30 // ZigBee TH03 TS0201(_TZ3000_gohcgzj7, _TZ3000_bguser20) LCD
+#define BOARD_LKTMZL02				31 // ZigBee LKTMZL02 LCD
+#define BOARD_ZTH05					33 // Tuya ZigBee TS0601_TZE204
+#define BOARD_CB3S					35  // development is not completed!Tuya ZigBee "Smart Button" TS0041_TZ3000_fa9mlvja
+#define BOARD_HS09					36  // development is not completed! TS0201_TZ3000_1twfmkcc: Tuya ZigBee "Smart Humidity Sensor"
+#define BOARD_ZYZTH02				37 // Tuya ZY-ZTH02 Zigbee, 2 x AAA, SHT30/CHT832x
+#define BOARD_ZYZTH01				38  // Tuya ZY-ZTH02Pro Zigbee LCD, 2 x AAA, SHT30/CHT832x
+#define BOARD_ZG_227Z				39  // Zigbee ZG-227Z
+#define BOARD_TS0202_PIR1 			40 // Tuya TS0202_TZ3000_6ygjfyll PIR
+#define BOARD_TS0202_PIR2 			41 // Tuya TS0202_TZ3040_bb6xaihh PIR
 */
 #define DEVICE_THB2		19
 #define DEVICE_BTH01	20
@@ -47,7 +60,7 @@
 #define DEVICE_TH04 	34
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05F
+#define DEVICE		DEVICE_TH05D
 #endif
 
 // supported services by the device (bits)
@@ -72,8 +85,12 @@
 //#define SERVICE_18B20		0x00040000	// use sensor(s) MY18B20 (пока нет реализации)
 //#define SERVICE_IUS		0x00080000	// use I and U sensor (INA226) (пока нет реализации)
 //#define SERVICE_PLM		0x00100000	// use PWM-RH and NTC (пока нет реализации)
-#define SERVICE_BUTTON		0x00200000	// кнопка, активность только при нажатии
+#define SERVICE_BUTTON		0x00200000	// брелок-кнопка
 #define SERVICE_FINDMY		0x00400000	// FindMy
+//#define SERVICE_SCANTIM		0x00800000	// Scan Time (develop, test only!)
+//#define SERVICE_ZIGBEE		0x01000000	// BZ-version
+//#define SERVICE_PIR			0x02000000	// use PIR sensor
+#define SERVICE_EXTENDED	0x80000000  //
 
 #define OTA_TYPE_NONE	0	// нет OTA, только переключение из APP на boot прошивку
 #define OTA_TYPE_BOOT	SERVICE_OTA		// вариант для прошивки boot + OTA

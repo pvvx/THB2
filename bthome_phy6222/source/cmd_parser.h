@@ -1,5 +1,5 @@
 /*
- * cmd_parcer.h
+ * cmd_parser.h
  *
  *  Created on: 16 01 2024
  *      Author: pvvx
@@ -66,9 +66,12 @@ typedef enum {
 	CMD_ID_MEM_RW	= 0xDB,	// Read/Write memory
 	CMD_ID_EEP_RW	= 0xDC,	// Get/set EEP
 	CMD_ID_LR_RESET = 0xDD,	// Reset Long Range
-	CMD_ID_DEBUG    = 0xDE	// Test/Debug
+	CMD_ID_DEBUG    = 0xDE,	// Test/Debug
+	CMD_ID_EFUSE	= 0xEF  // Read/Write EFUSE (if EFUSE_TEST == 1)
 
 } CMD_ID_KEYS;
+
+#define EFUSE_TEST	0
 
 // supported services by the device
 typedef struct _dev_services_t{

@@ -370,12 +370,14 @@ static void adv_measure(void) {
 	}
 }
 
+#if (DEV_SERVICES & SERVICE_KEY)
 static void increase_advertising_frequency() {
 	if(gapRole_AdvEnabled) {
 		adv_wrk.adv_reload_count = 60000 / DEF_CON_ADV_INTERVAL_MS; // 60 sec
 		set_new_adv_interval(DEF_CON_ADV_INTERVAL); // actual time * 625us
 	}
 }
+#endif
 
 #if (DEV_SERVICES & (SERVICE_KEY | SERVICE_RDS | SERVICE_BUTTON))
 /*********************************************************************
@@ -395,7 +397,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
   #else
 			hal_gpio_write(GPIO_LED, LED_OFF);
   #endif
- #endif
+ #endif // GPIO_LED
  #if (DEV_SERVICES & SERVICE_KEY)
 			osal_set_event(simpleBLEPeripheral_TaskID, KEY_CHANGE_EVT);
  #endif
@@ -403,7 +405,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
  #endif
 		}
-#endif
+#endif // (DEV_SERVICES & (SERVICE_KEY | SERVICE_BUTTON))
 #if (DEV_SERVICES & SERVICE_RDS)
 		if(pin == GPIO_INP) {
 			osal_set_event(simpleBLEPeripheral_TaskID, PIN_INPUT_EVT);
@@ -887,7 +889,8 @@ uint16_t BLEPeripheral_ProcessEvent( uint8_t task_id, uint16_t events )
 				}
 			}
 #endif
-		} else { // key up event
+		} else {
+			// key up event
 #if (DEV_SERVICES & SERVICE_SCREEN)
 			if ((cfg.flg & FLG_DISPLAY_OFF) == 0) {
 				osal_stop_timerEx(simpleBLEPeripheral_TaskID, LCD_TIMER_EVT);

@@ -486,7 +486,7 @@ int cmd_parser(uint8_t * obuf, uint8_t * ibuf, uint32_t len) {
 			}
 #endif
 #if EFUSE_TEST
-		} else if (cmd == CMD_ID_TEST && len > 3 && ibuf[1] == 0xce) { // Read/Write 32 bits register (aligned)
+		} else if (cmd == CMD_ID_EFUSE && len > 3 && ibuf[1] == 0xce) { // Read/Write 32 bits register (aligned)
 			extern int phy_sec_efuse_lock(int block);
 			uint32_t efuse[2];
 			//efuse_init();

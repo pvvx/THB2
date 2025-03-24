@@ -20,6 +20,7 @@
 #include "watchdog.h"
 #include "adc.h"
 #include "ble_ota.h"
+#include "cmd_parser.h"
 
 #define DEFAULT_UART_BAUD	115200
 
@@ -430,7 +431,7 @@ static void hal_rfphy_init(void) {
 
 	hal_rc32k_clk_tracking_init();
     { /* замена hal_rom_boot_init() */
-#if EFUSE_TEST
+#if !EFUSE_TEST
 		extern void efuse_init(void);
 		efuse_init();
 #endif	
