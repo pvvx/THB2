@@ -60,7 +60,7 @@
 #define DEVICE_TH04 	34
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05D
+#define DEVICE		DEVICE_TH05F
 #endif
 
 // supported services by the device (bits)

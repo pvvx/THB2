@@ -365,7 +365,7 @@ void init_lcd(void) {
 	} else
 		lcdd.lcd_i2c_addr = 0;
 	deinit_i2c(&i2c_dev1);
-//	i2c_dev1.speed = I2C_400KHZ;
+	i2c_dev1.speed = I2C_400KHZ;
 	memset(lcdd.display_out_buff, 0, sizeof(lcdd.display_out_buff));
 }
 

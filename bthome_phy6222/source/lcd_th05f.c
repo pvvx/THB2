@@ -351,7 +351,6 @@ void update_lcd(void) {
 
 void init_lcd(void) {
 	i2c_dev1.speed = I2C_100KHZ;
-	lcdd.display_out_buff[0] = 8;
 #if (OTA_TYPE == OTA_TYPE_APP)
 	if(hal_gpio_read(GPIO_LPWR) == 0) {
 		hal_gpio_write(GPIO_LPWR, 1);
@@ -373,7 +372,8 @@ void init_lcd(void) {
 		lcdd.lcd_i2c_addr = 0;
 	i2c_dev1.speed = I2C_400KHZ;
 	deinit_i2c(&i2c_dev1);
-	memset(lcdd.display_out_buff, 0, sizeof(lcdd.display_out_buff));
+	lcdd.display_out_buff[0] = 8;
+	memset(&lcdd.display_out_buff[1], 0, sizeof(lcdd.display_out_buff) - 1);
 }
 
 /****************************************************/
