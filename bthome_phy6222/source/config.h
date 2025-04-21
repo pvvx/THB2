@@ -58,6 +58,7 @@
 #define DEVICE_THB3		26
 #define DEVICE_KEY2		32
 #define DEVICE_TH04 	34
+#define DEVICE_6TAG31 35
 
 #ifndef DEVICE
 #define DEVICE		DEVICE_TH05F
@@ -414,6 +415,51 @@
 #define DEF_MODEL_NUMBER_STR		"KEY"
 #define DEF_HARDWARE_REVISION		"0020"
 #define DEF_MANUFACTURE_NAME_STR	"DIY"
+
+#elif DEVICE == DEVICE_6TAG31
+
+/*
+ * Model: FRESH 'n REBEL 6ATAG31SS v1 0001 ST17H65B
+ *
+ * Accelerometer SC7A20 connected to P00-P03
+ * Unpopulated i2c memory: P33-P31
+ */
+
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
+		| SERVICE_BINDKEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
+		| SERVICE_BINDKEY \
+)
+#endif
+
+#define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
+
+#define GPIO_KEY	GPIO_P14
+#define KEY_PRESSED	0
+//#define GPIO_LED	GPIO_P03
+//#define LED_ON	1
+//#define LED_OFF	0
+
+#define GPIO_BUZZER	GPIO_P34
+#define PWM_CHL_BUZZER	PWM_CH0
+#define BUZZER_ON	1
+#define BUZZER_OFF	0
+
+//#define GPIO_INP     GPIO_P15
+
+#define DEF_MODEL_NUMBER_STR           "6ATAG"
+#define DEF_HARDWARE_REVISION          "0020"
+#define DEF_MANUFACTURE_NAME_STR       "FnR"
+
 
 #elif DEVICE == DEVICE_TH04
 
