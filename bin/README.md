@@ -11,3 +11,4 @@
 | [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_vNN.hex | TH05F_vNN.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
 | [KEY2](https://pvvx.github.io/iSearching) | BOOT_KEY2_vNN.hex | KEY2_vNN.bin | SoC ST17H66B |
 | [HDP16](https://pvvx.github.io/HDP16) | BOOT_HDP16_vNN.hex | HDP16_vNN.bin | SoC ST17H65, MiTag-F2-YY-V2 |
+| [TN-6ATAG3-V01](https://pvvx.github.io/TN-6ATAG3-V01) | BOOT_HDP16_vNN.hex | HDP16_vNN.bin | SoC ST17H65, TN-6ATAG3-V01 |

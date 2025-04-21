@@ -15,10 +15,10 @@
 |:---:|:---:|:---:|:---:|
 | <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/TH04/img/th04.jpg" width="120"/> |
 
-|  [KEY2 (iSearching)](https://pvvx.github.io/iSearching) | [HD-P16](https://pvvx.github.io/HDP16) |
-|:---:|:---:|
-| <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> | <img src="https://pvvx.github.io/HDP16/img/hdp16.jpg" width="120"/>
-| Поддерживает "[FindMy](https://github.com/pvvx/THB2/issues/94)" | Поддерживает "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
+|  [KEY2 (iSearching)](https://pvvx.github.io/iSearching) | [HD-P16](https://pvvx.github.io/HDP16) |  [TN-6ATAG3-V01](https://pvvx.github.io/TN-6ATAG3-V01) |
+|:---:|:---:|:---:|
+| <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> |  <img src="https://pvvx.github.io/HDP16/img/hdp16.jpg" width="120"/> | <img src="https://pvvx.github.io/TN-6ATAG3-V01/img/case2.jpg" width="120"/> |
+| Поддерживает "[FindMy](https://github.com/pvvx/THB2/issues/94)" | Поддерживает "[FindMy](https://github.com/pvvx/THB2/issues/94)" | Поддерживает "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
 
 Прошивки работают с [Home Assistant](https://www.home-assistant.io/) и другим программным обеспечением, работающим с форматом [BTHome](https://bthome.io/).
 
@@ -59,6 +59,7 @@ _Далее, с помощью соединения BLE в [PHY62x2BTHome.html](
 | [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v20.hex | TH05F_v20.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
 | [KEY2](https://pvvx.github.io/iSearching) | BOOT_KEY2_v20.hex | KEY2_v20.bin | SoC ST17H66B |
 | [HD-P16](https://pvvx.github.io/HDP16) | BOOT_HDP16_v21.hex | HDP16_v21.bin | MiTag-F2-YY-V2 |
+| [TN-6ATAG3-V01](https://pvvx.github.io/TN-6ATAG3-V01) | BOOT_HDP16_v21.hex | HDP16_v21.bin | SoC ST17H65, TN-6ATAG3-V01 |
 
 Основные файлы прошивок, BOOT_xxx_vxx.hex для программирования через USB-COM адаптер и xxx_vxx.bin для OTA, находятся в директории [bin](https://github.com/pvvx/THB2/tree/master/bin).
 
