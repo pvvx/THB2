@@ -336,6 +336,31 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P32, GPIO_PULL_DOWN },
 		{ GPIO_P33, GPIO_PULL_DOWN },
 		{ GPIO_P34, GPIO_PULL_DOWN }
+
+#elif DEVICE == DEVICE_HDP16
+
+		{ GPIO_P00 , GPIO_PULL_DOWN }, // sc7a20
+		{ GPIO_P01 , GPIO_PULL_DOWN }, // sc7a20
+		{ GPIO_P02 , GPIO_PULL_DOWN }, // sc7a20
+		{ GPIO_P03 , GPIO_PULL_DOWN }, // sc7a20
+		{ GPIO_P07 , GPIO_PULL_DOWN },
+		{ GPIO_P09 , GPIO_PULL_UP }, // TX
+		{ GPIO_P10 , GPIO_PULL_UP }, // RX
+		{ GPIO_P11 , GPIO_PULL_UP }, // VBat
+		{ GPIO_P14 , GPIO_PULL_UP }, // Key
+		{ GPIO_P15 , GPIO_PULL_DOWN },
+		{ GPIO_P16 , GPIO_PULL_DOWN },
+		{ GPIO_P17 , GPIO_PULL_DOWN },
+		{ GPIO_P18 , GPIO_PULL_DOWN },
+		{ GPIO_P20 , GPIO_PULL_DOWN },
+		{ GPIO_P23 , GPIO_PULL_DOWN },
+		{ GPIO_P24 , GPIO_PULL_DOWN },
+		{ GPIO_P25 , GPIO_PULL_DOWN },
+		{ GPIO_P26 , GPIO_PULL_DOWN },
+		{ GPIO_P31 , GPIO_PULL_DOWN },
+		{ GPIO_P32 , GPIO_PULL_DOWN },
+		{ GPIO_P33 , GPIO_PULL_DOWN },
+		{ GPIO_P34 , GPIO_PULL_DOWN }   // Buzzer
 #else
 #error "DEVICE Not released!"
 #endif

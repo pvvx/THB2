@@ -22,7 +22,8 @@ DEVICES = [
     'THB1',
     'THB3',
     'KEY2',
-    'TH04'
+    'TH04',
+    'HDP16'
 ]
 
 def error_exit(message: str = "Error!") -> NoReturn:

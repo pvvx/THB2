@@ -15,10 +15,10 @@ Custom firmware for Tuya devices based on the PHY622x2 chipset.
 |:---:|:---:|:---:|:---:|
 | <img src="https://pvvx.github.io/TH05-v1.3/img/TH05-V1.3.jpg" width="120"/> | <img src="https://pvvx.github.io/TH-05/img/TH05V14.jpg" width="120"/> | <img src="https://pvvx.github.io/TH05F/img/TH05F.jpg" width="120"/> | <img src="https://pvvx.github.io/TH04/img/th04.jpg" width="120"/> |
 
-|  [KEY2 (iSearching)](https://pvvx.github.io/iSearching) |
-|:---:|
-| <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> |
-| Support "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
+|  [KEY2 (iSearching)](https://pvvx.github.io/iSearching) | [HD-P16](https://pvvx.github.io/HDP16) |
+|:---:|:---:|
+| <img src="https://pvvx.github.io/iSearching/img/keys.jpg" width="120"/> | <img src="https://pvvx.github.io/HDP16/img/hdp16.jpg" width="120"/>
+| Support "[FindMy](https://github.com/pvvx/THB2/issues/94)" | Support "[FindMy](https://github.com/pvvx/THB2/issues/94)" |
 
 
 This firmware works with [Home Assistant](https://www.home-assistant.io/) and other software running in the [BTHome](https://bthome.io/) format.
@@ -59,7 +59,7 @@ The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only u
 | [TH05_V1.3](https://pvvx.github.io/TH05-v1.3) | BOOT_TH05D_v20.hex | TH05D_v20.bin | RSH-TH05-V1.3 (chip: BL55072) |
 | [TH05F](https://pvvx.github.io/TH05F) | BOOT_TH05F_v20.hex | TH05F_v20.bin | TH05Y_V1.1, TH05Y_V1.2, TH05Y_V3.1 (chip: QD01 2332 NT) |
 | [KEY2](https://pvvx.github.io/iSearching) | BOOT_KEY2_v20.hex | KEY2_v20.bin | SoC ST17H66B |
-
+| [HD-P16](https://pvvx.github.io/HDP16) | BOOT_HDP16_v21.hex | HDP16_v21.bin | SoC ST17H65, MiTag-F2-YY-V2 |
 
 The main firmware files, BOOT_XXX_vXX.hex (for programming via USB-COM adapter) and XXX_vXX.bin (for OTA), are located in the [bin](bin) directory.
 

@@ -12,8 +12,9 @@
 "?",
 "bin/KEY2_v21.bin",
 "?",
-"bin/TH04_v21.bin"
-],
+"bin/TH04_v21.bin",
+"?","?","?","?","?","?","?",
+"bin/HDP16_v21.bin"],
 "updateboot":[
 "update_boot/BOOT_THB2_v21.bin",
 "update_boot/BOOT_BTH01_v21.bin",
@@ -26,5 +27,7 @@
 "?","?","?","?","?",
 "update_boot/BOOT_KEY2_v21.bin",
 "?",
-"update_boot/BOOT_TH04_v21.bin"]
+"update_boot/BOOT_TH04_v21.bin",
+"?","?","?","?","?","?","?",
+"update_boot/BOOT_HDP16_v21.bin"]
 }

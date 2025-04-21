@@ -48,6 +48,7 @@
 #define BOARD_ZG_227Z				39  // Zigbee ZG-227Z
 #define BOARD_TS0202_PIR1 			40 // Tuya TS0202_TZ3000_6ygjfyll PIR
 #define BOARD_TS0202_PIR2 			41 // Tuya TS0202_TZ3040_bb6xaihh PIR
+#define BOARD_HDP16					42 // MiniTag-F2-YY-v2 https://www.ednchina.com/technews/26425.html
 */
 #define DEVICE_THB2		19
 #define DEVICE_BTH01	20
@@ -58,9 +59,10 @@
 #define DEVICE_THB3		26
 #define DEVICE_KEY2		32
 #define DEVICE_TH04 	34
+#define DEVICE_HDP16	42
 
 #ifndef DEVICE
-#define DEVICE		DEVICE_TH05F
+#define DEVICE		DEVICE_HDP16
 #endif
 
 // supported services by the device (bits)
@@ -452,6 +454,84 @@
 #define DEF_MODEL_NUMBER_STR		"TH04"
 #define DEF_HARDWARE_REVISION		"0022" 
 #define DEF_MANUFACTURE_NAME_STR	"Tuya" 
+
+#elif DEVICE == DEVICE_KEY2
+/* Model: iSearch ver2 ST17H66 (TSSOP16) */
+#define SDK_VER_CHIP  __DEF_CHIP_TSOP16__
+
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
+		| SERVICE_BINDKEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
+		| SERVICE_BINDKEY \
+)
+#endif
+
+#define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
+
+#define GPIO_KEY	GPIO_P15
+#define KEY_PRESSED	1
+#define GPIO_LED	GPIO_P03
+#define LED_ON		1
+#define LED_OFF		0
+
+#define GPIO_BUZZER	   GPIO_P09
+#define PWM_CHL_BUZZER PWM_CH0
+#define BUZZER_ON	1
+#define BUZZER_OFF	0
+
+//#define GPIO_INP	GPIO_P15
+
+#define DEF_MODEL_NUMBER_STR		"KEY"
+#define DEF_HARDWARE_REVISION		"0020"
+#define DEF_MANUFACTURE_NAME_STR	"DIY"
+
+#elif DEVICE == DEVICE_HDP16
+/* Model: HD-P16, MiLi MiTag F2, SoC: ST17F65  */
+
+#if OTA_TYPE == OTA_TYPE_BOOT
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
+		| SERVICE_BINDKEY \
+)
+#else
+#define DEV_SERVICES (OTA_TYPE \
+		| SERVICE_BUTTON \
+		| SERVICE_FINDMY \
+		| SERVICE_BINDKEY \
+)
+#endif
+
+#define ADC_PIN_USE_OUT		1	// hal_gpio_write(ADC_PIN, 1);
+#define ADC_PIN				GPIO_P11
+#define ADC_VBAT_CHL		VBAT_ADC_P11
+
+#define GPIO_KEY	GPIO_P15
+#define KEY_PRESSED	1
+
+//#define GPIO_LED	GPIO_P03
+//#define LED_ON		1
+//#define LED_OFF		0
+
+#define GPIO_BUZZER	   GPIO_P34
+#define PWM_CHL_BUZZER PWM_CH0
+#define BUZZER_ON	1
+#define BUZZER_OFF	0
+
+//#define GPIO_INP	GPIO_P15
+
+#define DEF_MODEL_NUMBER_STR		"HDP16"
+#define DEF_HARDWARE_REVISION		"0002"
+#define DEF_MANUFACTURE_NAME_STR	"SHICo" // Shenzhen Haritong Industrial Co
 
 #else
 #error "DEVICE Not released!"
