@@ -58,7 +58,7 @@
 #define DEVICE_THB3		26
 #define DEVICE_KEY2		32
 #define DEVICE_TH04 	34
-#define DEVICE_6TAG31 35
+#define DEVICE_HDP16 42 // MiniTag-F2-YY-v2, Model: HD-P16, MiLi MiTag F2, SoC: ST17F65
 
 #ifndef DEVICE
 #define DEVICE		DEVICE_TH05F
@@ -416,14 +416,7 @@
 #define DEF_HARDWARE_REVISION		"0020"
 #define DEF_MANUFACTURE_NAME_STR	"DIY"
 
-#elif DEVICE == DEVICE_6TAG31
-
-/*
- * Model: FRESH 'n REBEL 6ATAG31SS v1 0001 ST17H65B
- *
- * Accelerometer SC7A20 connected to P00-P03
- * Unpopulated i2c memory: P33-P31
- */
+#elif DEVICE == DEVICE_HDP16
 
 #if OTA_TYPE == OTA_TYPE_BOOT
 #define DEV_SERVICES (OTA_TYPE \
@@ -456,9 +449,9 @@
 
 //#define GPIO_INP     GPIO_P15
 
-#define DEF_MODEL_NUMBER_STR           "6ATAG"
+#define DEF_MODEL_NUMBER_STR           "HDP16"
 #define DEF_HARDWARE_REVISION          "0020"
-#define DEF_MANUFACTURE_NAME_STR       "FnR"
+#define DEF_MANUFACTURE_NAME_STR       "MiLi"
 
 
 #elif DEVICE == DEVICE_TH04

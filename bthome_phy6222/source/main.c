@@ -311,7 +311,7 @@ const ioinit_cfg_t ioInit[] = {
 		{ GPIO_P18, GPIO_PULL_DOWN }, // PN10 ?
 		{ GPIO_P20, GPIO_FLOATING }, // connect to GND
 		{ GPIO_P34, GPIO_FLOATING }  // connect to +Vbat
-#elif (DEVICE == DEVICE_6TAG31)
+#elif (DEVICE == DEVICE_HDP16)
 		{ GPIO_P00, GPIO_PULL_DOWN }, // sc7a20
 		{ GPIO_P01, GPIO_PULL_DOWN }, // sc7a20
 		{ GPIO_P02, GPIO_PULL_DOWN }, // sc7a20
