@@ -49,7 +49,7 @@ The [Boot](#fw-boot-and-ota) firmware has minimal functions. `FW Boot` is only u
 
 | Device | Boot file | OTA file | Printed circuit board labelling |
 |:---:|:---:|:---:|:---:|
-| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v20.hex | BTH01_v20.bin | no |
+| [BTH01](https://pvvx.github.io/BTH01) | BOOT_BTH01_v20.hex | BTH01_v20.bin | BTH01Y_V1.2, BTH01Y_V3.1, BTH11Y_V1.0 |
 | [THB1](https://pvvx.github.io/THB1) | BOOT_THB1_v20.hex | THB1_v20.bin | no |
 | [THB2](https://pvvx.github.io/THB2) | BOOT_THB2_v20.hex | THB2_v20.bin | no |
 | [THB3](https://pvvx.github.io/THB3) | BOOT_THB2_v20.hex | THB2_v20.bin | no |
