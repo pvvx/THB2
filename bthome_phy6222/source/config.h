@@ -63,6 +63,7 @@
 #define DEVICE_TH04 	34
 #define DEVICE_HDP16	42
 #define DEVICE_TN6ATAG3 43
+#define DEVICE_SF07     44
 
 #ifndef DEVICE
 #define DEVICE		DEVICE_TH04
@@ -455,8 +456,8 @@
 #define GPIO_INP	GPIO_P10 // mark RX
 
 #define DEF_MODEL_NUMBER_STR		"TH04"
-#define DEF_HARDWARE_REVISION		"0022" 
-#define DEF_MANUFACTURE_NAME_STR	"Tuya" 
+#define DEF_HARDWARE_REVISION		"0022"
+#define DEF_MANUFACTURE_NAME_STR	"Tuya"
 
 #elif DEVICE == DEVICE_KEY2
 /* Model: iSearch ver2 ST17H66 (TSSOP16) */
@@ -497,7 +498,7 @@
 #define DEF_HARDWARE_REVISION		"0020"
 #define DEF_MANUFACTURE_NAME_STR	"DIY"
 
-#elif DEVICE == DEVICE_HDP16
+#elif (DEVICE == DEVICE_HDP16) || (DEVICE == DEVICE_SF07)
 /* Model: HD-P16, MiLi MiTag F2, SoC: ST17F65  */
 
 #if OTA_TYPE == OTA_TYPE_BOOT
@@ -518,8 +519,13 @@
 #define ADC_PIN				GPIO_P11
 #define ADC_VBAT_CHL		VBAT_ADC_P11
 
+#if DEVICE == DEVICE_HDP16
 #define GPIO_KEY	GPIO_P15
 #define KEY_PRESSED	1
+#elif DEVICE == DEVICE_SF07
+#define GPIO_KEY	GPIO_P14
+#define KEY_PRESSED	0
+#endif
 
 //#define GPIO_LED	GPIO_P03
 //#define LED_ON		1
@@ -532,9 +538,15 @@
 
 //#define GPIO_INP	GPIO_P15
 
+#if DEVICE == DEVICE_HDP16
 #define DEF_MODEL_NUMBER_STR		"HDP16"
 #define DEF_HARDWARE_REVISION		"0001"
 #define DEF_MANUFACTURE_NAME_STR	"SHICo" // Shenzhen Haritong Industrial Co
+#elif DEVICE == DEVICE_SF07
+#define DEF_MODEL_NUMBER_STR		"SF07"
+#define DEF_HARDWARE_REVISION		"0001"
+#define DEF_MANUFACTURE_NAME_STR	"Lenze" // Shenzhen Haritong Industrial Co
+#endif
 
 #elif DEVICE == DEVICE_TN6ATAG3
 /* Model: HD-P16, MiLi MiTag F2, SoC: ST17F65  */
